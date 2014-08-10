@@ -1,7 +1,9 @@
-FORTH SUPERCOLLIDER
--------------------
+LISP SUPERCOLLIDER
+------------------
 
-`HSC3-FORTH` is a simple-minded [FORTH][forth] interpreter.
+AMERICAN PRIMITIVE, VOL. 2
+
+`HSC3-LISP` is a simple-minded [LISP][lisp] interpreter.
 
 The only data type is the [SUPERCOLLIDER][sc3] `UNIT GENERATOR`.
 
@@ -9,48 +11,22 @@ A FORTH answer to the eternal question,
 [WHY SUPERCOLLIDER?](sw/hsc3-graphs/html/why-supercollider.scd.html)
 
 ~~~~
-: rvb 5 0 do 0.05 0 0.05 Rand.ir 2 clone 1 AllpassN loop ; 0.2 Dust.ar
-50 * 200 3200 Rand.ir 0.003 Resonz 10 clone mix dup 0.046 0.048 DelayN
-0.1 0 0.1 Rand.ir LFNoise1.kr 0.04 * 0.05 + 15 CombL 7 clone mix rvb
-0.2 * + play
+(define why-supercollider?
+  (let ((r (resonz (mul (dust ar 0.2) 50) (rand 200 3200) 0.003))
+        (s (mix (clone 10 r)))
+        (z (delay-n s 0.048 0.048))
+        (c (comb-l z 0.1 (mul-add (lf-noise1 kr (rand 0 0.1)) 0.04 0.05) 15))
+        (y (mix (clone 7 c)))
+        (f (lambda (i) (allpass-n i 0.05 (clone 2 (rand 0 0.05)) 1)))
+        (x ((foldl1 compose (replicate 4 f)) y)))
+    (add s (mul x 0.2))))
 ~~~~
-
-[![][img]][img]
-
-[img]: sw/hsc3-graphs/svg/why-supercollider.svg
-
-`HSC3-FORTH` works with the [GFORTH][gforth] [EMACS][emacs] mode, just
-set `forth-program-name`.
 
 To build type:
 
 ~~~~
 cd hs ; prefix=~/opt make install
 ~~~~
-
-To hear the above type `C-cC-r` in emacs, or in a shell type:
-
-~~~~
-hsc3-forth < ~/sw/hsc3-graphs/gr/why-supercollider.fs
-~~~~
-
-To quieten there is the forth word `STOP`.
-
-`HSC3-FORTH` is case-sensitive.
-
-It follows the [HASKELL][hs] supercollider ([HSC3][hsc3]) rules.
-
-It is very partial.
-
-It is known to work as far as the translated graphs at [HSC3-GRAPHS](?t=hsc3-graphs).
-
-Search for `FS` in the [INDEX](?t=hsc3-graphs&m=md/ix.md).
-
-* * *
-
-AMERICAN PRIMITIVE, VOL. 2
-
-Continuing the series, `HSC3-LISP` is a simple minded [LISP][lisp] interpreter.
 
 `HSC3-LISP` is not `SCHEME`.  Still, the following [RSC3][rsc3] graphs are working:
 
@@ -130,9 +106,7 @@ Continuing the series, `HSC3-LISP` is a simple minded [LISP][lisp] interpreter.
 [hsc3]: http://rd.slavepianos.org/?t=hsc3
 [hs]: http://haskell.org/
 [sc3]: http://audiosynth.com/
-[forth]: http://www.forth.org/
 [gpl]: http://gnu.org/copyleft/
-[gforth]: http://www.gnu.org/software/gforth/
 [emacs]: http://www.gnu.org/software/emacs/
 [lisp]: http://www-formal.stanford.edu/jmc/history/lisp/lisp.html
 [rsc3]: http://rd.slavepianos.org/?t=rsc3
