@@ -7,7 +7,7 @@ AMERICAN PRIMITIVE, VOL. 2
 
 The only data type is the [SUPERCOLLIDER][sc3] `UNIT GENERATOR`.
 
-A FORTH answer to the eternal question,
+A LISP answer to the eternal question,
 [WHY SUPERCOLLIDER?](sw/hsc3-graphs/html/why-supercollider.scd.html)
 
 ~~~~

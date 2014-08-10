@@ -1,7 +1,7 @@
 rhs_dir=$(HOME)/sw/rhs/src
 rsc3_dir=$(HOME)/sw/rsc3/src
 rsc3_lang_dir=$(HOME)/sw/rsc3-lang/src
-lisp_dir=$(HOME)/sw/hsc3-forth/lisp
+lisp_dir=$(HOME)/sw/hsc3-lisp/lisp
 
 rhs_lib=control/monad.scm data/ord.scm data/function.scm data/list.scm data/tree.scm data/tree.scm prelude.scm
 rsc3_lib=constant.scm derived.scm envelope.scm list.scm

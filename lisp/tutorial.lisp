@@ -333,7 +333,7 @@ three ; 3
 
 ; LOADING LISP
 
-(load "/home/rohan/sw/hsc3-forth/lisp/stdlib.lisp")
+(load "/home/rohan/sw/hsc3-lisp/lisp/stdlib.lisp")
 
 ; FLOATING LISP
 

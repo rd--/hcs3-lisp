@@ -147,6 +147,6 @@ import qualified Sound.SC3.UGen.DB as DB {- hsc3-db -}
 import qualified Sound.SC3.UGen.DB.Bindings.Lisp as DB {- hsc3-db -}
 
 let b = map (\nm -> DB.gen_mk_ugen nm) DB.complete_names
-writeFile "/home/rohan/sw/hsc3-forth/lisp/ugen.lisp" (unlines b)
+writeFile "/home/rohan/sw/hsc3-lisp/lisp/ugen.lisp" (unlines b)
 
 -}
