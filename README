@@ -97,7 +97,9 @@ cd hs ; prefix=~/opt make install
 - tsort
 - what-was-i-thinking
 - why-supercollider
+- wial
 - wind-metals
+- xy-interference
 - zizle
 
 © [rohan drape][rd], 2014, [gpl][gpl].

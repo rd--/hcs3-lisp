@@ -1,7 +1,3 @@
-(define mul-add
-  (lambda (input mul add)
-    (mk-ugen (list "MulAdd" (list 0) (list input mul add) nil 1 nil nil))))
-
 (define a2k
   (lambda (input)
     (mk-ugen (list "A2K" kr (list input) nil 1 nil nil))))
@@ -187,16 +183,12 @@
     (mk-ugen (list "BufSamples" rt (list bufnum) nil 1 nil nil))))
 
 (define buf-wr
-  (lambda (rt loop inputArray bufnum phase)
-    (mk-ugen (list "BufWr" rt (list loop inputArray bufnum) phase 1 nil nil))))
+  (lambda (bufnum phase loop inputArray)
+    (mk-ugen (list "BufWr" (list 3) (list bufnum phase loop) inputArray 1 nil nil))))
 
 (define c-osc
   (lambda (rt bufnum freq beats)
     (mk-ugen (list "COsc" rt (list bufnum freq beats) nil 1 nil nil))))
-
-(define changed
-  (lambda (rt input threshold)
-    (mk-ugen (list "Changed" rt (list input threshold) nil 1 nil nil))))
 
 (define check-bad-values
   (lambda (input id_ post)
@@ -227,16 +219,12 @@
     (mk-ugen (list "CombN" (list 0) (list input maxdelaytime delaytime decaytime) nil 1 nil nil))))
 
 (define compander
-  (lambda (input control thresh slopeBelow slopeAbove clampTime relaxTime)
-    (mk-ugen (list "Compander" (list 0) (list input control thresh slopeBelow slopeAbove clampTime relaxTime) nil 1 nil nil))))
+  (lambda (input control_ thresh slopeBelow slopeAbove clampTime relaxTime)
+    (mk-ugen (list "Compander" (list 0) (list input control_ thresh slopeBelow slopeAbove clampTime relaxTime) nil 1 nil nil))))
 
 (define compander-d
   (lambda (rt input thresh slopeBelow slopeAbove clampTime relaxTime)
     (mk-ugen (list "CompanderD" rt (list input thresh slopeBelow slopeAbove clampTime relaxTime) nil 1 nil nil))))
-
-(define control
-  (lambda (rt values)
-    (mk-ugen (list "Control" rt (list values) nil 1 nil nil))))
 
 (define control-dur (mk-ugen (list "ControlDur" ir nil nil 1 nil nil)))
 (define control-rate (mk-ugen (list "ControlRate" ir nil nil 1 nil nil)))
@@ -273,16 +261,16 @@
     (mk-ugen (list "DC" rt (list input) nil 1 nil nil))))
 
 (define dbrown
-  (lambda (hi step length_ lo)
-    (mk-ugen (list "Dbrown" dr (list hi step length_ lo) nil 1 nil (incr-uid 1)))))
+  (lambda (length_ lo hi step)
+    (mk-ugen (list "Dbrown" dr (list length_ lo hi step) nil 1 nil (incr-uid 1)))))
 
 (define dbufrd
   (lambda (bufnum phase loop)
     (mk-ugen (list "Dbufrd" dr (list bufnum phase loop) nil 1 nil (incr-uid 1)))))
 
 (define dbufwr
-  (lambda (bufnum phase input loop)
-    (mk-ugen (list "Dbufwr" dr (list bufnum phase input loop) nil 1 nil (incr-uid 1)))))
+  (lambda (bufnum phase loop input)
+    (mk-ugen (list "Dbufwr" dr (list bufnum phase loop input) nil 1 nil (incr-uid 1)))))
 
 (define decay
   (lambda (input decayTime)
@@ -337,28 +325,28 @@
     (mk-ugen (list "DemandEnvGen" rt (list level dur shape curve gate reset levelScale levelBias timeScale doneAction) nil 1 nil nil))))
 
 (define detect-index
-  (lambda (rt bufnum input)
-    (mk-ugen (list "DetectIndex" rt (list bufnum input) nil 1 nil nil))))
+  (lambda (bufnum input)
+    (mk-ugen (list "DetectIndex" (list 1) (list bufnum input) nil 1 nil nil))))
 
 (define detect-silence
-  (lambda (rt input amp time doneAction)
-    (mk-ugen (list "DetectSilence" rt (list input amp time doneAction) nil 1 nil nil))))
+  (lambda (input amp time doneAction)
+    (mk-ugen (list "DetectSilence" (list 0) (list input amp time doneAction) nil 1 nil nil))))
 
 (define dgeom
   (lambda (length_ start grow)
     (mk-ugen (list "Dgeom" dr (list length_ start grow) nil 1 nil (incr-uid 1)))))
 
 (define dibrown
-  (lambda (hi step length_ lo)
-    (mk-ugen (list "Dibrown" dr (list hi step length_ lo) nil 1 nil (incr-uid 1)))))
+  (lambda (length_ lo hi step)
+    (mk-ugen (list "Dibrown" dr (list length_ lo hi step) nil 1 nil (incr-uid 1)))))
 
 (define disk-in
-  (lambda (nc rt bufnum loop)
-    (mk-ugen (list "DiskIn" rt (list bufnum loop) nil nc nil nil))))
+  (lambda (nc bufnum loop)
+    (mk-ugen (list "DiskIn" ar (list bufnum loop) nil nc nil nil))))
 
 (define disk-out
-  (lambda (rt bufnum input)
-    (mk-ugen (list "DiskOut" rt (list bufnum) input 1 nil nil))))
+  (lambda (bufnum input)
+    (mk-ugen (list "DiskOut" ar (list bufnum) input 1 nil nil))))
 
 (define diwhite
   (lambda (length_ lo hi)
@@ -445,8 +433,8 @@
     (mk-ugen (list "Dxrand" dr (list repeats) list_ 1 nil (incr-uid 1)))))
 
 (define env-gen
-  (lambda (rt doneAction envelope gate levelScale levelBias timeScale)
-    (mk-ugen (list "EnvGen" rt (list doneAction envelope gate levelScale levelBias) timeScale 1 nil nil))))
+  (lambda (rt gate levelScale levelBias timeScale doneAction envelope_)
+    (mk-ugen (list "EnvGen" rt (list gate levelScale levelBias timeScale doneAction) envelope_ 1 nil nil))))
 
 (define exp-rand
   (lambda (lo hi)
@@ -465,8 +453,8 @@
     (mk-ugen (list "FBSineN" rt (list freq im fb a c xi yi) nil 1 nil nil))))
 
 (define fft
-  (lambda (rt buffer input hop wintype active winsize)
-    (mk-ugen (list "FFT" rt (list buffer input hop wintype active winsize) nil 1 nil nil))))
+  (lambda (buffer input hop wintype active winsize)
+    (mk-ugen (list "FFT" kr (list buffer input hop wintype active winsize) nil 1 nil nil))))
 
 (define fos
   (lambda (input a0 a1 b1)
@@ -489,12 +477,12 @@
     (mk-ugen (list "Formlet" (list 0) (list input freq attacktime decaytime) nil 1 nil nil))))
 
 (define free
-  (lambda (rt trig id_)
-    (mk-ugen (list "Free" rt (list trig id_) nil 1 nil nil))))
+  (lambda (trig id_)
+    (mk-ugen (list "Free" (list 0) (list trig id_) nil 1 nil nil))))
 
 (define free-self
-  (lambda (rt input)
-    (mk-ugen (list "FreeSelf" rt (list input) nil 1 nil nil))))
+  (lambda (input)
+    (mk-ugen (list "FreeSelf" kr (list input) nil 1 nil nil))))
 
 (define free-self-when-done
   (lambda (rt src)
@@ -597,16 +585,16 @@
     (mk-ugen (list "HilbertFIR" rt (list input buffer) nil 2 nil nil))))
 
 (define i-env-gen
-  (lambda (rt index envelope)
-    (mk-ugen (list "IEnvGen" rt (list index) envelope 1 nil nil))))
+  (lambda (rt index envelope_)
+    (mk-ugen (list "IEnvGen" rt (list index) envelope_ 1 nil nil))))
 
 (define ifft
-  (lambda (rt buffer wintype winsize)
-    (mk-ugen (list "IFFT" rt (list buffer wintype winsize) nil 1 nil nil))))
+  (lambda (buffer wintype winsize)
+    (mk-ugen (list "IFFT" ar (list buffer wintype winsize) nil 1 nil nil))))
 
 (define i-rand
   (lambda (lo hi)
-    (mk-ugen (list "IRand" (list 0 1) (list lo hi) nil 1 nil (incr-uid 1)))))
+    (mk-ugen (list "IRand" ir (list lo hi) nil 1 nil (incr-uid 1)))))
 
 (define impulse
   (lambda (rt freq phase)
@@ -617,8 +605,8 @@
     (mk-ugen (list "In" rt (list bus) nil nc nil nil))))
 
 (define in-feedback
-  (lambda (nc rt bus)
-    (mk-ugen (list "InFeedback" rt (list bus) nil nc nil nil))))
+  (lambda (nc bus)
+    (mk-ugen (list "InFeedback" ar (list bus) nil nc nil nil))))
 
 (define in-range
   (lambda (input lo hi)
@@ -633,8 +621,8 @@
     (mk-ugen (list "InTrig" rt (list bus) nil nc nil nil))))
 
 (define index
-  (lambda (rt bufnum input)
-    (mk-ugen (list "Index" rt (list bufnum input) nil 1 nil nil))))
+  (lambda (bufnum input)
+    (mk-ugen (list "Index" (list 1) (list bufnum input) nil 1 nil nil))))
 
 (define index-in-between
   (lambda (rt bufnum input)
@@ -665,12 +653,12 @@
     (mk-ugen (list "KeyTrack" rt (list chain keydecay chromaleak) nil 1 nil nil))))
 
 (define klang
-  (lambda (rt freqoffset specificationsArrayRef freqscale)
-    (mk-ugen (list "Klang" rt (list freqoffset specificationsArrayRef) freqscale 1 nil nil))))
+  (lambda (rt freqscale freqoffset specificationsArrayRef)
+    (mk-ugen (list "Klang" rt (list freqscale freqoffset) specificationsArrayRef 1 nil nil))))
 
 (define klank
-  (lambda (decayscale specificationsArrayRef input freqscale freqoffset)
-    (mk-ugen (list "Klank" (list 0) (list decayscale specificationsArrayRef input freqscale) freqoffset 1 nil nil))))
+  (lambda (input freqscale freqoffset decayscale specificationsArrayRef)
+    (mk-ugen (list "Klank" (list 0) (list input freqscale freqoffset decayscale) specificationsArrayRef 1 nil nil))))
 
 (define lf-clip-noise
   (lambda (rt freq)
@@ -826,19 +814,19 @@
 
 (define lin-rand
   (lambda (lo hi minmax)
-    (mk-ugen (list "LinRand" (list 0 1) (list lo hi minmax) nil 1 nil (incr-uid 1)))))
+    (mk-ugen (list "LinRand" ir (list lo hi minmax) nil 1 nil (incr-uid 1)))))
 
 (define lin-x-fade2
-  (lambda (rt inA inB pan level)
-    (mk-ugen (list "LinXFade2" rt (list inA inB pan level) nil 1 nil nil))))
+  (lambda (inA inB pan level)
+    (mk-ugen (list "LinXFade2" (list 0 1) (list inA inB pan level) nil 1 nil nil))))
 
 (define line
   (lambda (rt start end dur doneAction)
     (mk-ugen (list "Line" rt (list start end dur doneAction) nil 1 nil nil))))
 
 (define linen
-  (lambda (rt gate attackTime susLevel releaseTime doneAction)
-    (mk-ugen (list "Linen" rt (list gate attackTime susLevel releaseTime doneAction) nil 1 nil nil))))
+  (lambda (gate attackTime susLevel releaseTime doneAction)
+    (mk-ugen (list "Linen" kr (list gate attackTime susLevel releaseTime doneAction) nil 1 nil nil))))
 
 (define local-buf
   (lambda (numChannels numFrames)
@@ -910,7 +898,7 @@
 
 (define n-rand
   (lambda (lo hi n)
-    (mk-ugen (list "NRand" (list 0 1 2) (list lo hi n) nil 1 nil (incr-uid 1)))))
+    (mk-ugen (list "NRand" ir (list lo hi n) nil 1 nil (incr-uid 1)))))
 
 (define normalizer
   (lambda (input level dur)
@@ -923,8 +911,8 @@
 (define num-output-buses (mk-ugen (list "NumOutputBuses" ir nil nil 1 nil nil)))
 (define num-running-synths (mk-ugen (list "NumRunningSynths" ir nil nil 1 nil nil)))
 (define offset-out
-  (lambda (rt bus input)
-    (mk-ugen (list "OffsetOut" rt (list bus) input 1 nil nil))))
+  (lambda (bus input)
+    (mk-ugen (list "OffsetOut" (list 1) (list bus) input 1 nil nil))))
 
 (define one-pole
   (lambda (input coef)
@@ -935,8 +923,8 @@
     (mk-ugen (list "OneZero" (list 0) (list input coef) nil 1 nil nil))))
 
 (define onsets
-  (lambda (rt chain threshold odftype relaxtime floor_ mingap medianspan whtype rawodf)
-    (mk-ugen (list "Onsets" rt (list chain threshold odftype relaxtime floor_ mingap medianspan whtype rawodf) nil 1 nil nil))))
+  (lambda (chain threshold odftype relaxtime floor_ mingap medianspan whtype rawodf)
+    (mk-ugen (list "Onsets" kr (list chain threshold odftype relaxtime floor_ mingap medianspan whtype rawodf) nil 1 nil nil))))
 
 (define osc
   (lambda (rt bufnum freq phase)
@@ -955,148 +943,148 @@
     (mk-ugen (list "PSinGrain" rt (list freq dur amp) nil 1 nil nil))))
 
 (define pv-add
-  (lambda (rt bufferA bufferB)
-    (mk-ugen (list "PV_Add" rt (list bufferA bufferB) nil 1 nil nil))))
+  (lambda (bufferA bufferB)
+    (mk-ugen (list "PV_Add" kr (list bufferA bufferB) nil 1 nil nil))))
 
 (define pv-bin-scramble
-  (lambda (rt buffer wipe width trig)
-    (mk-ugen (list "PV_BinScramble" rt (list buffer wipe width trig) nil 1 nil nil))))
+  (lambda (buffer wipe width trig)
+    (mk-ugen (list "PV_BinScramble" kr (list buffer wipe width trig) nil 1 nil (incr-uid 1)))))
 
 (define pv-bin-shift
-  (lambda (rt buffer stretch shift interp)
-    (mk-ugen (list "PV_BinShift" rt (list buffer stretch shift interp) nil 1 nil nil))))
+  (lambda (buffer stretch shift interp)
+    (mk-ugen (list "PV_BinShift" kr (list buffer stretch shift interp) nil 1 nil nil))))
 
 (define pv-bin-wipe
-  (lambda (rt bufferA bufferB wipe)
-    (mk-ugen (list "PV_BinWipe" rt (list bufferA bufferB wipe) nil 1 nil nil))))
+  (lambda (bufferA bufferB wipe)
+    (mk-ugen (list "PV_BinWipe" kr (list bufferA bufferB wipe) nil 1 nil nil))))
 
 (define pv-brick-wall
-  (lambda (rt buffer wipe)
-    (mk-ugen (list "PV_BrickWall" rt (list buffer wipe) nil 1 nil nil))))
+  (lambda (buffer wipe)
+    (mk-ugen (list "PV_BrickWall" kr (list buffer wipe) nil 1 nil nil))))
 
 (define pv-chain-ugen
-  (lambda (rt maxSize)
-    (mk-ugen (list "PV_ChainUGen" rt (list maxSize) nil 1 nil nil))))
+  (lambda (maxSize)
+    (mk-ugen (list "PV_ChainUGen" kr (list maxSize) nil 1 nil nil))))
 
 (define pv-conformal-map
-  (lambda (rt buffer areal aimag)
-    (mk-ugen (list "PV_ConformalMap" rt (list buffer areal aimag) nil 1 nil nil))))
+  (lambda (buffer areal aimag)
+    (mk-ugen (list "PV_ConformalMap" kr (list buffer areal aimag) nil 1 nil nil))))
 
 (define pv-conj
-  (lambda (rt buffer)
-    (mk-ugen (list "PV_Conj" rt (list buffer) nil 1 nil nil))))
+  (lambda (buffer)
+    (mk-ugen (list "PV_Conj" kr (list buffer) nil 1 nil nil))))
 
 (define pv-copy
-  (lambda (rt bufferA bufferB)
-    (mk-ugen (list "PV_Copy" rt (list bufferA bufferB) nil 1 nil nil))))
+  (lambda (bufferA bufferB)
+    (mk-ugen (list "PV_Copy" kr (list bufferA bufferB) nil 1 nil nil))))
 
 (define pv-copy-phase
-  (lambda (rt bufferA bufferB)
-    (mk-ugen (list "PV_CopyPhase" rt (list bufferA bufferB) nil 1 nil nil))))
+  (lambda (bufferA bufferB)
+    (mk-ugen (list "PV_CopyPhase" kr (list bufferA bufferB) nil 1 nil nil))))
 
 (define pv-diffuser
-  (lambda (rt buffer trig)
-    (mk-ugen (list "PV_Diffuser" rt (list buffer trig) nil 1 nil nil))))
+  (lambda (buffer trig)
+    (mk-ugen (list "PV_Diffuser" kr (list buffer trig) nil 1 nil nil))))
 
 (define pv-div
-  (lambda (rt bufferA bufferB)
-    (mk-ugen (list "PV_Div" rt (list bufferA bufferB) nil 1 nil nil))))
+  (lambda (bufferA bufferB)
+    (mk-ugen (list "PV_Div" kr (list bufferA bufferB) nil 1 nil nil))))
 
 (define pv-hainsworth-foote
-  (lambda (rt maxSize)
-    (mk-ugen (list "PV_HainsworthFoote" rt (list maxSize) nil 1 nil nil))))
+  (lambda (maxSize)
+    (mk-ugen (list "PV_HainsworthFoote" kr (list maxSize) nil 1 nil nil))))
 
 (define pv-jensen-andersen
-  (lambda (rt maxSize)
-    (mk-ugen (list "PV_JensenAndersen" rt (list maxSize) nil 1 nil nil))))
+  (lambda (maxSize)
+    (mk-ugen (list "PV_JensenAndersen" kr (list maxSize) nil 1 nil nil))))
 
 (define pv-local-max
-  (lambda (rt buffer threshold)
-    (mk-ugen (list "PV_LocalMax" rt (list buffer threshold) nil 1 nil nil))))
+  (lambda (buffer threshold)
+    (mk-ugen (list "PV_LocalMax" kr (list buffer threshold) nil 1 nil nil))))
 
 (define pv-mag-above
-  (lambda (rt buffer threshold)
-    (mk-ugen (list "PV_MagAbove" rt (list buffer threshold) nil 1 nil nil))))
+  (lambda (buffer threshold)
+    (mk-ugen (list "PV_MagAbove" kr (list buffer threshold) nil 1 nil nil))))
 
 (define pv-mag-below
-  (lambda (rt buffer threshold)
-    (mk-ugen (list "PV_MagBelow" rt (list buffer threshold) nil 1 nil nil))))
+  (lambda (buffer threshold)
+    (mk-ugen (list "PV_MagBelow" kr (list buffer threshold) nil 1 nil nil))))
 
 (define pv-mag-clip
-  (lambda (rt buffer threshold)
-    (mk-ugen (list "PV_MagClip" rt (list buffer threshold) nil 1 nil nil))))
+  (lambda (buffer threshold)
+    (mk-ugen (list "PV_MagClip" kr (list buffer threshold) nil 1 nil nil))))
 
 (define pv-mag-div
-  (lambda (rt bufferA bufferB zeroed)
-    (mk-ugen (list "PV_MagDiv" rt (list bufferA bufferB zeroed) nil 1 nil nil))))
+  (lambda (bufferA bufferB zeroed)
+    (mk-ugen (list "PV_MagDiv" kr (list bufferA bufferB zeroed) nil 1 nil nil))))
 
 (define pv-mag-freeze
-  (lambda (rt buffer freeze)
-    (mk-ugen (list "PV_MagFreeze" rt (list buffer freeze) nil 1 nil nil))))
+  (lambda (buffer freeze)
+    (mk-ugen (list "PV_MagFreeze" kr (list buffer freeze) nil 1 nil nil))))
 
 (define pv-mag-mul
-  (lambda (rt bufferA bufferB)
-    (mk-ugen (list "PV_MagMul" rt (list bufferA bufferB) nil 1 nil nil))))
+  (lambda (bufferA bufferB)
+    (mk-ugen (list "PV_MagMul" kr (list bufferA bufferB) nil 1 nil nil))))
 
 (define pv-mag-noise
-  (lambda (rt buffer)
-    (mk-ugen (list "PV_MagNoise" rt (list buffer) nil 1 nil nil))))
+  (lambda (buffer)
+    (mk-ugen (list "PV_MagNoise" kr (list buffer) nil 1 nil nil))))
 
 (define pv-mag-shift
-  (lambda (rt buffer stretch shift)
-    (mk-ugen (list "PV_MagShift" rt (list buffer stretch shift) nil 1 nil nil))))
+  (lambda (buffer stretch shift)
+    (mk-ugen (list "PV_MagShift" kr (list buffer stretch shift) nil 1 nil nil))))
 
 (define pv-mag-smear
-  (lambda (rt buffer bins)
-    (mk-ugen (list "PV_MagSmear" rt (list buffer bins) nil 1 nil nil))))
+  (lambda (buffer bins)
+    (mk-ugen (list "PV_MagSmear" kr (list buffer bins) nil 1 nil nil))))
 
 (define pv-mag-squared
-  (lambda (rt buffer)
-    (mk-ugen (list "PV_MagSquared" rt (list buffer) nil 1 nil nil))))
+  (lambda (buffer)
+    (mk-ugen (list "PV_MagSquared" kr (list buffer) nil 1 nil nil))))
 
 (define pv-max
-  (lambda (rt bufferA bufferB)
-    (mk-ugen (list "PV_Max" rt (list bufferA bufferB) nil 1 nil nil))))
+  (lambda (bufferA bufferB)
+    (mk-ugen (list "PV_Max" kr (list bufferA bufferB) nil 1 nil nil))))
 
 (define pv-min
-  (lambda (rt bufferA bufferB)
-    (mk-ugen (list "PV_Min" rt (list bufferA bufferB) nil 1 nil nil))))
+  (lambda (bufferA bufferB)
+    (mk-ugen (list "PV_Min" kr (list bufferA bufferB) nil 1 nil nil))))
 
 (define pv-mul
-  (lambda (rt bufferA bufferB)
-    (mk-ugen (list "PV_Mul" rt (list bufferA bufferB) nil 1 nil nil))))
+  (lambda (bufferA bufferB)
+    (mk-ugen (list "PV_Mul" kr (list bufferA bufferB) nil 1 nil nil))))
 
 (define pv-phase-shift
-  (lambda (rt buffer shift integrate)
-    (mk-ugen (list "PV_PhaseShift" rt (list buffer shift integrate) nil 1 nil nil))))
+  (lambda (buffer shift integrate)
+    (mk-ugen (list "PV_PhaseShift" kr (list buffer shift integrate) nil 1 nil nil))))
 
 (define pv-phase-shift270
-  (lambda (rt buffer)
-    (mk-ugen (list "PV_PhaseShift270" rt (list buffer) nil 1 nil nil))))
+  (lambda (buffer)
+    (mk-ugen (list "PV_PhaseShift270" kr (list buffer) nil 1 nil nil))))
 
 (define pv-phase-shift90
-  (lambda (rt buffer)
-    (mk-ugen (list "PV_PhaseShift90" rt (list buffer) nil 1 nil nil))))
+  (lambda (buffer)
+    (mk-ugen (list "PV_PhaseShift90" kr (list buffer) nil 1 nil nil))))
 
 (define pv-rand-comb
-  (lambda (rt buffer wipe trig)
-    (mk-ugen (list "PV_RandComb" rt (list buffer wipe trig) nil 1 nil nil))))
+  (lambda (buffer wipe trig)
+    (mk-ugen (list "PV_RandComb" kr (list buffer wipe trig) nil 1 nil (incr-uid 1)))))
 
 (define pv-rand-wipe
-  (lambda (rt bufferA bufferB wipe trig)
-    (mk-ugen (list "PV_RandWipe" rt (list bufferA bufferB wipe trig) nil 1 nil nil))))
+  (lambda (bufferA bufferB wipe trig)
+    (mk-ugen (list "PV_RandWipe" kr (list bufferA bufferB wipe trig) nil 1 nil (incr-uid 1)))))
 
 (define pv-rect-comb
-  (lambda (rt buffer numTeeth phase width)
-    (mk-ugen (list "PV_RectComb" rt (list buffer numTeeth phase width) nil 1 nil nil))))
+  (lambda (buffer numTeeth phase width)
+    (mk-ugen (list "PV_RectComb" kr (list buffer numTeeth phase width) nil 1 nil nil))))
 
 (define pv-rect-comb2
-  (lambda (rt bufferA bufferB numTeeth phase width)
-    (mk-ugen (list "PV_RectComb2" rt (list bufferA bufferB numTeeth phase width) nil 1 nil nil))))
+  (lambda (bufferA bufferB numTeeth phase width)
+    (mk-ugen (list "PV_RectComb2" kr (list bufferA bufferB numTeeth phase width) nil 1 nil nil))))
 
 (define pv-split
-  (lambda (rt bufferA bufferB)
-    (mk-ugen (list "PV_Split" rt (list bufferA bufferB) nil 2 nil nil))))
+  (lambda (bufferA bufferB)
+    (mk-ugen (list "PV_Split" kr (list bufferA bufferB) nil 2 nil nil))))
 
 (define pan2
   (lambda (input pos level)
@@ -1107,8 +1095,8 @@
     (mk-ugen (list "Pan4" rt (list input xpos ypos level) nil 4 nil nil))))
 
 (define pan-az
-  (lambda (nc rt input pos level width orientation)
-    (mk-ugen (list "PanAz" rt (list input pos level width orientation) nil nc nil nil))))
+  (lambda (nc input pos level width orientation)
+    (mk-ugen (list "PanAz" (list 0) (list input pos level width orientation) nil nc nil nil))))
 
 (define pan-b
   (lambda (rt input azimuth elevation gain)
@@ -1119,8 +1107,8 @@
     (mk-ugen (list "PanB2" rt (list input azimuth gain) nil 3 nil nil))))
 
 (define part-conv
-  (lambda (rt input fftsize irbufnum)
-    (mk-ugen (list "PartConv" rt (list input fftsize irbufnum) nil 1 nil nil))))
+  (lambda (input fftsize irbufnum)
+    (mk-ugen (list "PartConv" ar (list input fftsize irbufnum) nil 1 nil nil))))
 
 (define pause
   (lambda (rt gate id_)
@@ -1151,8 +1139,8 @@
     (mk-ugen (list "PinkNoise" rt nil nil 1 nil (incr-uid 1)))))
 
 (define pitch
-  (lambda (rt input initFreq minFreq maxFreq execFreq maxBinsPerOctave median ampThreshold peakThreshold downSample clar)
-    (mk-ugen (list "Pitch" rt (list input initFreq minFreq maxFreq execFreq maxBinsPerOctave median ampThreshold peakThreshold downSample clar) nil 2 nil nil))))
+  (lambda (input initFreq minFreq maxFreq execFreq maxBinsPerOctave median ampThreshold peakThreshold downSample clar)
+    (mk-ugen (list "Pitch" kr (list input initFreq minFreq maxFreq execFreq maxBinsPerOctave median ampThreshold peakThreshold downSample clar) nil 2 nil nil))))
 
 (define pitch-shift
   (lambda (input windowSize pitchRatio pitchDispersion timeDispersion)
@@ -1235,8 +1223,8 @@
     (mk-ugen (list "RPlayTrace" rt (list bufnum degree rate_ axis) nil 1 nil nil))))
 
 (define r-shuffler-b
-  (lambda (rt bufnum readLocationMinima readLocationMaxima readIncrementMinima readIncrementMaxima durationMinima durationMaxima envelopeAmplitudeMinima envelopeAmplitudeMaxima envelopeShapeMinima envelopeShapeMaxima envelopeSkewMinima envelopeSkewMaxima stereoLocationMinima stereoLocationMaxima interOffsetTimeMinima interOffsetTimeMaxima ftableReadLocationIncrement readIncrementQuanta interOffsetTimeQuanta)
-    (mk-ugen (list "RShufflerB" rt (list bufnum readLocationMinima readLocationMaxima readIncrementMinima readIncrementMaxima durationMinima durationMaxima envelopeAmplitudeMinima envelopeAmplitudeMaxima envelopeShapeMinima envelopeShapeMaxima envelopeSkewMinima envelopeSkewMaxima stereoLocationMinima stereoLocationMaxima interOffsetTimeMinima interOffsetTimeMaxima ftableReadLocationIncrement readIncrementQuanta interOffsetTimeQuanta) nil 2 nil nil))))
+  (lambda (bufnum readLocationMinima readLocationMaxima readIncrementMinima readIncrementMaxima durationMinima durationMaxima envelopeAmplitudeMinima envelopeAmplitudeMaxima envelopeShapeMinima envelopeShapeMaxima envelopeSkewMinima envelopeSkewMaxima stereoLocationMinima stereoLocationMaxima interOffsetTimeMinima interOffsetTimeMaxima ftableReadLocationIncrement readIncrementQuanta interOffsetTimeQuanta)
+    (mk-ugen (list "RShufflerB" ar (list bufnum readLocationMinima readLocationMaxima readIncrementMinima readIncrementMaxima durationMinima durationMaxima envelopeAmplitudeMinima envelopeAmplitudeMaxima envelopeShapeMinima envelopeShapeMaxima envelopeSkewMinima envelopeSkewMaxima stereoLocationMinima stereoLocationMaxima interOffsetTimeMinima interOffsetTimeMaxima ftableReadLocationIncrement readIncrementQuanta interOffsetTimeQuanta) nil 2 nil nil))))
 
 (define r-shuffler-l
   (lambda (rt input fragmentSize maxDelay)
@@ -1265,7 +1253,7 @@
 
 (define rand
   (lambda (lo hi)
-    (mk-ugen (list "Rand" (list 0 1) (list lo hi) nil 1 nil (incr-uid 1)))))
+    (mk-ugen (list "Rand" ir (list lo hi) nil 1 nil (incr-uid 1)))))
 
 (define rand-id
   (lambda (rt id_)
@@ -1276,8 +1264,8 @@
     (mk-ugen (list "RandSeed" rt (list trig seed) nil 1 nil nil))))
 
 (define record-buf
-  (lambda (rt doneAction inputArray bufnum offset recLevel preLevel run loop trigger)
-    (mk-ugen (list "RecordBuf" rt (list doneAction inputArray bufnum offset recLevel preLevel run loop) trigger 1 nil nil))))
+  (lambda (rt bufnum offset recLevel preLevel run loop trigger doneAction inputArray)
+    (mk-ugen (list "RecordBuf" rt (list bufnum offset recLevel preLevel run loop trigger doneAction) inputArray 1 nil nil))))
 
 (define replace-out
   (lambda (bus input)
@@ -1411,8 +1399,8 @@
     (mk-ugen (list "SyncSaw" rt (list syncFreq sawFreq) nil 1 nil nil))))
 
 (define t2a
-  (lambda (rt input offset)
-    (mk-ugen (list "T2A" rt (list input offset) nil 1 nil nil))))
+  (lambda (input offset)
+    (mk-ugen (list "T2A" ar (list input offset) nil 1 nil nil))))
 
 (define t2k
   (lambda (rt input)
@@ -1435,8 +1423,8 @@
     (mk-ugen (list "TExpRand" (list 2) (list lo hi trig) nil 1 nil (incr-uid 1)))))
 
 (define tgrains
-  (lambda (nc rt trigger bufnum rate_ centerPos dur pan amp interp)
-    (mk-ugen (list "TGrains" rt (list trigger bufnum rate_ centerPos dur pan amp interp) nil nc nil nil))))
+  (lambda (nc trigger bufnum rate_ centerPos dur pan amp interp)
+    (mk-ugen (list "TGrains" ar (list trigger bufnum rate_ centerPos dur pan amp interp) nil nc nil nil))))
 
 (define ti-rand
   (lambda (lo hi trig)
@@ -1487,8 +1475,8 @@
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 nil nil))))
 
 (define v-disk-in
-  (lambda (nc rt bufnum rate_ loop sendID)
-    (mk-ugen (list "VDiskIn" rt (list bufnum rate_ loop sendID) nil nc nil nil))))
+  (lambda (nc bufnum rate_ loop sendID)
+    (mk-ugen (list "VDiskIn" ar (list bufnum rate_ loop sendID) nil nc nil nil))))
 
 (define v-osc
   (lambda (rt bufpos freq phase)
@@ -1531,8 +1519,8 @@
     (mk-ugen (list "WrapIndex" (list 1) (list bufnum input) nil 1 nil nil))))
 
 (define x-fade2
-  (lambda (rt inA inB pan level)
-    (mk-ugen (list "XFade2" rt (list inA inB pan level) nil 1 nil nil))))
+  (lambda (inA inB pan level)
+    (mk-ugen (list "XFade2" (list 0 1) (list inA inB pan level) nil 1 nil nil))))
 
 (define x-line
   (lambda (rt start end dur doneAction)
@@ -1543,8 +1531,12 @@
     (mk-ugen (list "XOut" (list 2) (list bus xfade) input 1 nil nil))))
 
 (define zero-crossing
-  (lambda (rt input)
-    (mk-ugen (list "ZeroCrossing" rt (list input) nil 1 nil nil))))
+  (lambda (input)
+    (mk-ugen (list "ZeroCrossing" (list 0) (list input) nil 1 nil nil))))
+
+(define mul-add
+  (lambda (input mul add)
+    (mk-ugen (list "MulAdd" (list 0) (list input mul add) nil 1 nil nil))))
 
 (define neg
   (lambda (a)
