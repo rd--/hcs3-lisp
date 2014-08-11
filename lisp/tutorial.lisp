@@ -83,6 +83,10 @@ a ; NIL
 (if #f (print 'a) (print 'b)) ; b NIL
 (if 'false 'true 'false) ; true
 
+; IF requires both true and false branches, see WHEN for alternate.
+
+(if #t 'true) ; ERROR
+
 #| EVALUATING LISP |#
 
 (eval 1) ; 1

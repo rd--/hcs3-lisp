@@ -12,6 +12,7 @@ rhs:
 rsc3:
 	(cd $(rsc3_dir) ; cat $(rsc3_lib) > $(lisp_dir)/rsc3.lisp)
 	cat $(rsc3_lang_dir)/overlap-texture.scm >> $(lisp_dir)/rsc3.lisp
+	cp $(rsc3_dir)/ugen.scm $(lisp_dir)/ugen.lisp
 
 all: rhs rsc3
 

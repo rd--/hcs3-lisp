@@ -227,7 +227,9 @@
     (mk-ugen (list "CompanderD" rt (list input thresh slopeBelow slopeAbove clampTime relaxTime) nil 1 nil nil))))
 
 (define control-dur (mk-ugen (list "ControlDur" ir nil nil 1 nil nil)))
+
 (define control-rate (mk-ugen (list "ControlRate" ir nil nil 1 nil nil)))
+
 (define convolution
   (lambda (rt input kernel framesize)
     (mk-ugen (list "Convolution" rt (list input kernel framesize) nil 1 nil nil))))
@@ -289,12 +291,12 @@
     (mk-ugen (list "DegreeToKey" (list 1) (list bufnum input octave) nil 1 nil nil))))
 
 (define del-tap-rd
-  (lambda (rt buffer phase delTime interp)
-    (mk-ugen (list "DelTapRd" rt (list buffer phase delTime interp) nil 1 nil nil))))
+  (lambda (buffer phase delTime interp)
+    (mk-ugen (list "DelTapRd" (list 1) (list buffer phase delTime interp) nil 1 nil nil))))
 
 (define del-tap-wr
-  (lambda (rt buffer input)
-    (mk-ugen (list "DelTapWr" rt (list buffer input) nil 1 nil nil))))
+  (lambda (buffer input)
+    (mk-ugen (list "DelTapWr" (list 1) (list buffer input) nil 1 nil nil))))
 
 (define delay1
   (lambda (input)
@@ -861,8 +863,8 @@
     (mk-ugen (list "MantissaMask" (list 0) (list input bits) nil 1 nil nil))))
 
 (define max-local-bufs
-  (lambda (rt)
-    (mk-ugen (list "MaxLocalBufs" rt nil nil 1 nil nil))))
+  (lambda (count)
+    (mk-ugen (list "MaxLocalBufs" ir (list count) nil 1 nil nil))))
 
 (define median
   (lambda (length_ input)
@@ -905,11 +907,17 @@
     (mk-ugen (list "Normalizer" (list 0) (list input level dur) nil 1 nil nil))))
 
 (define num-audio-buses (mk-ugen (list "NumAudioBuses" ir nil nil 1 nil nil)))
+
 (define num-buffers (mk-ugen (list "NumBuffers" ir nil nil 1 nil nil)))
+
 (define num-control-buses (mk-ugen (list "NumControlBuses" ir nil nil 1 nil nil)))
+
 (define num-input-buses (mk-ugen (list "NumInputBuses" ir nil nil 1 nil nil)))
+
 (define num-output-buses (mk-ugen (list "NumOutputBuses" ir nil nil 1 nil nil)))
+
 (define num-running-synths (mk-ugen (list "NumRunningSynths" ir nil nil 1 nil nil)))
+
 (define offset-out
   (lambda (bus input)
     (mk-ugen (list "OffsetOut" (list 1) (list bus) input 1 nil nil))))
@@ -1170,14 +1178,6 @@
   (lambda (trig div_ start)
     (mk-ugen (list "PulseDivider" (list 0) (list trig div_ start) nil 1 nil nil))))
 
-(define pure-multi-out-ugen
-  (lambda (rt maxSize)
-    (mk-ugen (list "PureMultiOutUGen" rt (list maxSize) nil 1 nil nil))))
-
-(define pure-ugen
-  (lambda (rt maxSize)
-    (mk-ugen (list "PureUGen" rt (list maxSize) nil 1 nil nil))))
-
 (define quad-c
   (lambda (rt freq a b c xi)
     (mk-ugen (list "QuadC" rt (list freq a b c xi) nil 1 nil nil))))
@@ -1247,6 +1247,7 @@
     (mk-ugen (list "RTraceRdZ" rt (list bufnum degree index) nil 1 nil nil))))
 
 (define radians-per-sample (mk-ugen (list "RadiansPerSample" ir nil nil 1 nil nil)))
+
 (define ramp
   (lambda (input lagTime)
     (mk-ugen (list "Ramp" (list 0) (list input lagTime) nil 1 nil nil))))
@@ -1300,7 +1301,9 @@
     (mk-ugen (list "SOS" (list 0) (list input a0 a1 a2 b1 b2) nil 1 nil nil))))
 
 (define sample-dur (mk-ugen (list "SampleDur" ir nil nil 1 nil nil)))
+
 (define sample-rate (mk-ugen (list "SampleRate" ir nil nil 1 nil nil)))
+
 (define saw
   (lambda (rt freq)
     (mk-ugen (list "Saw" rt (list freq) nil 1 nil nil))))
@@ -1382,6 +1385,7 @@
     (mk-ugen (list "StereoConvolution2L" rt (list input kernelL kernelR trigger framesize crossfade) nil 2 nil nil))))
 
 (define subsample-offset (mk-ugen (list "SubsampleOffset" ir nil nil 1 nil nil)))
+
 (define sum3
   (lambda (in0 in1 in2)
     (mk-ugen (list "Sum3" (list 0 1 2) (list in0 in1 in2) nil 1 nil nil))))
@@ -1538,11 +1542,15 @@
   (lambda (input mul add)
     (mk-ugen (list "MulAdd" (list 0) (list input mul add) nil 1 nil nil))))
 
+(define set-buf
+  (lambda (buf offset length_ array)
+    (mk-ugen (list "SetBuf" ir (list buf offset length_) array 1 nil nil))))
+
 (define neg
   (lambda (a)
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 0 nil))))
 
-(define not
+(define u:not
   (lambda (a)
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 1 nil))))
 
@@ -1558,7 +1566,7 @@
   (lambda (a)
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 4 nil))))
 
-(define abs
+(define u:abs
   (lambda (a)
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 5 nil))))
 
@@ -1574,7 +1582,7 @@
   (lambda (a)
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 8 nil))))
 
-(define floor
+(define u:floor
   (lambda (a)
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 9 nil))))
 
@@ -1594,11 +1602,11 @@
   (lambda (a)
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 13 nil))))
 
-(define sqrt
+(define u:sqrt
   (lambda (a)
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 14 nil))))
 
-(define exp
+(define u:exp
   (lambda (a)
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 15 nil))))
 
@@ -1638,7 +1646,7 @@
   (lambda (a)
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 24 nil))))
 
-(define log
+(define u:log
   (lambda (a)
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 25 nil))))
 
@@ -1650,15 +1658,15 @@
   (lambda (a)
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 27 nil))))
 
-(define sin
+(define u:sin
   (lambda (a)
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 28 nil))))
 
-(define cos
+(define u:cos
   (lambda (a)
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 29 nil))))
 
-(define tan
+(define u:tan
   (lambda (a)
     (mk-ugen (list "UnaryOpUGen" (list 0) (list a) nil 1 30 nil))))
 
@@ -1774,7 +1782,7 @@
   (lambda (a b)
     (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 4 nil))))
 
-(define mod
+(define u:mod
   (lambda (a b)
     (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 5 nil))))
 
@@ -1802,11 +1810,11 @@
   (lambda (a b)
     (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 11 nil))))
 
-(define min
+(define u:min
   (lambda (a b)
     (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 12 nil))))
 
-(define max
+(define u:max
   (lambda (a b)
     (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 13 nil))))
 
@@ -1822,15 +1830,15 @@
   (lambda (a b)
     (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 16 nil))))
 
-(define lcm
+(define u:lcm
   (lambda (a b)
     (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 17 nil))))
 
-(define gcd
+(define u:gcd
   (lambda (a b)
     (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 18 nil))))
 
-(define round
+(define u:round
   (lambda (a b)
     (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 19 nil))))
 
@@ -1949,52 +1957,3 @@
 (define exp-rand-range
   (lambda (a b)
     (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 48 nil))))
-
-(define +
-  (lambda (a b)
-    (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 0 nil))))
-
-(define -
-  (lambda (a b)
-    (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 1 nil))))
-
-(define *
-  (lambda (a b)
-    (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 2 nil))))
-
-(define /
-  (lambda (a b)
-    (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 4 nil))))
-
-(define %
-  (lambda (a b)
-    (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 5 nil))))
-
-(define ==
-  (lambda (a b)
-    (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 6 nil))))
-
-(define /=
-  (lambda (a b)
-    (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 7 nil))))
-
-(define <
-  (lambda (a b)
-    (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 8 nil))))
-
-(define >
-  (lambda (a b)
-    (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 9 nil))))
-
-(define <=
-  (lambda (a b)
-    (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 10 nil))))
-
-(define >=
-  (lambda (a b)
-    (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 11 nil))))
-
-(define **
-  (lambda (a b)
-    (mk-ugen (list "BinaryOpUGen" (list 0 1) (list a b) nil 1 25 nil))))
-
