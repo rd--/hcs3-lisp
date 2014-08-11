@@ -175,12 +175,19 @@
 (define cdddar (λ c (cdr (cdr (cdr (car c))))))
 (define cddddr (λ c (cdr (cdr (cdr (cdr c))))))
 
-; NO DEFINE SYNTAX!
+; NO DEFINE-SYNTAX!
 
 (define define-syntax
   (macro
       (lambda (exp)
         (begin (print "DEFINE-SYNTAX DISCARDED") (print exp) 'define-syntax))))
+
+; NO IMPORT!
+
+(define import
+  (macro
+      (lambda (exp)
+        (begin (print "IMPORT DISCARDED") (print exp) 'import))))
 
 ; RHS
 
