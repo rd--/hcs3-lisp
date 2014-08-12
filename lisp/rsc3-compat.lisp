@@ -46,3 +46,5 @@
 (define audition (lambda (u) (play-at nil u -1 add-to-head 1)))
 
 (define with-sc3 (lambda (f) (f nil)))
+
+(define draw show-graph)

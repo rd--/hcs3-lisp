@@ -357,12 +357,16 @@ three ; 3
 
 ; UGEN
 
-(stop nil)
+(reset nil)
 (draw (* (sin-osc ar 440 0) 0.1))
 (draw (* (sin-osc ar (mouse-x kr 440 880 0 0.1) 0) 0.1))
 (draw (* (hpz1 (white-noise ar)) 0.1))
-(sc3-status nil)
-(play (* (sin-osc ar 440 0) 0.1))
+(display-server-status nil)
+(hear (* (sin-osc ar 440 0) 0.1))
+
+; INSENSITIVE LISP
+
+(hear (MUL (SIN-OSC AR 440 0) 0.1))
 
 ; UID
 

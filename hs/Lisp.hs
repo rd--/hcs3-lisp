@@ -2,6 +2,7 @@ module Lisp where
 
 import Control.Monad.State {- mtl -}
 import Control.Monad.Except {- mtl -}
+import Data.Char {- base -}
 import Data.IORef {- base -}
 import qualified Data.Map as M {- containers -}
 import System.Directory {- directory -}
@@ -293,7 +294,7 @@ get_sexp s h = do
   l <- hGetLine h
   r <- hReady h
   let s' = s ++ l
-  if r then get_sexp s' h else return s'
+  if r then get_sexp s' h else return (map toLower s')
 
 repl' :: Lisp_Ty a => Env a -> IO ()
 repl' env = do

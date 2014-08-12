@@ -6,6 +6,7 @@ import Rational
 
 instance (Show a,Integral a) => Lisp_Ty (Ratio a) where
     ty_show = rat_pp
+    ty_to_int = floor
     ty_from_bool t = if t then 1 else 0
 
 -- * NUM / FLOAT
