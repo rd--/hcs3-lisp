@@ -44,13 +44,14 @@
   (quote
    (λ exp
      (let ((param (car exp))
-           (code (car (cdr exp))))
-       (cond ((null? param) (list 'λ '_ code))
+           (code (cadr exp)))
+       (cond ((pair? (cddr exp)) (error "LAMBDA: NOT UNARY?"))
+             ((null? param) (list 'λ '_ code))
              ((null? (cdr param)) (list 'λ (car param) code))
              (else (list 'λ (car param) (lambda-rw (list (cdr param) code)))))))))
 
 ; (expand lambda-rw-code)
-(define lambda-rw (λ exp ((λ param ((λ code (if (null? param) (cons (quote λ) (cons (quote _) (cons code nil))) (if (null? (cdr param)) (cons (quote λ) (cons (car param) (cons code nil))) (cons (quote λ) (cons (car param) (cons (lambda-rw (cons (cdr param) (cons code nil))) nil)))))) (car (cdr exp)))) (car exp))))
+(define lambda-rw (λ exp ((λ param ((λ code (if (pair? (cddr exp)) (error "LAMBDA: NOT UNARY?") (if (null? param) (cons (quote λ) (cons (quote _) (cons code nil))) (if (null? (cdr param)) (cons (quote λ) (cons (car param) (cons code nil))) (cons (quote λ) (cons (car param) (cons (lambda-rw (cons (cdr param) (cons code nil))) nil))))))) (cadr exp))) (car exp))))
 
 (define lambda (macro lambda-rw))
 
@@ -158,7 +159,7 @@
 
 ; simple fixed expander, pre-dates Lisp.hs:expand
 
-(define expand'
+(define expand*
   (λ exp
     (if (list? exp)
         (let ((f (λ nm (equal? (car exp) nm))))

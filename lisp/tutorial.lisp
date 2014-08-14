@@ -141,6 +141,11 @@ list-rw ; LAMBDA
 ((lambda (n) (* n n)) 3) ; 9
 ((lambda (x y z) (+ x (+ y ((lambda (n) (* n n)) z)))) 1 2 3) ; 12
 
+; BEGIN cannot be elided.
+
+((lambda (p q) (display p) (print q))) ; ERROR
+((lambda (p q) (begin (display p) (print q))) 1 2) ; 12
+
 ; NIL LISP
 
 nil ; NIL

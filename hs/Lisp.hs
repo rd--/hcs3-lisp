@@ -259,12 +259,14 @@ l_mapM f c =
       Cons lhs rhs -> f lhs >>= \lhs' -> fmap (Cons lhs') (l_mapM f rhs)
       _ -> throwError ("L_MAPM: NOT LIST? " ++ show c)
 
--- | If /c/ is a Macro call expand it, and then expand the result
+-- | If /c/ is a Macro call expand it, and then expand the result.
+-- Do not expand quoted forms.
 expand :: Lisp_Ty a => Cell a -> VM a (Cell a)
 expand c = do
   case c of
     Cons lhs rhs ->
         case lhs of
+          Symbol "quote" -> return c
           Symbol sym ->
               do env <- get
                  lhs' <- env_lookup' sym env
