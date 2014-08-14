@@ -5,6 +5,7 @@ import Control.Monad.Except {- mtl -}
 import Data.Char {- base -}
 import Data.IORef {- base -}
 import qualified Data.Map as M {- containers -}
+import Data.Maybe {- base -}
 import System.Directory {- directory -}
 import System.Environment {- base -}
 import System.Exit {- base -}
@@ -59,17 +60,24 @@ env_empty = do
   d <- newIORef M.empty
   return (Toplevel d)
 
-env_lookup :: String -> Env a -> VM a (Cell a)
-env_lookup w e =
+env_lookup' :: String -> Env a -> VM a (Maybe (Cell a))
+env_lookup' w e =
     case e of
       Frame f e' -> do
              (k,v) <- liftIO (readIORef f)
-             if w == k then return v else env_lookup w e'
+             if w == k then return (Just v) else env_lookup' w e'
       Toplevel d -> do
              d' <- liftIO (readIORef d)
              case M.lookup w d' of
-               Just r -> return r
-               Nothing -> throwError ("ENV-LOOKUP: " ++ w)
+               Just r -> return (Just r)
+               Nothing -> return Nothing
+
+env_lookup :: String -> Env a -> VM a (Cell a)
+env_lookup w e = do
+  r <- env_lookup' w e
+  case r of
+    Nothing -> throwError ("ENV-LOOKUP: " ++ w)
+    Just c -> return c
 
 env_add_frame :: String -> (Cell a) -> Env a -> IO (Env a)
 env_add_frame k v e = do
@@ -101,6 +109,13 @@ maybe_to_err msg = maybe (throwError msg) return
 atom_err :: Lisp_Ty a => Cell a -> VM a a
 atom_err c = maybe_to_err ("NOT ATOM: " ++ show c) (atom c)
 
+to_list' :: Lisp_Ty a => Cell a -> Maybe [Cell a]
+to_list' l =
+    case l of
+      Nil -> Just []
+      Cons e l' -> fmap (e :) (to_list' l')
+      _ -> Nothing
+
 is_list :: Eq a => Cell a -> Bool
 is_list c =
     case c of
@@ -108,11 +123,7 @@ is_list c =
       _ -> False
 
 to_list :: Lisp_Ty a => Cell a -> [Cell a]
-to_list l =
-    case l of
-      Nil -> []
-      Cons e l' -> e : to_list l'
-      _ -> [Error "NOT LIST?"]
+to_list = fromMaybe [Error "NOT LIST?"] . to_list'
 
 from_list :: [Cell a] -> Cell a
 from_list = foldr Cons Nil
@@ -126,8 +137,8 @@ instance Lisp_Ty a => Show (Cell a) where
           Atom a -> ty_show a
           Symbol s -> s
           String s -> show s
-          Nil -> "NIL"
-          Cons p q -> if is_list c then list_pp c else concat ["(CONS ",show p," ",show q,")"]
+          Nil -> "nil"
+          Cons p q -> if is_list c then list_pp c else concat ["(cons ",show p," ",show q,")"]
           Fun _ -> "FUN"
           Proc _ -> "PROC"
           Lambda _ nm code -> concat ["(λ ",nm," ",show code,")"]
@@ -153,8 +164,8 @@ parse_sexps = either (throwError . show) return . S.readExprList
 parse_sexp :: String -> VM a SEXP
 parse_sexp = either (throwError . show) return . S.readExpr
 
-parse_cell' :: Lisp_Ty a => SEXP -> VM a (Cell a)
-parse_cell' sexp =
+sexp_to_cell :: Lisp_Ty a => SEXP -> VM a (Cell a)
+sexp_to_cell sexp =
     case sexp of
       S.Number n -> return (Atom (fromIntegral n))
       S.Float n -> return (Atom (realToFrac n))
@@ -163,28 +174,25 @@ parse_cell' sexp =
       S.String s -> return (String s)
       S.Bool b -> return (Atom (ty_from_bool b))
       S.List [] -> return Nil
-      S.List (e : l) -> do
-                e' <- parse_cell' e
-                l' <- parse_cell' (S.List l)
-                return (Cons e' l')
-      _ -> throwError (show "PARSE-CELL")
-
-parse_cell :: Lisp_Ty a => String -> VM a (Cell a)
-parse_cell str = parse_sexp str >>= parse_cell'
+      S.List (e : l) -> sexp_to_cell e >>= \e' -> fmap (Cons e') (sexp_to_cell (S.List l))
+      _ -> throwError ("SEXP-TO-CELL: " ++ show sexp)
 
 -- * EVAL / APPLY
 
+-- | Apply works by:
+--   1. saving the current environment (c_env)
+--   2. extending the lambda environment (l_env) with the binding (nm,arg)
+--      and making this the current environment
+--   3. running 'eval' of /code/ in the current (extended l_env) environment
+--      and saving the result
+--   4. restoring the saved environment (c_env)
+--   5. returning the saved result
 apply_lambda :: Lisp_Ty a => Env a -> String -> Cell a -> Cell a -> VM a (Cell a)
 apply_lambda l_env nm code arg = do
-  -- save caller environment
   c_env <- get
-  -- store extended lambda environment
   put =<< liftIO (env_add_frame nm arg l_env)
-  -- eval code in lambda environment
   res <- eval code
-  -- restore caller environment
   put c_env
-  -- return result
   return res
 
 -- | Functions are one argument, but allow (+ 1 2) for ((+ 1) 2).
@@ -240,6 +248,31 @@ eval c =
       Cons _ _ -> l_apply c
       _ -> throwError ("EVAL: ILLEGAL FORM: " ++ show c)
 
+l_mapM :: Lisp_Ty a => (Cell a -> VM a (Cell a)) -> Cell a -> VM a (Cell a)
+l_mapM f c =
+    case c of
+      Nil -> return Nil
+      Cons lhs rhs -> f lhs >>= \lhs' -> fmap (Cons lhs') (l_mapM f rhs)
+      _ -> throwError ("L_MAPM: NOT LIST? " ++ show c)
+
+-- | If /c/ is a Macro call expand it, and then expand the result
+expand :: Lisp_Ty a => Cell a -> VM a (Cell a)
+expand c = do
+  case c of
+    Cons lhs rhs ->
+        case lhs of
+          Symbol sym ->
+              do env <- get
+                 lhs' <- env_lookup' sym env
+                 case lhs' of
+                   Just (Macro f) -> do
+                            rhs' <- l_mapM expand rhs
+                            c' <- apply f (l_quote rhs') Nil
+                            expand c'
+                   _ -> l_mapM expand c
+          _ -> l_mapM expand c
+    _ -> return c
+
 -- * LOAD
 
 load :: Lisp_Ty a => Cell a -> VM a ()
@@ -250,7 +283,7 @@ load c = do
                when (not x) (throwError ("LOAD: FILE MISSING: " ++ nm))
                str <- liftIO (readFile nm)
                sexps <- parse_sexps str
-               cells <- mapM parse_cell' sexps
+               cells <- mapM (\e -> sexp_to_cell e >>= expand) sexps
                mapM_ eval cells
     _ -> throwError ("LOAD: " ++ show c)
 
@@ -284,6 +317,7 @@ core_dict =
     ,("display",Proc (\c -> liftIO (putStr (show c)) >> return c))
     ,("load",Proc (\c -> load c >> return Nil))
     ,("eval",Proc (\c -> eval c >>= eval))
+    ,("expand",Proc (\c -> expand c))
     ,("error",Proc (\c -> throwError ("ERROR: " ++ show c)))
     ,("exit",Proc (\_ -> liftIO exitSuccess))]
 
@@ -299,7 +333,7 @@ get_sexp s h = do
 repl' :: Lisp_Ty a => Env a -> IO ()
 repl' env = do
   str <- get_sexp "" stdin
-  (r,env') <- runStateT (runExceptT (parse_cell str >>= eval)) env
+  (r,env') <- runStateT (runExceptT (parse_sexp str >>= sexp_to_cell >>= expand >>= eval)) env
   case r of
     Left msg -> putStrLn ("ERROR: " ++ msg) >> repl' env
     Right res -> putStrLn ("RESULT: " ++ show res) >> repl' env'

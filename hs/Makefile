@@ -1,7 +1,7 @@
 prefix=$(HOME)/opt
 cmd=hsc3-lisp rat-lisp
 
-% : %.hs
+% : %.hs Lisp.hs
 	ghc -Wall -O2 -fno-warn-orphans --make $<
 
 all: $(cmd)

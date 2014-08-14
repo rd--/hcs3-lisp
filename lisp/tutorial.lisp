@@ -55,10 +55,21 @@
 
 ((λ exp (cons '- (cdr exp))) '(+ 1 2)) ; (- 1 2)
 
-; The MACRO form takes an S-EXPRESSION re-writeing program.
+; The MACRO form takes an S-EXPRESSION re-writing program.
 ; When applied the MACRO receives the remainder of expression as a LIST.
 
 ((macro (λ exp (cons '- (cdr exp)))) + 1 2) ; -1
+
+; MACROS may expand to MACROS.
+
+b ; ERROR: ENV-LOOKUP
+(set! a (macro (λ exp (list 'set! 'b (car exp))))) ; NIL
+(a 5) ; NIL
+b ; 5
+
+; EXPAND expands a form where the LHS is a MACRO.
+
+(expand '(a 5)) ; (set! b 5)
 
 ; DEFINE, LAMBDA, LET, AND, OR, COND, BEGIN, WHEN, and LIST are all MACROS.
 
@@ -384,6 +395,29 @@ three ; 3
 (kons 1 2) ; (λ m (m x y))
 (kar (kons 1 2)) ; 1
 (kdr (kons 1 2)) ; 2
+
+#| Y |#
+
+(define y (λ w ((λ f (f f)) (λ f (w (λ x ((f f) x)))))))
+
+(define length*
+  ((λ h (h h))
+   (λ g (λ lst (if (null? lst) 0 ((+ 1) ((g g) (cdr lst))))))))
+
+(length* (list 1 3 5 7 9))
+
+(define y (λ w ((λ f (f f)) (λ f (w (λ x ((f f) x)))))))
+
+(define length** (y (λ f (λ l (if (null? l) 0 (+ 1 (f (cdr l))))))))
+
+(length** (list 1 3 5 7 9))
+
+(define maximum*
+  (y (λ f (λ l (cond ((null? l) -1)
+                     ((> (car l) (f (cdr l))) (car l))
+                     (else (f (cdr l))))))))
+
+(maximum* (list 1 5 9 7 3))
 
 ; R5RS
 

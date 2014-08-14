@@ -42,6 +42,19 @@
 
 ; LIST
 
+(define append
+  (lambda (a b)
+    (if (null? a)
+        b
+        (cons (car a) (append (cdr a) b)))))
+
+;; foldr :: (a -> b -> b) -> b -> [a] -> b
+(define foldr
+  (lambda (f z l)
+    (if (null? l)
+        z
+        (f (car l) (foldr f z (cdr l))))))
+
 (define list-rw
   (λ exp
     (let ((f (lambda (e r) (append (cons 'cons (cons e nil)) (cons r '())))))
@@ -116,7 +129,9 @@
 
 ; EXPAND
 
-(define expand
+; simple fixed expander, pre-dates Lisp.hs:expand
+
+(define expand'
   (λ exp
     (if (list? exp)
         (let ((f (λ nm (equal? (car exp) nm))))
