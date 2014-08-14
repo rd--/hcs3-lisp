@@ -218,7 +218,7 @@ l_apply c = do
              _ -> throwError ("APPLY: RHS not NIL or CONS: " ++ show rhs)
   f <- eval lhs
   case f of
-    Macro f' -> apply f' (l_quote rhs) Nil >>= eval
+    Macro _ -> throwError ("APPLY: MACRO? " ++ show c)
     _ -> apply f p l
 
 l_quote :: Cell a -> Cell a
@@ -265,15 +265,20 @@ expand c = do
               do env <- get
                  lhs' <- env_lookup' sym env
                  case lhs' of
-                   Just (Macro f) -> do
-                            rhs' <- l_mapM expand rhs
-                            c' <- apply f (l_quote rhs') Nil
-                            expand c'
+                   Just (Macro f) ->
+                       do rhs' <- l_mapM expand rhs
+                          c' <- apply f (l_quote rhs') Nil
+                          expand c'
                    _ -> l_mapM expand c
           _ -> l_mapM expand c
     _ -> return c
 
 -- * LOAD
+
+eval_str :: Lisp_Ty a => String -> VM a ()
+eval_str str = do
+  l <- parse_sexps str
+  mapM_ (\e -> sexp_to_cell e >>= expand >>= eval) l
 
 load :: Lisp_Ty a => Cell a -> VM a ()
 load c = do
@@ -281,10 +286,7 @@ load c = do
     String nm -> do
                x <- liftIO (doesFileExist nm)
                when (not x) (throwError ("LOAD: FILE MISSING: " ++ nm))
-               str <- liftIO (readFile nm)
-               sexps <- parse_sexps str
-               cells <- mapM (\e -> sexp_to_cell e >>= expand) sexps
-               mapM_ eval cells
+               liftIO (readFile nm) >>= eval_str
     _ -> throwError ("LOAD: " ++ show c)
 
 load_files :: Lisp_Ty a => [String] -> VM a ()
@@ -333,7 +335,7 @@ get_sexp s h = do
 repl' :: Lisp_Ty a => Env a -> IO ()
 repl' env = do
   str <- get_sexp "" stdin
-  (r,env') <- runStateT (runExceptT (parse_sexp str >>= sexp_to_cell >>= expand >>= eval)) env
+  (r,env') <- runStateT (runExceptT (eval_str str)) env
   case r of
     Left msg -> putStrLn ("ERROR: " ++ msg) >> repl' env
     Right res -> putStrLn ("RESULT: " ++ show res) >> repl' env'

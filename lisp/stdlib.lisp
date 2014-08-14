@@ -3,6 +3,37 @@
 (set! define-rw (λ exp (cons 'set! exp)))
 (set! define (macro define-rw))
 
+; C....R
+
+(define caar (λ c (car (car c))))
+(define cadr (λ c (car (cdr c))))
+(define cdar (λ c (cdr (car c))))
+(define cddr (λ c (cdr (cdr c))))
+(define caaar (λ c (car (car (car c)))))
+(define caadr (λ c (car (car (cdr c)))))
+(define cadar (λ c (car (cdr (car c)))))
+(define caddr (λ c (car (cdr (cdr c)))))
+(define cdaar (λ c (cdr (car (car c)))))
+(define cdadr (λ c (cdr (car (cdr c)))))
+(define cddar (λ c (cdr (cdr (car c)))))
+(define cdddr (λ c (cdr (cdr (cdr c)))))
+(define caaaar (λ c (car (car (car (car c))))))
+(define caaadr (λ c (car (car (car (cdr c))))))
+(define caadar (λ c (car (car (cdr (car c))))))
+(define caaddr (λ c (car (car (cdr (cdr c))))))
+(define cadaar (λ c (car (cdr (car (car c))))))
+(define cadadr (λ c (car (cdr (car (cdr c))))))
+(define caddar (λ c (car (cdr (cdr (car c))))))
+(define cadddr (λ c (car (cdr (cdr (cdr c))))))
+(define cdaaar (λ c (cdr (car (car (car c))))))
+(define cdaadr (λ c (cdr (car (car (cdr c))))))
+(define cdadar (λ c (cdr (car (cdr (car c))))))
+(define cdaddr (λ c (cdr (car (cdr (cdr c))))))
+(define cddaar (λ c (cdr (cdr (car (car c))))))
+(define cddadr (λ c (cdr (cdr (car (cdr c))))))
+(define cdddar (λ c (cdr (cdr (cdr (car c))))))
+(define cddddr (λ c (cdr (cdr (cdr (cdr c))))))
+
 ; NIL
 
 (define nil '())
@@ -57,8 +88,8 @@
 
 (define list-rw
   (λ exp
-    (let ((f (lambda (e r) (append (cons 'cons (cons e nil)) (cons r '())))))
-      (foldr f 'nil exp))))
+     (let ((f (lambda (e r) (append (cons 'cons (cons e nil)) (cons r '())))))
+       (foldr f 'nil exp))))
 
 (define list (macro list-rw))
 
@@ -158,37 +189,6 @@
 (define space (λ _ (write-char space-char)))
 
 (define display* (λ o (begin (display o) (space))))
-
-; C....R
-
-(define caar (λ c (car (car c))))
-(define cadr (λ c (car (cdr c))))
-(define cdar (λ c (cdr (car c))))
-(define cddr (λ c (cdr (cdr c))))
-(define caaar (λ c (car (car (car c)))))
-(define caadr (λ c (car (car (cdr c)))))
-(define cadar (λ c (car (cdr (car c)))))
-(define caddr (λ c (car (cdr (cdr c)))))
-(define cdaar (λ c (cdr (car (car c)))))
-(define cdadr (λ c (cdr (car (cdr c)))))
-(define cddar (λ c (cdr (cdr (car c)))))
-(define cdddr (λ c (cdr (cdr (cdr c)))))
-(define caaaar (λ c (car (car (car (car c))))))
-(define caaadr (λ c (car (car (car (cdr c))))))
-(define caadar (λ c (car (car (cdr (car c))))))
-(define caaddr (λ c (car (car (cdr (cdr c))))))
-(define cadaar (λ c (car (cdr (car (car c))))))
-(define cadadr (λ c (car (cdr (car (cdr c))))))
-(define caddar (λ c (car (cdr (cdr (car c))))))
-(define cadddr (λ c (car (cdr (cdr (cdr c))))))
-(define cdaaar (λ c (cdr (car (car (car c))))))
-(define cdaadr (λ c (cdr (car (car (cdr c))))))
-(define cdadar (λ c (cdr (car (cdr (car c))))))
-(define cdaddr (λ c (cdr (car (cdr (cdr c))))))
-(define cddaar (λ c (cdr (cdr (car (car c))))))
-(define cddadr (λ c (cdr (cdr (car (cdr c))))))
-(define cdddar (λ c (cdr (cdr (cdr (car c))))))
-(define cddddr (λ c (cdr (cdr (cdr (cdr c))))))
 
 ; NO DEFINE-SYNTAX!
 
