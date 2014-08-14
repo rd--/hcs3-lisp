@@ -50,3 +50,7 @@
 
 ; dot
 (define draw show-graph)
+
+; math (hsc3 constants are ieee double precision, scsynth is single precision)
+(define inf 9e8)
+(define -inf -9e8)

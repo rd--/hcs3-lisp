@@ -350,7 +350,7 @@ three ; 3
 (set! uid 0) ; NIL
 (map incr-uid '(1 1 1)) ; (1 2 3)
 
-#| CHURCH CONS |#
+#| DERIVATIVE CONS |#
 
 ; CONS need not be primitive, it can be in terms of λ.
 
@@ -364,26 +364,25 @@ three ; 3
 
 #| Y |#
 
-(define y (λ w ((λ f (f f)) (λ f (w (λ x ((f f) x)))))))
-
 (define length*
   ((λ h (h h))
-   (λ g (λ lst (if (null? lst) 0 ((+ 1) ((g g) (cdr lst))))))))
+   (λ g (λ l (if (null? l) 0 ((+ 1) ((g g) (cdr l))))))))
 
-(length* (list 1 3 5 7 9))
+(length* (list 1 3 5 7 9)) ; 5
 
 (define y (λ w ((λ f (f f)) (λ f (w (λ x ((f f) x)))))))
 
 (define length** (y (λ f (λ l (if (null? l) 0 (+ 1 (f (cdr l))))))))
 
-(length** (list 1 3 5 7 9))
+(length** (list 1 3 5 7 9)) ; 5
 
 (define maximum*
-  (y (λ f (λ l (cond ((null? l) -1)
+  (y (λ f (λ l (cond ((null? l) -inf)
                      ((> (car l) (f (cdr l))) (car l))
                      (else (f (cdr l))))))))
 
-(maximum* (list 1 5 9 7 3))
+(maximum* (list 1 5 9 7 3)) ; 9
+(maximum* (list -5 -7 -3)) ; -3
 
 ; R5RS
 
