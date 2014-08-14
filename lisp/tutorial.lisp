@@ -1,11 +1,19 @@
 #| HSC3-LISP |#
 
 ; AMERICAN PRIMITIVE, VOL. 2
-; λ, MACRO, SET!, IF, QUOTE/EVAL, CONS
+; λ, MACRO, SET!, IF, QUOTE, CONS
 
 #| EMACS LISP |#
 
+; The RSC3-MODE more or less works.  Type:
+;
 ; (setq rsc3-interpreter (list "hsc3-lisp"))
+;
+; C-\    = lambda
+; M-\    = λ
+; C-cC-a = (hear <point>)
+; C-cC-g = (draw <point>)
+; C-cC-k = (reset)
 
 #| CHURCH LISP |#
 
@@ -24,7 +32,7 @@
 (+ 1 2) ; 3
 ((λ _ 1)) ; 1
 
-; This notation is against the grain of the traditional variadic notation.
+; Single argument λ is against the grain of traditional variadic notation.
 
 (+ 1 2 3) ; ERROR: (3 3)
 
@@ -41,7 +49,7 @@
 
 #| QUOTING LISP |#
 
-; QUOTE protects an S-EXPRESSION from EVAL
+; QUOTE protects an S-EXPRESSION from EXPAND and EVAL.
 
 (quote (+ 1 2)) ; (+ 1 2)
 
