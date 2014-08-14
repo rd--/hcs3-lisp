@@ -88,6 +88,7 @@ cd hs ; prefix=~/opt make install
 - sweepy-noise
 - synthetic-piano
 - tank
+- tgb (async,b-alloc-read)
 - theremin
 - three-cpsw
 - tipnso
@@ -101,6 +102,17 @@ cd hs ; prefix=~/opt make install
 - wind-metals
 - xy-interference
 - zizle
+
+## LISP
+
+- [hsc3.lisp](?t=hsc3-lisp&e=lisp/hsc3.lisp)
+- [rhs.lisp](?t=hsc3-lisp&e=lisp/rhs.lisp)
+- [rhs.syntaxlisp](?t=hsc3-lisp&e=lisp/rhs.syntax.lisp)
+- [rsc3.lisp](?t=hsc3-lisp&e=lisp/rsc3.lisp)
+- [scheme.lisp](?t=hsc3-lisp&e=lisp/scheme.lisp)
+- [stdlib.lisp](?t=hsc3-lisp&e=lisp/stdlib.lisp)
+- [tutorial.lisp](?t=hsc3-lisp&e=lisp/tutorial.lisp)
+- [ugen.lisp](?t=hsc3-lisp&e=lisp/ugen.lisp)
 
 © [rohan drape][rd], 2014, [gpl][gpl].
 

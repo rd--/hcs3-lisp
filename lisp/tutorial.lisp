@@ -110,15 +110,18 @@ a ; NIL
 ; MACROS can implement variable argument functions.
 
 list ; MACRO
+(list) ; nil
 (list 1 2 3) ; (1 2 3)
 
 ; The standard MACROS also define the associated re-writer.
 
 list-rw ; LAMBDA
+(list-rw (cdr '(list))) ; NIL
 (list-rw (cdr '(list 1 2 3))) ; (cons 1 (cons 2 (cons 3 nil)))
 
 #| STANDARDISED LISP |#
 
+(map (+ 1) (list 1 2 3)) ; (2 3 4)
 (map (compose (+ 1) (* 2)) (list 1 2 3)) ; (3 5 7)
 (map (compose (/ 2) (+ 3)) (list 1 2 3)) ; (1/2 2/5 1/3)
 (map (const 3) (list 1 2 3)) ; (3 3 3)
@@ -224,50 +227,6 @@ not-defined ; 1
 (null? c) ; #f
 (null? '()) ; #t
 
-; LIST LISP
-
-(list-rw (cdr '(list))) ; NIL
-(list-rw (cdr '(list 1 2 3))) ; (cons 1 (cons 2 (cons 3 nil)))
-(list 1 2 3) ; (1 2 3)
-list ; MACRO
-
-(define l (cons 1 (cons 2 (cons 3 '())))) ; NIL
-(null? l) ; #f
-(pair? l) ; #t
-(list? l) ; #t
-(length l) ; 3
-(append l l) ; (1 2 3 1 2 3)
-
-(append '(1 2 3) (list 4 5 6)) ; (1 2 3 4 5 6)
-(foldl + 0 (list 1 2 3)) ; 6
-(foldr cons '() (list 1 2 3)) ; (1 2 3)
-(list 1 2 3) ; (1 2 3)
-(list 1 2 ((lambda (_) (cons 3 4)) nil) 5) ; (1 2 (cons 3 4) 5)
-(map (+ 1) (list 1 2 3)) ; (2 3 4)
-(maximum '(1 3 5 4 2 0)) ; 5
-(minimum '(1 3 5 4 2 0)) ; 5
-nil ; '()
-(nub '(1 2 2 3 3 3)) ; (1 2 3)
-(nub-by (on equal? car) '((0 1) (0 2) (1 2))) ; ((0 1) (1 2))
-(not-elem 1 '(0 2 4))
-(reverse (list 1 2 3)) ; (3 2 1)
-
-; TREE LISP
-
-(flatten '(1 2 (3 4 (5)) 6)) ; (1 2 3 4 5 6)
-(levels '(1 2 (3 4 (5)) 6)) ; ((1 2 6) (3 4) (5))
-
-; PRELUDE LISP
-
-(enum-from-difference-to > 0 1 9) ; (0 1 2 3 4 5 6 7 8 9)
-(enum-from-difference-to < 0 -3 -9) ; (0 -3 -6 -9)
-(enum-from-then-to 0 1 9) ; (0 1 2 3 4 5 6 7 8 9)
-(enum-from-then-to 0 -3 -9) ; (0 -3 -6 -9)
-(enum-from-to 0 9) ; (0 1 2 3 4 5 6 7 8 9)
-(map signum '(-3 0 3)) ; (-1 0 1)
-(succ 1) ; 2
-(pred 2) ; 1
-
 ; LOGICAL LISP
 
 (not #t) ; #f
@@ -308,12 +267,6 @@ nil ; '()
 (number? 1) ; #t
 (number? 'one) ; #f
 (number? (sin-osc kr 5 0)) ; #f
-
-; CONTROL.MONAD LISP
-
-(replicate-m-rw (cdr '(replicate-m 4 (rand 0 1)))) ; (replicate-m* 4 (lambda (_) (rand 0 1)))
-(replicate-m 4 (rand 0 1)) ; (Rand Rand Rand Rand)
-
 
 ; TEMPORAL LISP
 
@@ -541,4 +494,3 @@ three ; 3
 (not '()) ; ?
 (not (list)) ; ?
 (not 'nil) ; ?
-

@@ -1426,7 +1426,7 @@
   (lambda (lo hi trig)
     (mk-ugen (list "TExpRand" (list 2) (list lo hi trig) nil 1 nil (incr-uid 1)))))
 
-(define tgrains
+(define t-grains
   (lambda (nc trigger bufnum rate_ centerPos dur pan amp interp)
     (mk-ugen (list "TGrains" ar (list trigger bufnum rate_ centerPos dur pan amp interp) nil nc nil nil))))
 

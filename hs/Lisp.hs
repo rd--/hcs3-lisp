@@ -72,9 +72,13 @@ env_lookup' w e =
                Just r -> return (Just r)
                Nothing -> return Nothing
 
-env_lookup :: String -> Env a -> VM a (Cell a)
+trace :: Show d => Int -> String -> d -> VM a ()
+trace lev msg val = when (lev < 3) (liftIO (putStrLn ("TRACE: " ++ msg ++ ": " ++ show val)))
+
+env_lookup :: Lisp_Ty a => String -> Env a -> VM a (Cell a)
 env_lookup w e = do
   r <- env_lookup' w e
+  trace 5 "ENV_LOOKUP" (w,r)
   case r of
     Nothing -> throwError ("ENV-LOOKUP: " ++ w)
     Just c -> return c
@@ -275,10 +279,11 @@ expand c = do
 
 -- * LOAD
 
-eval_str :: Lisp_Ty a => String -> VM a ()
+eval_str :: Lisp_Ty a => String -> VM a [Cell a]
 eval_str str = do
   l <- parse_sexps str
-  mapM_ (\e -> sexp_to_cell e >>= expand >>= eval) l
+  trace 5 "EVAL_STR" (str,l)
+  mapM (\e -> sexp_to_cell e >>= expand >>= eval) l
 
 load :: Lisp_Ty a => Cell a -> VM a ()
 load c = do
@@ -286,7 +291,7 @@ load c = do
     String nm -> do
                x <- liftIO (doesFileExist nm)
                when (not x) (throwError ("LOAD: FILE MISSING: " ++ nm))
-               liftIO (readFile nm) >>= eval_str
+               liftIO (readFile nm) >>= eval_str >> return ()
     _ -> throwError ("LOAD: " ++ show c)
 
 load_files :: Lisp_Ty a => [String] -> VM a ()
@@ -298,7 +303,7 @@ load_files nm = do
 
 -- * CORE
 
-l_write_char :: Lisp_Ty a => Cell a -> VM a (Cell a1)
+l_write_char :: Lisp_Ty a => Cell a -> VM a (Cell a)
 l_write_char c = atom_err c >>= \a -> liftIO (putChar (toEnum (ty_to_int a)) >> return Nil)
 
 core_dict :: Lisp_Ty a => Dict a
@@ -338,7 +343,7 @@ repl' env = do
   (r,env') <- runStateT (runExceptT (eval_str str)) env
   case r of
     Left msg -> putStrLn ("ERROR: " ++ msg) >> repl' env
-    Right res -> putStrLn ("RESULT: " ++ show res) >> repl' env'
+    Right res -> mapM_ (\res' -> putStrLn ("RESULT: " ++ show res')) res >> repl' env'
 
 repl :: Lisp_Ty a => Env a -> VM a () -> IO ()
 repl env initialise = do

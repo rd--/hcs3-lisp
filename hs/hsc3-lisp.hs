@@ -109,6 +109,23 @@ l_thread_sleep c = do
     liftIO (pauseThread (ugen_to_double "pause" u))
     return Nil
 
+cell_to_datum :: Cell UGen -> VM a Datum
+cell_to_datum c =
+    case c of
+      Symbol str -> return (string str)
+      String str -> return (string str)
+      Atom (Constant_U (Constant n)) -> return (float n)
+      _ -> throwError ("CELL-TO-DATUM: " ++ show c)
+
+cell_to_message :: Cell UGen -> VM a Message
+cell_to_message c =
+    case to_list' c of
+      Just (String addr : l) -> mapM cell_to_datum l >>= \l' -> return (Message addr l')
+      _ -> throwError ("CELL-TO-MESSAGE: " ++ show c)
+
+l_async_star :: Cell UGen -> VM a (Cell a)
+l_async_star c = cell_to_message c >>= \c' -> lift_io (withSC3 (void (async c')))
+
 ugen_dict :: Dict UGen
 ugen_dict =
     M.fromList
@@ -126,7 +143,8 @@ ugen_dict =
     ,("reset*",Proc (\_ -> lift_io (withSC3 reset)))
     ,("thread-sleep",Proc l_thread_sleep)
     ,("utcr",Proc (\_ -> liftIO time >>= return . Atom . constant))
-    ,("display-server-status",Proc (\_ -> lift_io (withSC3 serverStatus >>= mapM_ putStrLn)))]
+    ,("display-server-status",Proc (\_ -> lift_io (withSC3 serverStatus >>= mapM_ putStrLn)))
+    ,("async*",Proc l_async_star)]
 
 main :: IO ()
 main = do
@@ -134,9 +152,11 @@ main = do
   env <- gen_toplevel (M.unions [core_dict,ugen_dict]) :: IO (Env UGen)
   let lib = ["stdlib.lisp"
             ,"scheme.lisp"
-            ,"rhs.lisp"
+            ,"rhs.lisp" -- sw/rhs
+            ,"rhs.syntax.lisp"
+            ,"rsc3.prereq.lisp"
+            ,"ugen.lisp" -- sw/rsc3
             ,"hsc3.lisp"
-            ,"ugen.lisp"
-            ,"rsc3-compat.lisp"
-            ,"rsc3.lisp"]
+            ,"rsc3.lisp" -- sw/rsc3
+            ]
   repl env (load_files lib)
