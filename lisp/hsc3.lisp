@@ -46,7 +46,12 @@
 (define audition (lambda (u) (play-at nil u -1 add-to-head 1)))
 (define reset reset*)
 (define async (lambda (_ msg) (async* msg)))
+(define send (lambda (_ msg) (send* msg)))
 (define with-sc3 (lambda (f) (f nil)))
+
+; rand
+(define random (lambda (l r) (unrand (rand l r))))
+(define i-random (lambda (l r) (unrand (i-rand l r))))
 
 ; dot
 (define draw show-graph)
@@ -54,3 +59,6 @@
 ; math (hsc3 constants are ieee double precision, scsynth is single precision)
 (define inf 9e8)
 (define -inf -9e8)
+
+; scheme
+(define expt pow)

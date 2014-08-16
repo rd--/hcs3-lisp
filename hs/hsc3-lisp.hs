@@ -126,6 +126,9 @@ cell_to_message c =
 l_async_star :: Cell UGen -> VM a (Cell a)
 l_async_star c = cell_to_message c >>= \c' -> lift_io (withSC3 (void (async c')))
 
+l_send_star :: Cell UGen -> VM a (Cell a)
+l_send_star c = cell_to_message c >>= \c' -> lift_io (withSC3 (void (send c')))
+
 ugen_dict :: Dict UGen
 ugen_dict =
     M.fromList
@@ -144,7 +147,9 @@ ugen_dict =
     ,("thread-sleep",Proc l_thread_sleep)
     ,("utcr",Proc (\_ -> liftIO time >>= return . Atom . constant))
     ,("display-server-status",Proc (\_ -> lift_io (withSC3 serverStatus >>= mapM_ putStrLn)))
-    ,("async*",Proc l_async_star)]
+    ,("async*",Proc l_async_star)
+    ,("send*",Proc l_send_star)
+    ,("unrand",Proc (\c -> atom_err c >>= \u -> return (Atom (ugen_optimise_ir_rand u))))]
 
 main :: IO ()
 main = do

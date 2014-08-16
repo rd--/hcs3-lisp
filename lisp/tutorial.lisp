@@ -216,6 +216,11 @@ not-defined ; 1
 (let ((a 5) (b (+ 2 3))) (* a b)) ; 25
 (let ((a 5) (b (+ a 3))) (* a b)) ; 40
 
+; LET is unary
+
+(let ((a 1)) (display a) (newline)) ; ERROR
+(let ((a 1)) (begin (display a) (newline))) ; 1\n
+
 ; LET is schemes LET*.
 
 (let ((x 2) (y 3)) (let ((x 7) (z (+ x y))) (* z x))) ; 70 (NOT 35)

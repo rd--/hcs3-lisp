@@ -44,8 +44,9 @@
   (quote
    (λ exp
      (let ((param (car exp))
-           (code (cadr exp)))
-       (cond ((pair? (cddr exp)) (error "LAMBDA: NOT UNARY?"))
+           (code (cadr exp))
+           (rem (cddr exp)))
+       (cond ((pair? rem) (error "LAMBDA: NOT UNARY?"))
              ((null? param) (list 'λ '_ code))
              ((null? (cdr param)) (list 'λ (car param) code))
              (else (list 'λ (car param) (lambda-rw (list (cdr param) code)))))))))
@@ -60,13 +61,16 @@
 (define let-rw-code
   (quote
    (λ exp
-     (if (null? (car exp))
-         (cadr exp)
-         (list (list 'λ (caaar exp) (let-rw (list (cdar exp) (cadr exp))))
-               (cadr (caar exp)))))))
+     (let ((bindings (car exp))
+           (code (cadr exp))
+           (rem (cddr exp)))
+       (cond ((pair? rem) (error "LET: NOT UNARY?"))
+             ((null? (car exp)) (cadr exp))
+             (else (list (list 'λ (caaar exp) (let-rw (list (cdar exp) (cadr exp))))
+                         (cadr (caar exp)))))))))
 
 ; (expand let-rw-code)
-(define let-rw (λ exp (if (null? (car exp)) (cadr exp) (cons (cons (quote λ) (cons (caaar exp) (cons (let-rw (cons (cdar exp) (cons (cadr exp) nil))) nil))) (cons (cadr (caar exp)) nil)))))
+(define let-rw (λ exp ((λ bindings ((λ code ((λ rem (if (pair? rem) (error "LET: NOT UNARY?") (if (null? (car exp)) (cadr exp) (cons (cons (quote λ) (cons (caaar exp) (cons (let-rw (cons (cdar exp) (cons (cadr exp) nil))) nil))) (cons (cadr (caar exp)) nil))))) (cddr exp))) (cadr exp))) (car exp))))
 
 (define let (macro let-rw))
 

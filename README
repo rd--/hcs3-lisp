@@ -56,23 +56,25 @@ cd hs ; prefix=~/opt make install
 - f-lets
 - fm-iter
 - forest-sounds
+- h-chatter
 - half-life
 - hard-sync-sawtooth-with-lfo
 - harmonic-swimming
 - harmonic-tumbling
-- h-chatter
 - hh-808
 - implosion
 - impulse-sequencer
 - k-ppr
-- lfo-modulation
 - lf-pulses
+- lfo-modulation
 - lg-timed
+- modal-space
 - modal-space-local
 - moto-rev
 - noise-burst-sweep
 - one-line
 - oscillator-cluster
+- pattern-buffer (random,i-random)
 - plucked-strings
 - police-state
 - pulsing-bottles
@@ -80,10 +82,14 @@ cd hs ; prefix=~/opt make install
 - rzblp
 - sample-and-hold-liquidities
 - scratchy
+- shepard-tones
 - shifting-pulses
+- slly-wlk
 - snare-909
+- sosc-lp (send,b-setn1)
 - spe
 - sprinkler
+- strtchd-scrmbld
 - strummable-guitar
 - sweepy-noise
 - synthetic-piano
@@ -95,6 +101,7 @@ cd hs ; prefix=~/opt make install
 - tremulate
 - trkl
 - trmlo
+- tr-out
 - tsort
 - what-was-i-thinking
 - why-supercollider
