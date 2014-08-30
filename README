@@ -3,7 +3,7 @@ LISP SUPERCOLLIDER
 
 AMERICAN PRIMITIVE, VOL. 2
 
-`HSC3-LISP` is a simple-minded [LISP][lisp] interpreter.
+`HSC3-LISP` is a simple [LISP][lisp] interpreter.
 
 The only data type is the [SUPERCOLLIDER][sc3] `UNIT GENERATOR`.
 
@@ -28,7 +28,23 @@ To build type:
 cd hs ; prefix=~/opt make install
 ~~~~
 
-`HSC3-LISP` is not [SCHEME][scheme].  Still, the following [RSC3][rsc3] graphs are working:
+To hear the above type `C-cC-e` in EMACS, or in a shell type:
+
+~~~~
+hsc3-lisp < ~/sw/rsc3/help/graph/why-supercollider.scm
+~~~~
+
+There is a rather terse [tutorial](?t=hsc3-lisp&e=help/tutorial.lisp),
+and [translations](?t=hsc3-lisp&e=help/jmcc.lisp) of graphs by [James
+McCartney](http://audiosynth.com/autobio/emu.jpg) from the `SC2`
+manual.
+
+HSC3-LISP is `CASE-INSENSITIVE`, in EMACS you can type `C-x C-l` to
+time travel.
+
+HSC3-LISP follows the [HASKELL][hs] supercollider ([HSC3][hsc3]) rules.
+
+HSC3-LISP is not [SCHEME][scheme].  Still, the following [RSC3][rsc3] graphs are working:
 
 - aleatoric-quartet
 - alien-meadow
@@ -118,8 +134,12 @@ cd hs ; prefix=~/opt make install
 - [rsc3.lisp](?t=hsc3-lisp&e=lisp/rsc3.lisp)
 - [scheme.lisp](?t=hsc3-lisp&e=lisp/scheme.lisp)
 - [stdlib.lisp](?t=hsc3-lisp&e=lisp/stdlib.lisp)
-- [tutorial.lisp](?t=hsc3-lisp&e=lisp/tutorial.lisp)
 - [ugen.lisp](?t=hsc3-lisp&e=lisp/ugen.lisp)
+
+## HELP
+
+- [tutorial.lisp](?t=hsc3-lisp&e=help/tutorial.lisp)
+- [r5rs.lisp](?t=hsc3-lisp&e=help/r5rs.lisp)
 
 © [rohan drape][rd], 2014, [gpl][gpl].
 
