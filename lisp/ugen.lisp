@@ -686,7 +686,7 @@
   (lambda (rt freq)
     (mk-ugen (list "LFDNoise3" rt (list freq) nil 1 nil (incr-uid 1)))))
 
-(define lfgauss
+(define lf-gauss
   (lambda (rt duration width iphase loop doneAction)
     (mk-ugen (list "LFGauss" rt (list duration width iphase loop doneAction) nil 1 nil nil))))
 
