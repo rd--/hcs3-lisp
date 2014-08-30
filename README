@@ -31,7 +31,7 @@ cd hs ; prefix=~/opt make install
 To hear the above type `C-cC-e` in EMACS, or in a shell type:
 
 ~~~~
-hsc3-lisp < ~/sw/rsc3/help/graph/why-supercollider.scm
+hsc3-lisp ~/sw/rsc3/help/graph/why-supercollider.scm
 ~~~~
 
 There is a rather terse [tutorial](?t=hsc3-lisp&e=help/tutorial.lisp),

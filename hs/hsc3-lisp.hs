@@ -1,8 +1,9 @@
 import Control.Monad.Except {- mtl -}
-import Data.Char
+import Data.Char {- base -}
 import qualified Data.Map as M {- containers -}
 import Data.Maybe {- base -}
 import Safe {- safe -}
+import System.Environment {- base -}
 
 import Sound.OSC {- hsc3 -}
 import Sound.SC3 {- hsc3 -}
@@ -164,4 +165,5 @@ main = do
             ,"hsc3.lisp"
             ,"rsc3.lisp" -- sw/rsc3
             ]
-  repl env (load_files lib)
+  a <- getArgs
+  repl env (load_files (lib ++ a))
