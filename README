@@ -34,9 +34,9 @@ To hear the above type `C-cC-e` in EMACS, or in a shell type:
 hsc3-lisp ~/sw/rsc3/help/graph/why-supercollider.scm
 ~~~~
 
-There is a rather terse [tutorial](?t=hsc3-lisp&e=help/tutorial.lisp),
-and [translations](?t=hsc3-lisp&e=help/jmcc.lisp) of graphs by [James
-McCartney](http://audiosynth.com/autobio/emu.jpg) from the `SC2`
+There is a [TUTORIAL](?t=hsc3-lisp&e=help/tutorial.lisp),
+and [TRANSLATIONS](?t=hsc3-lisp&e=help/jmcc.lisp) of graphs by [JAMES
+MCCARTNEY](http://audiosynth.com/autobio/emu.jpg) from the `SC2`
 manual.
 
 HSC3-LISP is `CASE-INSENSITIVE`, in EMACS you can type `C-x C-l` to
@@ -138,6 +138,7 @@ HSC3-LISP is not [SCHEME][scheme].  Still, the following [RSC3][rsc3] graphs are
 
 ## HELP
 
+- [jmcc.lisp](?t=hsc3-lisp&e=help/jmcc.lisp)
 - [tutorial.lisp](?t=hsc3-lisp&e=help/tutorial.lisp)
 - [r5rs.lisp](?t=hsc3-lisp&e=help/r5rs.lisp)
 

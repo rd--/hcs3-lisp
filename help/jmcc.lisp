@@ -1,3 +1,17 @@
+; WHY SUPERCOLLIDER (JMCC) #0
+
+(DEFINE WHY-SUPERCOLLIDER?
+  (LET ((R (RESONZ (MUL (DUST AR 0.2) 50) (RAND 200 3200) 0.003))
+        (S (MIX (CLONE 10 R)))
+        (Z (DELAY-N S 0.048 0.048))
+        (C (COMB-L Z 0.1 (MUL-ADD (LF-NOISE1 KR (RAND 0 0.1)) 0.04 0.05) 15))
+        (Y (MIX (CLONE 7 C)))
+        (F (LAMBDA (I) (ALLPASS-N I 0.05 (CLONE 2 (RAND 0 0.05)) 1)))
+        (X ((FOLDL1 COMPOSE (REPLICATE 4 F)) Y)))
+    (ADD S (MUL X 0.2))))
+
+(HEAR WHY-SUPERCOLLIDER?)
+
 ;; ANALOG BUBBLES (JMCC) #1
 
 (DEFINE ANALOG-BUBBLES
@@ -467,7 +481,7 @@
   (LAMBDA (_)
     (LET* ((N (I-RAND 36 90))
            (F (RAND 0.1 0.5))
-           (PH (RAND 0 (MUL PI 2)))
+           (PH (RAND 0 1))
            (S (MUL (IMPULSE AR F PH) 0.1))
            (E (DECAY2 S 0.008 0.04))
            (C
@@ -745,4 +759,3 @@
     (ADD X Y)))
 
 (HEAR BABBLING-BROOK)
-
