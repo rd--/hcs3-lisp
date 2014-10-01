@@ -22,10 +22,17 @@ A LISP answer to the eternal question,
     (ADD S (MUL X 0.2))))
 ~~~~
 
-To build type:
+There is an OSX (10.9.3) binary ([hsc3-lisp](sw/hsc3-lisp/osx/hsc3-lisp.xz).[xz](http://tukaani.org/xz/)),
+or to build type:
 
 ~~~~
 cd hs ; prefix=~/opt make install
+~~~~
+
+An environment variable locates the HSC3-LISP library files:
+
+~~~~
+export HSC3_LISP_DIR=$HOME/sw/hsc3-lisp/lisp
 ~~~~
 
 To hear the above type `C-cC-e` in EMACS, or in a shell type:
@@ -43,6 +50,8 @@ HSC3-LISP is `CASE-INSENSITIVE`, in EMACS you can type `C-x C-l` to
 time travel.
 
 HSC3-LISP follows the [HASKELL][hs] supercollider ([HSC3][hsc3]) rules.
+
+HSC3-LISP thinks `scsynth` is listening at the standard port (57110).
 
 HSC3-LISP is not [SCHEME][scheme].  Still, the following [RSC3][rsc3] graphs are working:
 
