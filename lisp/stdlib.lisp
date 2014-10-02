@@ -191,6 +191,14 @@
 
 (define display* (λ o (begin (display o) (space))))
 
+(define for-each
+  (lambda (f l)
+    (if (null? l)
+        nil
+        (begin
+          (f (car l))
+          (for-each f (cdr l))))))
+
 ; NO DEFINE-SYNTAX!
 
 (define define-syntax
