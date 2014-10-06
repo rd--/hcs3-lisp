@@ -53,6 +53,8 @@ HSC3-LISP follows the [HASKELL][hs] supercollider ([HSC3][hsc3]) rules.
 
 HSC3-LISP thinks `scsynth` is listening at the standard port (57110).
 
+HSC3-LISP is POST-[ML](http://standardml.org), `(EQUAL? (MAP (+ 1) (LIST 1 2 3)) (LIST 2 3 4))`.
+
 HSC3-LISP is not [SCHEME][scheme].  Still, the following [RSC3][rsc3] graphs are working:
 
 - [aleatoric-quartet.lisp](sw/rsc3/help/graph/aleatoric-quartet.lisp)
