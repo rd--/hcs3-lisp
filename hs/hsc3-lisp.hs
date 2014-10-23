@@ -165,6 +165,7 @@ main = do
             ,"hsc3.lisp"
             ,"rsc3.lisp" -- sw/rsc3
             ,"rdu.lisp"
+            ,"alias.lisp"
             ]
   a <- getArgs
   repl env (load_files (lib ++ a))
