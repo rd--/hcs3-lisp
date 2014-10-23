@@ -1,2 +1,5 @@
-(define uclone clone)
 (define klank-spec klank-data-mce)
+(define mce make-mce)
+(define mrg mrg-n)
+(define negate neg)
+(define uclone clone)
