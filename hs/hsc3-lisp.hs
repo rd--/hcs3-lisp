@@ -100,7 +100,7 @@ l_play_at_star c =
          let nid' = ugen_to_int "PLAY-AT: NID" nid
              act' = ugen_to_int "PLAY-AT: ACT" act
              grp' = ugen_to_int "PLAY-AT: GRP" grp
-         in lift_io (withSC3 (play_at (nid',toEnum act',grp') u)) >>
+         in lift_io (withSC3 (play_at (nid',toEnum act',grp',[]) u)) >>
             return Nil
      _ -> throwError ("play-at*: " ++ show c)
 
@@ -164,6 +164,7 @@ main = do
             ,"ugen.lisp" -- sw/rsc3
             ,"hsc3.lisp"
             ,"rsc3.lisp" -- sw/rsc3
+            ,"rdu.lisp"
             ]
   a <- getArgs
   repl env (load_files (lib ++ a))

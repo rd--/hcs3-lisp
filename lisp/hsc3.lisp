@@ -60,5 +60,8 @@
 (define inf 9e8)
 (define -inf -9e8)
 
+; hsc3
+(define useq (lambda (n f x) ((foldl1 compose (replicate n f)) x)))
+
 ; scheme
 (define expt pow)
