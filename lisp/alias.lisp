@@ -1,3 +1,4 @@
+(define ceiling ceil)
 (define klank-spec klank-data-mce)
 (define mce make-mce)
 (define mrg mrg-n)

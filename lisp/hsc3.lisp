@@ -51,7 +51,8 @@
 
 ; rand
 (define random (lambda (l r) (unrand (rand l r))))
-(define i-random (lambda (l r) (unrand (i-rand l r))))
+(define i-random (lambda (l r) (unrand (i-rand l (- r 1))))) ; i-rand is INCLUSIVE
+(define u-choose (lambda (u) (l-choose (mce-channels u)))) ; hsc3 calls this choose...
 
 ; dot
 (define draw show-graph)

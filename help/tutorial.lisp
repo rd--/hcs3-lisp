@@ -216,6 +216,8 @@ not-defined ; 1
 (let ((a 5) (b (+ 2 3))) (* a b)) ; 25
 (let ((a 5) (b (+ a 3))) (* a b)) ; 40
 
+(let ((set! 0) (set! 1)) set!) ; 1
+
 ; LET is unary
 
 (let ((a 1)) (display a) (newline)) ; ERROR
@@ -285,6 +287,11 @@ not-defined ; 1
 (number? 1) ; #t
 (number? 'one) ; #f
 (number? (sin-osc kr 5 0)) ; #f
+
+; RANDOM LISP
+
+(i-random 0 3)
+(replicate-m 12 (choose (list 1 2 3)))
 
 ; TEMPORAL LISP
 
