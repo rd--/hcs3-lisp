@@ -360,6 +360,15 @@ three ; 3
 (set! uid 0) ; NIL
 (map incr-uid '(1 1 1)) ; (1 2 3)
 
+#| CONCURRENT LISP |#
+
+(begin
+  (fork (begin (print 'A) (pause-thread 4) (print 'C)))
+  (pause-thread 2)
+  (print' B))
+
+; After a thread is begun, it runs until it completes.
+
 #| GENSYM |#
 
 (list (gensym) (gensym))

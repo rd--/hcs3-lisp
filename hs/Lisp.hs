@@ -1,5 +1,6 @@
 module Lisp where
 
+import Control.Concurrent {- base -}
 import Control.Monad.State {- mtl -}
 import Control.Monad.Except {- mtl -}
 import Data.Char {- base -}
@@ -24,7 +25,8 @@ class (Eq a,Ord a,Num a,Fractional a) => Lisp_Ty a where
 
 type Dict a = M.Map String (Cell a)
 
-data Env a = Frame (IORef (String,Cell a)) (Env a) | Toplevel (IORef (Dict a))
+data Env a = Frame (IORef (String,Cell a)) (Env a)
+           | Toplevel (IORef (Dict a))
 
 data Cell a = Symbol String | String String
             | Atom a
@@ -35,19 +37,34 @@ data Cell a = Symbol String | String String
             | Macro (Cell a)
             | Error String
 
-instance Eq a => Eq (Cell a) where
-    lhs == rhs =
-        case (lhs,rhs) of
-          (Atom p,Atom q) -> p == q
-          (String p,String q) -> p == q
-          (Symbol p,Symbol q) -> p == q
-          (Nil,Nil) -> True
-          (Cons p p',Cons q q') -> p == q && p' == q'
-          _ -> False -- error "EQ"
+cell_eq :: Eq a => Cell a -> Cell a -> Bool
+cell_eq lhs rhs =
+    case (lhs,rhs) of
+      (Atom p,Atom q) -> p == q
+      (String p,String q) -> p == q
+      (Symbol p,Symbol q) -> p == q
+      (Nil,Nil) -> True
+      (Cons p p',Cons q q') -> p == q && p' == q'
+      _ -> False -- error "EQ"
 
+instance Eq a => Eq (Cell a) where (==) = cell_eq
+
+-- data ST a = ST {st_threads :: M.Map Int ThreadId,st_env :: Env a}
 type VM a r = ExceptT String (StateT (Env a) IO) r
 
 -- * ENV
+
+ioref_cpy :: IORef a -> IO (IORef a)
+ioref_cpy r = readIORef r >>= newIORef
+
+env_copy :: Env a -> IO (Env a)
+env_copy e =
+    case e of
+      Frame f e' -> do f' <- ioref_cpy f
+                       e'' <- env_copy e'
+                       return (Frame f' e'')
+      Toplevel d -> do d' <- ioref_cpy d
+                       return (Toplevel d')
 
 env_print :: Lisp_Ty t => Env t -> IO ()
 env_print e =
@@ -249,6 +266,11 @@ eval c =
       Cons (Symbol "quote") (Cons code Nil) -> return code
       Cons (Symbol "λ") (Cons (Symbol nm) (Cons code Nil)) -> l_lambda nm code
       Cons (Symbol "macro") (Cons code Nil) -> fmap Macro (eval code)
+      Cons (Symbol "fork") (Cons code Nil) -> do
+             e <- get
+             let f = env_copy e >>= runStateT (runExceptT (eval code)) >> return ()
+             _ <- liftIO (forkIO f)
+             return Nil
       Cons _ _ -> l_apply c
       _ -> throwError ("EVAL: ILLEGAL FORM: " ++ show c)
 
