@@ -308,27 +308,50 @@ load_files nm = do
 l_write_char :: Lisp_Ty a => Cell a -> VM a (Cell a)
 l_write_char c = atom_err c >>= \a -> liftIO (putChar (toEnum (ty_to_int a)) >> return Nil)
 
+l_string_to_symbol :: Lisp_Ty a => Cell a -> Cell a
+l_string_to_symbol c =
+    case c of
+      String s -> Symbol s
+      _ -> Error ("STRING->SYMBOL: " ++ show c)
+
+l_string_append :: Lisp_Ty a => Cell a -> Cell a -> Cell a
+l_string_append p q =
+    case (p,q) of
+      (String r,String s) -> String (r ++ s)
+      _ -> Error ("STRING-APPEND: " ++ show (p,q))
+
+l_write_string :: Lisp_Ty a => Cell a -> VM a (Cell a)
+l_write_string c =
+    case c of
+      String s -> liftIO (putStr s) >> return Nil
+      _ -> throwError ("WRITE-STRING: " ++ show c)
+
 core_dict :: Lisp_Ty a => Dict a
 core_dict =
     M.fromList
     [("#t",l_true)
     ,("#f",l_false)
-    ,("symbol?",Fun (\c -> case c of {Symbol _ -> l_true; _ -> l_false}))
-    ,("string?",Fun (\c -> case c of {String _ -> l_true; _ -> l_false}))
-    ,("cons",Fun (\lhs -> Fun (\rhs -> Cons lhs rhs)))
     ,("car",Fun (\c -> case c of {Cons lhs _ -> lhs; _ -> Error ("CAR: " ++ show c)}))
     ,("cdr",Fun (\c -> case c of {Cons _ rhs -> rhs; _ -> Error ("CDR: " ++ show c)}))
+    ,("cons",Fun (\lhs -> Fun (\rhs -> Cons lhs rhs)))
+    ,("write-string",Proc (\c -> liftIO (putStr (show c)) >> return c))
+    ,("equal?",Fun l_equal)
+    ,("error",Proc (\c -> throwError ("ERROR: " ++ show c)))
+    ,("eval",Proc (\c -> eval c >>= eval))
+    ,("exit",Proc (\_ -> liftIO exitSuccess))
+    ,("expand",Proc (\c -> expand c))
+    ,("list?",Fun (Atom . ty_from_bool . is_list))
+    ,("load",Proc (\c -> load c >> return Nil))
     ,("null?",Fun (\c -> case c of {Nil -> l_true; _ -> l_false}))
     ,("pair?",Fun (\c -> case c of {Cons _ _ -> l_true; _ -> l_false}))
-    ,("list?",Fun (Atom . ty_from_bool . is_list))
-    ,("equal?",Fun l_equal)
+    ,("show",Fun (String . show))
+    ,("string->symbol",Fun l_string_to_symbol)
+    ,("string-append",Fun (\p -> Fun (\q -> l_string_append p q)))
+    ,("string?",Fun (\c -> case c of {String _ -> l_true; _ -> l_false}))
+    ,("symbol?",Fun (\c -> case c of {Symbol _ -> l_true; _ -> l_false}))
     ,("write-char",Proc l_write_char)
-    ,("display",Proc (\c -> liftIO (putStr (show c)) >> return c))
-    ,("load",Proc (\c -> load c >> return Nil))
-    ,("eval",Proc (\c -> eval c >>= eval))
-    ,("expand",Proc (\c -> expand c))
-    ,("error",Proc (\c -> throwError ("ERROR: " ++ show c)))
-    ,("exit",Proc (\_ -> liftIO exitSuccess))]
+    ,("write-string",Proc l_write_string)
+    ]
 
 -- * REPL
 

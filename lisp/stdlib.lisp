@@ -1,4 +1,4 @@
-; DEFINE
+; DEFINE is an alias for SET!
 
 (set! define-rw (λ exp (cons 'set! exp)))
 (set! define (macro define-rw))
@@ -55,6 +55,20 @@
 (define lambda-rw (λ exp ((λ param ((λ code (if (pair? (cddr exp)) (error "LAMBDA: NOT UNARY?") (if (null? param) (cons (quote λ) (cons (quote _) (cons code nil))) (if (null? (cdr param)) (cons (quote λ) (cons (car param) (cons code nil))) (cons (quote λ) (cons (car param) (cons (lambda-rw (cons (cdr param) (cons code nil))) nil))))))) (cadr exp))) (car exp))))
 
 (define lambda (macro lambda-rw))
+
+; GENSYM
+
+(define gensym-code
+  (quote
+   (let ((n 0))
+     (lambda ()
+       (let ((r (string->symbol (string-append "GENSYM:" (show n)))))
+         (begin
+           (set! n (+ n 1))
+           r))))))
+
+; (expand gensym-code)
+(define gensym ((λ n (λ _ ((λ r ((λ _ r) ((λ _ (set! n (+ n 1))) nil))) (string->symbol (string-append "GENSYM:" (show n)))))) 0))
 
 ; LET
 
@@ -184,6 +198,7 @@
 
 (define newline-char 10)
 (define newline (λ _ (write-char newline-char)))
+(define display (λ s (write-string (show s))))
 
 (define print (λ o (begin (display o) (newline))))
 

@@ -188,10 +188,7 @@ nil ; NIL
 
 #| DEFINING LISP |#
 
-; DEFINE is an alias for set!
-
 (define-rw (cdr '(define one 1))) ; (set! one 1)
-
 (define one 1) ; NIL
 one ; 1
 
@@ -205,7 +202,7 @@ not-defined ; ERROR
 ((lambda (_) (define not-defined 1)) nil) ; NIL
 not-defined ; 1
 
-; BINDING LISP
+#| BINDING LISP |#
 
 (let-rw (cdr '(let () 1))) ; 1
 (let-rw (cdr '(let ((a 5)) (+ a 1)))) ; ((λ a (+ a 1)) 5)
@@ -245,6 +242,7 @@ not-defined ; 1
 (pair? c) ; #t
 (list? c) ; #f
 (null? c) ; #f
+(null? nil) ; #t
 (null? '()) ; #t
 
 ; LOGICAL LISP
@@ -361,6 +359,10 @@ three ; 3
 
 (set! uid 0) ; NIL
 (map incr-uid '(1 1 1)) ; (1 2 3)
+
+#| GENSYM |#
+
+(list (gensym) (gensym))
 
 #| DERIVATIVE CONS |#
 
