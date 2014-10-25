@@ -1,4 +1,5 @@
 (define ceiling ceil)
+(define constant (lambda (n) n))
 (define klank-spec klank-data-mce)
 (define mce make-mce)
 (define mrg mrg-n)
