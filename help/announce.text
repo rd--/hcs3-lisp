@@ -1,0 +1,28 @@
+From: Rohan Drape <rohan.drape <at> gmail.com>
+Subject: [haskell art] [ANN] LISP SUPERCOLLIDER (OR AMERICAN PRIMITIVE, VOL. 2)
+Newsgroups: gmane.comp.lang.haskell.art, gmane.comp.audio.supercollider.user
+Date: 2014-10-15 05:10:19 GMT
+
+Dear List,
+
+LISP SUPERCOLLIDER is a simple LISP interpreter.
+
+The only data type is the SuperCollider unit generator.
+
+"Why SuperCollider?" in LISP?
+
+(LET ((R (RESONZ (MUL (DUST AR 0.2) 50) (RAND 200 3200) 0.003))
+      (S (MIX (CLONE 10 R)))
+      (Z (DELAY-N S 0.048 0.048))
+      (C (COMB-L Z 0.1 (MUL-ADD (LF-NOISE1 KR (RAND 0 0.1)) 0.04 0.05) 15))
+      (Y (MIX (CLONE 7 C)))
+      (F (LAMBDA (I) (ALLPASS-N I 0.05 (CLONE 2 (RAND 0 0.05)) 1)))
+      (X ((FOLDL1 COMPOSE (REPLICATE 4 F)) Y)))
+  (ADD S (MUL X 0.2)))
+
+Archive: http://rd.slavepianos.org/t/hsc3-lisp
+SC2->LISP: http://rd.slavepianos.org/sw/hsc3-lisp/help/jmcc.lisp
+Tutorial: http://rd.slavepianos.org/sw/hsc3-lisp/help/tutorial.lisp
+
+Regards,
+Rohan
