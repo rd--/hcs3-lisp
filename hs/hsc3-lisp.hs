@@ -128,7 +128,7 @@ l_async_star :: Cell UGen -> VM a (Cell a)
 l_async_star c = cell_to_message c >>= \c' -> lift_io (withSC3 (void (async c')))
 
 l_send_star :: Cell UGen -> VM a (Cell a)
-l_send_star c = cell_to_message c >>= \c' -> lift_io (withSC3 (void (send c')))
+l_send_star c = cell_to_message c >>= \c' -> lift_io (withSC3 (void (sendMessage c')))
 
 ugen_dict :: Dict UGen
 ugen_dict =

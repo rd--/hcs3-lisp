@@ -1,4 +1,6 @@
 clean:
+	cabal clean
+	rm -Rf dist
 	(cd hs; make clean)
 
 push-sp:

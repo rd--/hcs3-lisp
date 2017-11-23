@@ -1,10 +1,10 @@
 Name:              hsc3-lisp
-Version:           0.16
+Version:           0.17
 Synopsis:          LISP SUPERCOLLIDER
 Description:       LISP SUPERCOLLIDER
 License:           GPL
 Category:          Sound
-Copyright:         (c) Rohan Drape, 2014-2015
+Copyright:         (c) Rohan Drape, 2014-2017
 Author:            Rohan Drape
 Maintainer:        rd@slavepianos.org
 Stability:         Experimental
@@ -22,9 +22,9 @@ executable hsc3-lisp
                    filepath,
                    hashable,
                    husk-scheme,
-                   hosc == 0.16.*,
-                   hsc3 == 0.16.*,
-                   hsc3-dot == 0.16.*,
+                   hosc == 0.17.*,
+                   hsc3 == 0.17.*,
+                   hsc3-dot == 0.17.*,
                    mtl,
                    safe,
                    unix

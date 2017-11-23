@@ -195,13 +195,16 @@ HSC3-LISP is not [SCHEME][scheme].  Still, the following [RSC3][rsc3] graphs are
 - [r5rs.lisp](?t=hsc3-lisp&e=help/r5rs.lisp)
 
 initial announcement:
-[[gmane](http://article.gmane.org/gmane.comp.lang.haskell.art/1026),
+[[haskell-art](http://lurk.org/groups/haskell-art/messages/topic/5i1PSjCHQvVQwcAcLhUaE6/),
  [local](?t=hsc3-lisp&e=help/announce.text)]
 2014-10-15 05:10:19 GMT
 
-<!-- [bham](http://www.listarc.bham.ac.uk/lists/sc-users/msg42056.html) -->
+<!--
+[bham](http://www.listarc.bham.ac.uk/lists/sc-users/msg42056.html)
+[gmane](http://article.gmane.org/gmane.comp.lang.haskell.art/1026)
+-->
 
-© [rohan drape][rd], 2014-2015, [gpl][gpl].
+© [rohan drape][rd], 2014-2017, [gpl][gpl].
 
 [rd]: http://rd.slavepianos.org/
 [hsc3]: http://rd.slavepianos.org/?t=hsc3

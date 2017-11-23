@@ -113,7 +113,7 @@ env_set e nm c =
              if nm == k then writeIORef f (nm,c) else env_set e' nm c
       Toplevel d -> modifyIORef d (M.insert nm c)
 
-gen_toplevel :: Lisp_Ty a => Dict a -> IO (Env a)
+gen_toplevel :: Dict a -> IO (Env a)
 gen_toplevel = fmap Toplevel . newIORef
 
 -- * CELL
