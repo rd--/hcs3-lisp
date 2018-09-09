@@ -4,12 +4,12 @@ Synopsis:          LISP SUPERCOLLIDER
 Description:       LISP SUPERCOLLIDER
 License:           GPL
 Category:          Sound
-Copyright:         (c) Rohan Drape, 2014-2017
+Copyright:         (c) Rohan Drape, 2014-2018
 Author:            Rohan Drape
-Maintainer:        rd@slavepianos.org
+Maintainer:        rd@rohandrape.net
 Stability:         Experimental
-Homepage:          http://rd.slavepianos.org/t/hsc3-lisp
-Tested-With:       GHC == 7.10.1
+Homepage:          http://rohandrape.net/t/hsc3-lisp
+Tested-With:       GHC == 8.2.2
 Build-Type:        Simple
 Cabal-Version:     >= 1.8
 
@@ -34,4 +34,4 @@ executable hsc3-lisp
 
 Source-Repository  head
   Type:            darcs
-  Location:        http://rd.slavepianos.org/sw/hsc3-lisp/
+  Location:        http://rohandrape.net/sw/hsc3-lisp/

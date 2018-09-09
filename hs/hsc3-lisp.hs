@@ -9,6 +9,7 @@ import Sound.OSC {- hsc3 -}
 import Sound.SC3 {- hsc3 -}
 import Sound.SC3.UGen.Plain {- hsc3 -}
 import Sound.SC3.UGen.PP {- hsc3 -}
+import Sound.SC3.UGen.Protect {- hsc3 -}
 
 import Sound.SC3.UGen.Dot {- hsc3-dot -}
 

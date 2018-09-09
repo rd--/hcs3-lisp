@@ -3,9 +3,13 @@ LISP SUPERCOLLIDER
 
 AMERICAN PRIMITIVE, VOL. 2
 
-`HSC3-LISP` is a simple [LISP][lisp] interpreter.
+`HSC3-LISP` is a simple
+[LISP](http://www-formal.stanford.edu/jmc/history/lisp/lisp.html)
+interpreter.
 
-The only data type is the [SUPERCOLLIDER][sc3] `UNIT GENERATOR`.
+The only data type is the
+[SUPERCOLLIDER](http://audiosynth.com/)
+`UNIT GENERATOR`.
 
 A LISP answer to the eternal question,
 [WHY SUPERCOLLIDER?](?t=hsc3-graphs&e=gr/why-supercollider.scd)
@@ -36,7 +40,9 @@ An environment variable locates the HSC3-LISP library files:
 export HSC3_LISP_DIR=$HOME/sw/hsc3-lisp/lisp
 ~~~~
 
-To hear the above type `C-cC-e` in EMACS, or in a shell type:
+To hear the above type `C-cC-e` in
+[EMACS](http://www.gnu.org/software/emacs/),
+or in a shell type:
 
 ~~~~
 hsc3-lisp ~/sw/rsc3/help/graph/why-supercollider.lisp
@@ -50,13 +56,18 @@ manual.
 HSC3-LISP is `CASE-INSENSITIVE`, in EMACS you can type `C-x C-l` to
 time travel.
 
-HSC3-LISP follows the [HASKELL][hs] supercollider ([HSC3][hsc3]) rules.
+HSC3-LISP follows the
+[HASKELL](http://haskell.org/)
+supercollider
+([HSC3](http://rohandrape.net/?t=hsc3))
+rules.
 
 HSC3-LISP thinks `scsynth` is listening at the standard port (57110).
 
 HSC3-LISP is POST-[ML](http://standardml.org), `(EQUAL? (MAP (+ 1) (LIST 1 2 3)) (LIST 2 3 4))`.
 
-HSC3-LISP is not [SCHEME][scheme].  Still, the following [RSC3][rsc3] graphs are working:
+HSC3-LISP is not [SCHEME](http://library.readscheme.org/standards.html).
+Still, the following [RSC3](http://rohandrape.net/?t=rsc3) graphs are working:
 
 - [aleatoric-quartet.lisp](sw/rsc3/help/graph/aleatoric-quartet.lisp)
 - [alien-froggies.lisp](sw/rsc3/help/graph/alien-froggies.lisp)
@@ -204,17 +215,4 @@ initial announcement:
 [gmane](http://article.gmane.org/gmane.comp.lang.haskell.art/1026)
 -->
 
-© [rohan drape][rd], 2014-2017, [gpl][gpl].
-
-[rd]: http://rd.slavepianos.org/
-[hsc3]: http://rd.slavepianos.org/?t=hsc3
-[hs]: http://haskell.org/
-[sc3]: http://audiosynth.com/
-[gpl]: http://gnu.org/copyleft/
-[emacs]: http://www.gnu.org/software/emacs/
-[lisp]: http://www-formal.stanford.edu/jmc/history/lisp/lisp.html
-[rsc3]: http://rd.slavepianos.org/?t=rsc3
-[scheme]: http://library.readscheme.org/standards.html
-
-[r4rs]: http://people.csail.mit.edu/jaffer/r4rs_toc.html
-[r5rs]: http://www.schemers.org/Documents/Standards/R5RS/HTML/
+© [rohan drape](http://rohandrape.net/), 2014-2018, [gpl](http://gnu.org/copyleft/).

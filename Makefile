@@ -3,8 +3,8 @@ clean:
 	rm -Rf dist
 	(cd hs; make clean)
 
-push-sp:
-	darcs push -a rd@slavepianos.org:sw/hsc3-lisp
+push-rd:
+	darcs push -a rd@rohandrape.net:sw/hsc3-lisp
 
-pull-sp:
-	darcs pull -a http://rd.slavepianos.org/sw/hsc3-lisp
+pull-rd:
+	darcs pull -a http://rohandrape.net/sw/hsc3-lisp
