@@ -91,7 +91,7 @@ l_clone_star c =
       [Atom k,Atom n,Atom u] ->
          let k' = ugen_to_int "CLONE-K" k
              n' = ugen_to_int "CLONE-N" n
-         in return (Atom (uclone k' n' u))
+         in return (Atom (uclone (const False) k' n' u))
       _ -> throwError ("clone*: " ++ show c)
 
 l_play_at_star :: Cell UGen -> VM UGen (Cell UGen)

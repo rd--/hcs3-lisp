@@ -4,7 +4,7 @@ Synopsis:          LISP SUPERCOLLIDER
 Description:       LISP SUPERCOLLIDER
 License:           GPL
 Category:          Sound
-Copyright:         (c) Rohan Drape, 2014-2018
+Copyright:         (c) Rohan Drape, 2014-2019
 Author:            Rohan Drape
 Maintainer:        rd@rohandrape.net
 Stability:         Experimental
@@ -24,11 +24,13 @@ executable hsc3-lisp
                    husk-scheme,
                    hosc == 0.18.*,
                    hsc3 == 0.18.*,
+                   hsc3-rw == 0.18.*,
                    hsc3-dot == 0.18.*,
                    mtl,
                    safe,
                    unix
   hs-source-dirs:  hs
+  other-modules:   Lisp
   main-is:         hsc3-lisp.hs
   ghc-options:     -Wall -fno-warn-orphans -fwarn-tabs
 
