@@ -189,6 +189,9 @@ Still, the following [RSC3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [xy-interference.lisp](?t=rsc3&e=help/graph/xy-interference.lisp)
 - [zizle.lisp](?t=rsc3&e=help/graph/zizle.lisp)
 
+There is as HS-TO-LISP translator (October, 2014) that re-writes a
+[subset](?t=hsc3-rw&e=md/sexp.md) of haskell as LISP.
+
 ## LISP
 
 - [hsc3.lisp](?t=hsc3-lisp&e=lisp/hsc3.lisp)
@@ -215,4 +218,4 @@ initial announcement:
 [gmane](http://article.gmane.org/gmane.comp.lang.haskell.art/1026)
 -->
 
-© [rohan drape](http://rohandrape.net/), 2014-2019, [gpl](http://gnu.org/copyleft/).
+© [rohan drape](http://rohandrape.net/), 2014-2020, [gpl](http://gnu.org/copyleft/).
