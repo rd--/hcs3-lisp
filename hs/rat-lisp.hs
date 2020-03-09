@@ -2,6 +2,7 @@ import qualified Data.Map as M {- containers -}
 import Data.Ratio {- base -}
 
 import Lisp
+import Lisp.Type
 import Rational
 
 instance (Show a,Integral a) => Lisp_Ty (Ratio a) where

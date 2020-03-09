@@ -1,3 +1,12 @@
+{-
+
+NOTE: the primitive lambda form is monadic, ie. λx → y
+
+For parsers that allow unicode (ie. HUSK-SCHEME) the primitive lambda can be written λ
+
+For non-unicode parsers use lambda_
+
+-}
 module Lisp where
 
 import Control.Concurrent {- base -}
@@ -6,51 +15,14 @@ import Control.Monad.Except {- mtl -}
 import Data.Char {- base -}
 import Data.IORef {- base -}
 import qualified Data.Map as M {- containers -}
-import Data.Maybe {- base -}
 import System.Directory {- directory -}
 import System.Environment {- base -}
 import System.Exit {- base -}
 import System.FilePath {- filepath -}
 import System.IO {- base -}
 
-import qualified Language.Scheme.Parser as S {- husk-scheme -}
-import qualified Language.Scheme.Types as S {- husk-scheme -}
-
--- * Types
-
-class (Eq a,Ord a,Num a,Fractional a) => Lisp_Ty a where
-    ty_show :: a -> String -- ^ String representation of /a/, pretty printer.
-    ty_to_int :: a -> Int -- ^ Coercion, ie. for Char.
-    ty_from_bool :: Bool -> a -- ^ Boolean value represented in /a/, by convention @1@ and @0@.
-
-type Dict a = M.Map String (Cell a)
-
-data Env a = Frame (IORef (String,Cell a)) (Env a)
-           | Toplevel (IORef (Dict a))
-
-data Cell a = Symbol String | String String
-            | Atom a
-            | Nil | Cons (Cell a) (Cell a)
-            | Fun (Cell a -> Cell a)
-            | Proc (Cell a -> VM a (Cell a))
-            | Lambda (Env a) String (Cell a)
-            | Macro (Cell a)
-            | Error String
-
-cell_eq :: Eq a => Cell a -> Cell a -> Bool
-cell_eq lhs rhs =
-    case (lhs,rhs) of
-      (Atom p,Atom q) -> p == q
-      (String p,String q) -> p == q
-      (Symbol p,Symbol q) -> p == q
-      (Nil,Nil) -> True
-      (Cons p p',Cons q q') -> p == q && p' == q'
-      _ -> False -- error "EQ"
-
-instance Eq a => Eq (Cell a) where (==) = cell_eq
-
--- data ST a = ST {st_threads :: M.Map Int ThreadId,st_env :: Env a}
-type VM a r = ExceptT String (StateT (Env a) IO) r
+import Lisp.Type
+import Lisp.Parse
 
 -- * ENV
 
@@ -130,41 +102,8 @@ maybe_to_err msg = maybe (throwError msg) return
 atom_err :: Lisp_Ty a => Cell a -> VM a a
 atom_err c = maybe_to_err ("NOT ATOM: " ++ show c) (atom c)
 
-to_list' :: Lisp_Ty a => Cell a -> Maybe [Cell a]
-to_list' l =
-    case l of
-      Nil -> Just []
-      Cons e l' -> fmap (e :) (to_list' l')
-      _ -> Nothing
-
-is_list :: Eq a => Cell a -> Bool
-is_list c =
-    case c of
-      Cons _ c' -> c' == Nil || is_list c'
-      _ -> False
-
-to_list :: Lisp_Ty a => Cell a -> [Cell a]
-to_list = fromMaybe [Error "NOT LIST?"] . to_list'
-
 from_list :: [Cell a] -> Cell a
 from_list = foldr Cons Nil
-
-list_pp :: Lisp_Ty a => Cell a -> String
-list_pp c = "(" ++ unwords (map show (to_list c)) ++ ")"
-
-instance Lisp_Ty a => Show (Cell a) where
-    show c =
-        case c of
-          Atom a -> ty_show a
-          Symbol s -> s
-          String s -> show s
-          Nil -> "nil"
-          Cons p q -> if is_list c then list_pp c else concat ["(cons ",show p," ",show q,")"]
-          Fun _ -> "FUN"
-          Proc _ -> "PROC"
-          Lambda _ nm code -> concat ["(λ ",nm," ",show code,")"]
-          Macro m -> "MACRO: " ++ show m
-          Error msg -> "ERROR: " ++ msg
 
 l_false :: Lisp_Ty a => Cell a
 l_false = Atom (ty_from_bool False)
@@ -174,29 +113,6 @@ l_true = Atom (ty_from_bool True)
 
 l_equal :: Lisp_Ty a => Cell a -> Cell a
 l_equal lhs = Fun (\rhs -> if lhs == rhs then l_true else l_false)
-
--- * SEXP
-
-type SEXP = S.LispVal
-
-parse_sexps :: String -> VM a [SEXP]
-parse_sexps = either (throwError . show) return . S.readExprList
-
-parse_sexp :: String -> VM a SEXP
-parse_sexp = either (throwError . show) return . S.readExpr
-
-sexp_to_cell :: Lisp_Ty a => SEXP -> VM a (Cell a)
-sexp_to_cell sexp =
-    case sexp of
-      S.Number n -> return (Atom (fromIntegral n))
-      S.Float n -> return (Atom (realToFrac n))
-      S.Rational n -> return (Atom (fromRational n))
-      S.Atom nm -> return (Symbol nm)
-      S.String s -> return (String s)
-      S.Bool b -> return (Atom (ty_from_bool b))
-      S.List [] -> return Nil
-      S.List (e : l) -> sexp_to_cell e >>= \e' -> fmap (Cons e') (sexp_to_cell (S.List l))
-      _ -> throwError ("SEXP-TO-CELL: " ++ show sexp)
 
 -- * EVAL / APPLY
 
@@ -264,7 +180,7 @@ eval c =
       Cons (Symbol "set!") (Cons (Symbol nm) (Cons def Nil)) -> l_set nm def
       Cons (Symbol "if") (Cons p (Cons t (Cons f Nil))) -> l_if p t f
       Cons (Symbol "quote") (Cons code Nil) -> return code
-      Cons (Symbol "λ") (Cons (Symbol nm) (Cons code Nil)) -> l_lambda nm code
+      Cons (Symbol "lambda_") (Cons (Symbol nm) (Cons code Nil)) -> l_lambda nm code -- λ PRIMITIVE
       Cons (Symbol "macro") (Cons code Nil) -> fmap Macro (eval code)
       Cons (Symbol "fork") (Cons code Nil) -> do
              e <- get

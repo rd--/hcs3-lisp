@@ -13,6 +13,7 @@ import Sound.SC3.UGen.Protect {- hsc3 -}
 
 import Sound.SC3.UGen.Dot {- hsc3-dot -}
 
+import Lisp.Type
 import Lisp
 
 ugen_to_int :: String -> UGen -> Int
@@ -121,7 +122,7 @@ cell_to_datum c =
 
 cell_to_message :: Cell UGen -> VM a Message
 cell_to_message c =
-    case to_list' c of
+    case to_list_m c of
       Just (String addr : l) -> mapM cell_to_datum l >>= \l' -> return (Message addr l')
       _ -> throwError ("CELL-TO-MESSAGE: " ++ show c)
 
