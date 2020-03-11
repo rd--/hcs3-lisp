@@ -1,8 +1,8 @@
 ; rate
-(define dr 'dr)
-(define ir 'ir)
-(define kr 'kr)
-(define ar 'ar)
+(define dr (quote dr))
+(define ir (quote ir))
+(define kr (quote kr))
+(define ar (quote ar))
 
 ; osc
 (define message (lambda (addr param) (cons addr param)))

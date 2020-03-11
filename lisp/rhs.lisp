@@ -4,25 +4,29 @@
     (if (<= i 0)
         nil
         (cons (x) (replicate-m* (- i 1) x)))))
+
 ;; otherwise :: Bool
 (define otherwise #t)
 
 ;; not :: Bool -> Bool
 (define not (lambda (x) (if (equal? x #f) #t #f)))
+
 ;; data Ordering = LT | EQ | GT
 
 ;; compare :: (Ord a) => a -> a -> Ordering
 (define compare
   (lambda (x y)
-    (cond ((> x y) 'gt)
-          ((< x y) 'lt)
-          (else 'eq))))
+    (cond ((> x y) (quote gt))
+          ((< x y) (quote lt))
+          (else (quote eq)))))
 
 ;; max :: a -> a -> a
 (define max (lambda (x y) (if (> x y) x y)))
 
 ;; min :: a -> a -> a
+
 (define min (lambda (x y) (if (< x y) x y)))
+
 ;; (.) :: (b -> c) -> (a -> b) -> a -> c
 (define compose
   (lambda (f g)
@@ -51,6 +55,7 @@
   (lambda (j f)
     (lambda (x y)
       (j (f x) (f y)))))
+
 ;; all :: (a -> Bool) -> [a] -> Bool
 (define all
   (lambda (f l)
@@ -222,7 +227,7 @@
   (lambda (f x l)
     (if (null? l)
         (list1 x)
-        (if (equal? (f x (car l)) 'gt)
+        (if (equal? (f x (car l)) (quote gt))
             (cons (car l) (insert-by f x (cdr l)))
             (cons x l)))))
 
@@ -453,7 +458,7 @@
   (lambda (f l r)
     (cond ((null? l) r)
           ((null? r) l)
-          (else (if (equal? (f (car l) (car r)) 'gt)
+          (else (if (equal? (f (car l) (car r)) (quote gt))
                     (cons (car r) (merge f l (cdr r)))
                     (cons (car l) (merge f (cdr l) r)))))))
 

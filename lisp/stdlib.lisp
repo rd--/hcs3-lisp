@@ -1,6 +1,6 @@
 ; DEFINE is an alias for SET!
 
-(set! define-rw (λ exp (cons 'set! exp)))
+(set! define-rw (λ exp (cons (quote set!) exp)))
 (set! define (macro define-rw))
 
 ; C....R
@@ -47,9 +47,9 @@
            (code (cadr exp))
            (rem (cddr exp)))
        (cond ((pair? rem) (error "LAMBDA: NOT UNARY?"))
-             ((null? param) (list 'λ '_ code))
-             ((null? (cdr param)) (list 'λ (car param) code))
-             (else (list 'λ (car param) (lambda-rw (list (cdr param) code)))))))))
+             ((null? param) (list (quote λ) (quote _) code))
+             ((null? (cdr param)) (list (quote λ) (car param) code))
+             (else (list (quote λ) (car param) (lambda-rw (list (cdr param) code)))))))))
 
 ; (expand lambda-rw-code)
 (define lambda-rw (λ exp ((λ param ((λ code (if (pair? (cddr exp)) (error "LAMBDA: NOT UNARY?") (if (null? param) (cons (quote λ) (cons (quote _) (cons code nil))) (if (null? (cdr param)) (cons (quote λ) (cons (car param) (cons code nil))) (cons (quote λ) (cons (car param) (cons (lambda-rw (cons (cdr param) (cons code nil))) nil))))))) (cadr exp))) (car exp))))
@@ -81,7 +81,7 @@
        (cond ((pair? rem) (error "LET: NOT UNARY?"))
              ((null? bindings) code)
              (else (let ((binding0 (car bindings)))
-                     (list (list 'λ (car binding0) (let-rw (list (cdr bindings) code)))
+                     (list (list (quote λ) (car binding0) (let-rw (list (cdr bindings) code)))
                            (cadr binding0)))))))))
 
 ; (expand let-rw-code)
@@ -106,17 +106,17 @@
 
 (define list-rw
   (λ exp
-     (let ((f (lambda (e r) (append (cons 'cons (cons e nil)) (cons r '())))))
-       (foldr f 'nil exp))))
+     (let ((f (lambda (e r) (append (cons (quote cons) (cons e nil)) (cons r '())))))
+       (foldr f (quote nil) exp))))
 
 (define list (macro list-rw))
 
 ; AND / OR
 
-(define and-rw (λ exp (list 'if (car exp) (cadr exp) #f)))
+(define and-rw (λ exp (list (quote if) (car exp) (cadr exp) #f)))
 (define and (macro and-rw))
 
-(define or-rw (λ exp (list 'if (car exp) #t (cadr exp))))
+(define or-rw (λ exp (list (quote if) (car exp) #t (cadr exp))))
 (define or (macro or-rw))
 
 ; COND
@@ -126,9 +126,9 @@
      (if (null? exp)
          nil
          (let ((c0 (car exp)))
-           (if (equal? (car c0) 'else)
+           (if (equal? (car c0) (quote else))
                (cadr c0)
-               (list 'if (car c0) (cadr c0) (cond-rw (cdr exp))))))))
+               (list (quote if) (car c0) (cadr c0) (cond-rw (cdr exp))))))))
 
 (define cond (macro cond-rw))
 
@@ -136,7 +136,7 @@
   (λ exp
     (let ((test (car exp))
           (branch (cadr exp)))
-      (list 'if test branch nil))))
+      (list (quote if) test branch nil))))
 
 (define when (macro when-rw))
 
@@ -147,7 +147,7 @@
    (lambda (pre code)
      (if (null? code)
          pre
-         (begin-rw* (list (list 'λ '_ (car code)) pre) (cdr code))))))
+         (begin-rw* (list (list (quote λ) (quote _) (car code)) pre) (cdr code))))))
 
 ; (expand begin-rw*-code)
 (define begin-rw* (λ pre (λ code (if (null? code) pre (begin-rw* (cons (cons (quote λ) (cons (quote _) (cons (car code) nil))) (cons pre nil)) (cdr code))))))
@@ -166,8 +166,8 @@
            (names (map car bindings))
            (values (map cadr bindings))
            (bindings* (zip-with list names (map (const nil) bindings)))
-           (initialisers (zip-with (lambda (p q) (list 'set! p q)) names values)))
-       (list 'let bindings* (cons 'begin (append initialisers (list code))))))))
+           (initialisers (zip-with (lambda (p q) (list (quote set!) p q)) names values)))
+       (list (quote let) bindings* (cons (quote begin) (append initialisers (list code))))))))
 
 ; (expand letrec-rw-code)
 (define letrec-rw (λ exp ((λ bindings ((λ code ((λ names ((λ values ((λ bindings* ((λ initialisers (cons (quote let) (cons bindings* (cons (cons (quote begin) (append initialisers (cons code nil))) nil)))) (zip-with (λ p (λ q (cons (quote set!) (cons p (cons q nil))))) names values))) (zip-with list names (map (const nil) bindings)))) (map cadr bindings))) (map car bindings))) (cadr exp))) (car exp))))
@@ -178,17 +178,17 @@
 
 ; simple fixed expander, pre-dates Lisp.hs:expand
 
-(define expand*
-  (λ exp
-    (if (list? exp)
-        (let ((f (λ nm (equal? (car exp) nm))))
-          (cond ((f 'list) (expand (list-rw (map expand (cdr exp)))))
-                ((f 'let) (expand (let-rw (map expand (cdr exp)))))
-                ((f 'cond) (expand (cond-rw (map expand (cdr exp)))))
-                ((f 'lambda) (expand (lambda-rw (map expand (cdr exp)))))
-                ((f 'begin) (expand (begin-rw (map expand (cdr exp)))))
-                (else (map expand exp))))
-        exp)))
+;(define expand*
+;  (λ exp
+;    (if (list? exp)
+;        (let ((f (λ nm (equal? (car exp) nm))))
+;          (cond ((f 'list) (expand (list-rw (map expand (cdr exp)))))
+;                ((f 'let) (expand (let-rw (map expand (cdr exp)))))
+;                ((f 'cond) (expand (cond-rw (map expand (cdr exp)))))
+;                ((f 'lambda) (expand (lambda-rw (map expand (cdr exp)))))
+;                ((f 'begin) (expand (begin-rw (map expand (cdr exp)))))
+;                (else (map expand exp))))
+;        exp)))
 
 ; MATH
 
@@ -220,11 +220,11 @@
 (define define-syntax
   (macro
       (lambda (exp)
-        (begin (print "DEFINE-SYNTAX DISCARDED") (print exp) 'define-syntax))))
+        (begin (print "DEFINE-SYNTAX DISCARDED") (print exp) (quote define-syntax)))))
 
 ; NO IMPORT!
 
 (define import
   (macro
       (lambda (exp)
-        (begin (print "IMPORT DISCARDED") (print exp) 'import))))
+        (begin (print "IMPORT DISCARDED") (print exp) (quote import)))))

@@ -49,12 +49,12 @@ env_empty = do
   d <- newIORef M.empty
   return (Toplevel d)
 
-env_lookup' :: String -> Env a -> VM a (Maybe (Cell a))
-env_lookup' w e =
+env_lookup_m :: String -> Env a -> VM a (Maybe (Cell a))
+env_lookup_m w e =
     case e of
       Frame f e' -> do
              (k,v) <- liftIO (readIORef f)
-             if w == k then return (Just v) else env_lookup' w e'
+             if w == k then return (Just v) else env_lookup_m w e'
       Toplevel d -> do
              d' <- liftIO (readIORef d)
              case M.lookup w d' of
@@ -66,7 +66,7 @@ trace lev msg val = when (lev < 3) (liftIO (putStrLn ("TRACE: " ++ msg ++ ": " +
 
 env_lookup :: Lisp_Ty a => String -> Env a -> VM a (Cell a)
 env_lookup w e = do
-  r <- env_lookup' w e
+  r <- env_lookup_m w e
   trace 5 "ENV_LOOKUP" (w,r)
   case r of
     Nothing -> throwError ("ENV-LOOKUP: " ++ w)
@@ -180,7 +180,7 @@ eval c =
       Cons (Symbol "set!") (Cons (Symbol nm) (Cons def Nil)) -> l_set nm def
       Cons (Symbol "if") (Cons p (Cons t (Cons f Nil))) -> l_if p t f
       Cons (Symbol "quote") (Cons code Nil) -> return code
-      Cons (Symbol "lambda_") (Cons (Symbol nm) (Cons code Nil)) -> l_lambda nm code -- λ PRIMITIVE
+      Cons (Symbol "λ") (Cons (Symbol nm) (Cons code Nil)) -> l_lambda nm code -- λ PRIMITIVE
       Cons (Symbol "macro") (Cons code Nil) -> fmap Macro (eval code)
       Cons (Symbol "fork") (Cons code Nil) -> do
              e <- get
@@ -207,7 +207,7 @@ expand c = do
           Symbol "quote" -> return c
           Symbol sym ->
               do env <- get
-                 lhs' <- env_lookup' sym env
+                 lhs' <- env_lookup_m sym env
                  case lhs' of
                    Just (Macro f) ->
                        do rhs' <- l_mapM expand rhs
@@ -221,7 +221,7 @@ expand c = do
 
 eval_str :: Lisp_Ty a => String -> VM a [Cell a]
 eval_str str = do
-  l <- parse_sexps str
+  l <- parse_sexp_vm str
   trace 5 "EVAL_STR" (str,l)
   mapM (\e -> sexp_to_cell e >>= expand >>= eval) l
 
@@ -231,7 +231,7 @@ load c = do
     String nm -> do
                x <- liftIO (doesFileExist nm)
                when (not x) (throwError ("LOAD: FILE MISSING: " ++ nm))
-               liftIO (readFile nm) >>= eval_str >> return ()
+               liftIO (putStrLn nm >> readFile nm) >>= eval_str >> return ()
     _ -> throwError ("LOAD: " ++ show c)
 
 load_files :: Lisp_Ty a => [String] -> VM a ()
@@ -264,6 +264,12 @@ l_write_string c =
       String s -> liftIO (putStr s) >> return Nil
       _ -> throwError ("WRITE-STRING: " ++ show c)
 
+l_env_print :: Lisp_Ty a => Cell a -> VM a (Cell a)
+l_env_print x = do
+  e <- get
+  liftIO (env_print e)
+  return x
+
 core_dict :: Lisp_Ty a => Dict a
 core_dict =
     M.fromList
@@ -272,7 +278,7 @@ core_dict =
     ,("car",Fun (\c -> case c of {Cons lhs _ -> lhs; _ -> Error ("CAR: " ++ show c)}))
     ,("cdr",Fun (\c -> case c of {Cons _ rhs -> rhs; _ -> Error ("CDR: " ++ show c)}))
     ,("cons",Fun (\lhs -> Fun (\rhs -> Cons lhs rhs)))
-    ,("write-string",Proc (\c -> liftIO (putStr (show c)) >> return c))
+    ,("env-print", Proc l_env_print)
     ,("equal?",Fun l_equal)
     ,("error",Proc (\c -> throwError ("ERROR: " ++ show c)))
     ,("eval",Proc (\c -> eval c >>= eval))
