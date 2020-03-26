@@ -1,4 +1,4 @@
-module Lisp.Parse where
+module Lisp.Parse.Schilling where
 
 import Control.Monad.Except {- mtl -}
 

@@ -1,15 +1,17 @@
--- * HUSK-SCHEME
+-- * HUSK-SCHEME <https://github.com/justinethier/husk-scheme>
+module Lisp.Parse.Ethier where
+
+import Control.Monad.Except {- mtl -}
 
 import qualified Language.Scheme.Parser as S {- husk-scheme -}
 import qualified Language.Scheme.Types as S {- husk-scheme -}
 
+import Lisp.Type {- hsc3-lisp -}
+
 type SEXP = S.LispVal
 
-parse_sexps :: String -> VM a [SEXP]
-parse_sexps = either (throwError . show) return . S.readExprList
-
-parse_sexp :: String -> VM a SEXP
-parse_sexp = either (throwError . show) return . S.readExpr
+parse_sexp_vm :: String -> VM a [SEXP]
+parse_sexp_vm = either (throwError . show) return . S.readExprList
 
 sexp_to_cell :: Lisp_Ty a => SEXP -> VM a (Cell a)
 sexp_to_cell sexp =

@@ -4,8 +4,6 @@ NOTE: the primitive lambda form is monadic, ie. λx → y
 
 For parsers that allow unicode (ie. HUSK-SCHEME) the primitive lambda can be written λ
 
-For non-unicode parsers use lambda_
-
 -}
 module Lisp where
 
@@ -22,7 +20,7 @@ import System.FilePath {- filepath -}
 import System.IO {- base -}
 
 import Lisp.Type
-import Lisp.Parse
+import qualified Lisp.Parse.Ethier as Parse
 
 -- * ENV
 
@@ -221,9 +219,9 @@ expand c = do
 
 eval_str :: Lisp_Ty a => String -> VM a [Cell a]
 eval_str str = do
-  l <- parse_sexp_vm str
+  l <- Parse.parse_sexp_vm str
   trace 5 "EVAL_STR" (str,l)
-  mapM (\e -> sexp_to_cell e >>= expand >>= eval) l
+  mapM (\e -> Parse.sexp_to_cell e >>= expand >>= eval) l
 
 load :: Lisp_Ty a => Cell a -> VM a ()
 load c = do

@@ -7,7 +7,7 @@ cmd=hsc3-lisp rat-lisp
 all: $(cmd)
 
 clean:
-	rm -f *.hi *.o Lisp/*.hi Lisp/*.o $(cmd)
+	rm -f *.hi *.o Lisp/*.hi Lisp/*.o Lisp/Parse/*.hi Lisp/Parse/*.o $(cmd)
 
 install: $(cmd)
 	cp -f $(cmd) $(prefix)/bin
