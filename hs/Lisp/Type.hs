@@ -38,6 +38,9 @@ cell_eq lhs rhs =
       (Cons p p',Cons q q') -> p == q && p' == q'
       _ -> False -- error "EQ"
 
+quoted_symbol :: String -> Cell a
+quoted_symbol x = (Cons (Symbol "quote") (Cons (Symbol x) Nil))
+
 instance Eq a => Eq (Cell a) where (==) = cell_eq
 
 -- data ST a = ST {st_threads :: M.Map Int ThreadId,st_env :: Env a}
