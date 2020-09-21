@@ -11,8 +11,7 @@ The only data type is the
 [SUPERCOLLIDER](http://audiosynth.com/)
 `UNIT GENERATOR`.
 
-A LISP answer to the eternal question,
-[WHY SUPERCOLLIDER?](?t=hsc3-graphs&e=gr/why-supercollider.scd)
+[WHY LISP SUPERCOLLIDER?](?t=hsc3-graphs&e=gr/jmcc/why-supercollider.scd)
 
 ~~~~
 (HEAR
@@ -190,7 +189,7 @@ Still, the following [RSC3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [zizle.lisp](?t=rsc3&e=help/graph/zizle.lisp)
 
 There is as HS-TO-LISP translator (October, 2014) that re-writes a
-[subset](?t=hsc3-rw&e=md/sexp.md) of haskell as LISP.
+[subset](?t=hsc3-lisp&e=md/sexp.md) of haskell as LISP.
 
 ## LISP
 

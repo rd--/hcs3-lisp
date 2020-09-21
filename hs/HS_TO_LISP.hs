@@ -14,7 +14,11 @@ error_x nm x = error (nm ++ ": " ++ show x)
 
 type SEXP = S.LispVal
 
--- | The HUSK printer uses "show" for Floats, and prints 'Char' directly.
+{- | The HUSK printer uses "show" for Floats, and prints 'Char' directly.
+
+> (S.Float 0.01,S.Char 'c') -- 1.0e-2 c
+> mapM_ (putStrLn . show_sexp) [S.Float 0.01,S.Char 'c'] -- 0.01 \#c
+-}
 show_sexp :: SEXP -> String
 show_sexp s =
     case s of

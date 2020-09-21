@@ -19,8 +19,8 @@ import System.Exit {- base -}
 import System.FilePath {- filepath -}
 import System.IO {- base -}
 
-import Lisp.Type
-import qualified Lisp.Parse.Ethier as Parse
+import Lisp.Type {- hsc3-lisp -}
+import qualified Lisp.Parse.Ethier as Parse {- hsc3-lisp -}
 
 -- * ENV
 

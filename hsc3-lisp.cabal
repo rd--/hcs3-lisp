@@ -1,5 +1,5 @@
 Name:              hsc3-lisp
-Version:           0.18
+Version:           0.19
 Synopsis:          LISP SUPERCOLLIDER
 Description:       LISP SUPERCOLLIDER
 License:           GPL
@@ -9,7 +9,7 @@ Author:            Rohan Drape
 Maintainer:        rd@rohandrape.net
 Stability:         Experimental
 Homepage:          http://rohandrape.net/t/hsc3-lisp
-Tested-With:       GHC == 8.6.5
+Tested-With:       GHC == 8.8.3
 Build-Type:        Simple
 Cabal-Version:     >= 1.8
 
@@ -21,15 +21,18 @@ executable hsc3-lisp
                    directory,
                    filepath,
                    hashable,
-                   husk-scheme,
-                   hosc == 0.18.*,
-                   hsc3 == 0.18.*,
-                   hsc3-dot == 0.18.*,
+                   husk-scheme >= 3.19.4,
+                   hosc == 0.19.*,
+                   hsc3 == 0.19.*,
+                   hsc3-dot == 0.19.*,
+                   hsc3-rw == 0.19.*,
                    mtl,
                    safe,
                    unix
   hs-source-dirs:  hs
-  other-modules:   Lisp
+  other-modules:   Lisp,
+                   Lisp.Type,
+                   Lisp.Parse.Ethier
   main-is:         hsc3-lisp.hs
   ghc-options:     -Wall -fno-warn-orphans -fwarn-tabs
 

@@ -9,12 +9,13 @@ import Sound.OSC {- hsc3 -}
 import Sound.SC3 {- hsc3 -}
 import Sound.SC3.UGen.Plain {- hsc3 -}
 import Sound.SC3.UGen.PP {- hsc3 -}
-import Sound.SC3.UGen.Protect {- hsc3 -}
 
-import Sound.SC3.UGen.Dot {- hsc3-dot -}
+import qualified Sound.SC3.UGen.Protect as Protect {- hsc3-rw -}
 
-import Lisp.Type
-import Lisp
+import qualified Sound.SC3.UGen.Dot as Dot {- hsc3-dot -}
+
+import Lisp.Type {- hsc3-lisp -}
+import Lisp {- hsc3-lisp -}
 
 ugen_to_int :: String -> UGen -> Int
 ugen_to_int c u =
@@ -92,7 +93,7 @@ l_clone_star c =
       [Atom k,Atom n,Atom u] ->
          let k' = ugen_to_int "CLONE-K" k
              n' = ugen_to_int "CLONE-N" n
-         in return (Atom (uclone (const False) k' n' u))
+         in return (Atom (Protect.uclone (const False) k' n' u))
       _ -> throwError ("clone*: " ++ show c)
 
 l_play_at_star :: Cell UGen -> VM UGen (Cell UGen)
@@ -144,7 +145,7 @@ ugen_dict =
     ,("make-mce",Proc (\c -> fmap (Atom . mce) (mapM atom_err (to_list c))))
     ,("mce-channels",Proc (\c -> fmap (from_list . map Atom . mceChannels) (atom_err c)))
     ,("make-mrg*",Proc (\c -> fmap (Atom . mrg) (mapM atom_err (to_list c))))
-    ,("show-graph",Proc (\c -> atom_err c >>= \u -> lift_io (draw (out 0 u))))
+    ,("show-graph",Proc (\c -> atom_err c >>= \u -> lift_io (Dot.draw (out 0 u))))
     ,("play-at*",Proc l_play_at_star)
     ,("reset*",Proc (\_ -> lift_io (withSC3 reset)))
     ,("thread-sleep",Proc l_thread_sleep)
