@@ -5,7 +5,7 @@ NOTE: the primitive lambda form is monadic, ie. λx → y
 For parsers that allow unicode (ie. HUSK-SCHEME) the primitive lambda can be written λ
 
 -}
-module Lisp where
+module Sound.SC3.Lisp where
 
 import Control.Concurrent {- base -}
 import Control.Monad.State {- mtl -}
@@ -19,8 +19,8 @@ import System.Exit {- base -}
 import System.FilePath {- filepath -}
 import System.IO {- base -}
 
-import Lisp.Type {- hsc3-lisp -}
-import qualified Lisp.Parse.Ethier as Parse {- hsc3-lisp -}
+import Sound.SC3.Lisp.Type {- hsc3-lisp -}
+import qualified Sound.SC3.Lisp.Parse.Ethier as Parse {- hsc3-lisp -}
 
 -- * ENV
 

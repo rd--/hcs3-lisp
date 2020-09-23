@@ -1,17 +1,17 @@
 LISP SUPERCOLLIDER
 ------------------
 
-AMERICAN PRIMITIVE, VOL. 2
+<!-- AMERICAN PRIMITIVE, VOL. 2 -->
 
-`HSC3-LISP` is a simple
-[LISP](http://www-formal.stanford.edu/jmc/history/lisp/lisp.html)
+`hsc3-lisp` is a simple
+[Lisp](http://www-formal.stanford.edu/jmc/history/lisp/lisp.html)
 interpreter.
 
 The only data type is the
-[SUPERCOLLIDER](http://audiosynth.com/)
-`UNIT GENERATOR`.
+[SuperCollider](http://audiosynth.com/)
+`Unit Generator`.
 
-[WHY LISP SUPERCOLLIDER?](?t=hsc3-graphs&e=gr/jmcc/why-supercollider.scd)
+[Why](?t=hsc3-graphs&e=gr/jmcc/why-supercollider.scd) Lisp SuperCollider?
 
 ~~~~
 (HEAR
@@ -30,43 +30,47 @@ There is an OSX (10.9.3) binary
 or to build type:
 
 ~~~~
-cd ~/sw/hsc3-lisp/hs ; prefix=~/opt make install
+(cd ~/sw/hsc3-lisp ; cabal v1-install ; cd cmd ; prefix=~/opt make install)
 ~~~~
 
-An environment variable locates the HSC3-LISP library files:
+An environment variable locates the hsc3-lisp library files:
 
 ~~~~
 export HSC3_LISP_DIR=$HOME/sw/hsc3-lisp/lisp
 ~~~~
 
 To hear the above type `C-cC-e` in
-[EMACS](http://www.gnu.org/software/emacs/),
+[Emacs](http://www.gnu.org/software/emacs/),
 or in a shell type:
 
 ~~~~
 hsc3-lisp ~/sw/rsc3/help/graph/why-supercollider.lisp
 ~~~~
 
-There is a [TUTORIAL](?t=hsc3-lisp&e=help/tutorial.lisp),
-and [TRANSLATIONS](?t=hsc3-lisp&e=help/jmcc.lisp) of graphs by [JAMES
-MCCARTNEY](http://audiosynth.com/autobio/emu.jpg) from the `SC2`
+There is a [tutorial](?t=hsc3-lisp&e=help/tutorial.lisp),
+and [translations](?t=hsc3-lisp&e=help/jmcc.lisp) of graphs by [James
+McCartney](http://audiosynth.com/autobio/emu.jpg) from the `SC2`
 manual.
 
-HSC3-LISP is `CASE-INSENSITIVE`, in EMACS you can type `C-x C-l` to
-time travel.
+hsc3-lisp is `case-insensitive`.
 
-HSC3-LISP follows the
-[HASKELL](http://haskell.org/)
-supercollider
-([HSC3](http://rohandrape.net/?t=hsc3))
+<!-- In emacs you can type `C-x C-l` to time travel. -->
+
+hsc3-lisp follows the
+[Haskell](http://haskell.org/)
+SuperCollider
+([hsc3](http://rohandrape.net/?t=hsc3))
 rules.
 
-HSC3-LISP thinks `scsynth` is listening at the standard port (57110).
+hsc3-lisp thinks `scsynth` is listening at the standard port (57110).
 
-HSC3-LISP is POST-[ML](http://standardml.org), `(EQUAL? (MAP (+ 1) (LIST 1 2 3)) (LIST 2 3 4))`.
+hsc3-lisp is Post-[ML](http://standardml.org), ie.
 
-HSC3-LISP is not [SCHEME](http://library.readscheme.org/standards.html).
-Still, the following [RSC3](http://rohandrape.net/?t=rsc3) graphs are working:
+    > (equal? (map (+ 1) (list 1 2 3)) (list 2 3 4))
+    RESULT: 1
+
+hsc3-lisp is not [scheme](http://library.readscheme.org/standards.html).
+Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 
 - [aleatoric-quartet.lisp](?t=rsc3&e=help/graph/aleatoric-quartet.lisp)
 - [alien-froggies.lisp](?t=rsc3&e=help/graph/alien-froggies.lisp)
@@ -188,8 +192,8 @@ Still, the following [RSC3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [xy-interference.lisp](?t=rsc3&e=help/graph/xy-interference.lisp)
 - [zizle.lisp](?t=rsc3&e=help/graph/zizle.lisp)
 
-There is as HS-TO-LISP translator (October, 2014) that re-writes a
-[subset](?t=hsc3-lisp&e=md/sexp.md) of haskell as LISP.
+There is also an haskell to lisp translator (October, 2014) that re-writes a
+[subset](?t=hsc3-lisp&e=md/hs-to-sexp.md) of haskell as lisp.
 
 ## LISP
 

@@ -1,5 +1,5 @@
 -- | Rewrite a subset of haskell as LISP.
-module HS_TO_LISP where
+module Sound.SC3.Lisp.Haskell where
 
 import Data.Maybe {- base -}
 import qualified Numeric {- base -}

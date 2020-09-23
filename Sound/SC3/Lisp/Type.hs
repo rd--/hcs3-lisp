@@ -1,4 +1,4 @@
-module Lisp.Type where
+module Sound.SC3.Lisp.Type where
 
 import Control.Monad.State {- mtl -}
 import Control.Monad.Except {- mtl -}

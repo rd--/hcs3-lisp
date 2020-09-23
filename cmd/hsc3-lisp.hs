@@ -14,8 +14,8 @@ import qualified Sound.SC3.UGen.Protect as Protect {- hsc3-rw -}
 
 import qualified Sound.SC3.UGen.Dot as Dot {- hsc3-dot -}
 
-import Lisp.Type {- hsc3-lisp -}
-import Lisp {- hsc3-lisp -}
+import Sound.SC3.Lisp {- hsc3-lisp -}
+import Sound.SC3.Lisp.Type {- hsc3-lisp -}
 
 ugen_to_int :: String -> UGen -> Int
 ugen_to_int c u =

@@ -1,12 +1,12 @@
 -- * HUSK-SCHEME <https://github.com/justinethier/husk-scheme>
-module Lisp.Parse.Ethier where
+module Sound.SC3.Lisp.Parse.Ethier where
 
 import Control.Monad.Except {- mtl -}
 
 import qualified Language.Scheme.Parser as S {- husk-scheme -}
 import qualified Language.Scheme.Types as S {- husk-scheme -}
 
-import Lisp.Type {- hsc3-lisp -}
+import Sound.SC3.Lisp.Type {- hsc3-lisp -}
 
 type SEXP = S.LispVal
 
