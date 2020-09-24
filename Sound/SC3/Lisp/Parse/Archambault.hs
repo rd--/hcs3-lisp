@@ -28,6 +28,10 @@ parse_sexp_plain =
   either (Left . M.errorBundlePretty) (either Left Right . S.sexpr2Datum) .
   parse_sexp_raw
 
+-- > parse_sexp_m "(c_set 0 440.0)"
+parse_sexp_m :: String -> Maybe [SEXP]
+parse_sexp_m = either (const Nothing) Just . parse_sexp_plain
+
 parse_sexp_vm :: String -> VM t [SEXP]
 parse_sexp_vm = either throwError return . parse_sexp_plain
 
@@ -49,6 +53,19 @@ num_to_cell (ty,c) =
       Just (Atom (with_sgn sgn (decimal_to_fractional (n,m))))
     (S.Inexact,S.CReal (S.SRational sgn (S.UInteger n) (S.UInteger d))) ->
       Just (Atom (with_sgn sgn (fromRational (n % d))))
+    _ -> Nothing
+
+sexp_to_cell_m :: Lisp_Ty a => SEXP -> Maybe (Cell a)
+sexp_to_cell_m sexp =
+  case sexp of
+    S.DNumber (S.SchemeNumber ty c) -> num_to_cell (ty,c)
+    S.DIdentifier nm -> Just (Symbol (T.unpack nm))
+    S.DQuote (S.DIdentifier nm) -> Just (quoted_symbol (T.unpack nm))
+    S.DString s -> Just (String (T.unpack s))
+    S.DBoolean b -> Just (Atom (ty_from_bool b))
+    S.DList [] -> Just Nil
+    S.DQuote (S.DList []) -> Just Nil
+    S.DList (e : l) -> sexp_to_cell_m e >>= \e' -> fmap (Cons e') (sexp_to_cell_m (S.DList l))
     _ -> Nothing
 
 sexp_to_cell :: Lisp_Ty a => SEXP -> VM a (Cell a)
