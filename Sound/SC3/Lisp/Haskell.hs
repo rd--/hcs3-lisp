@@ -17,13 +17,13 @@ type SEXP = S.LispVal
 {- | The HUSK printer uses "show" for Floats, and prints 'Char' directly.
 
 > (S.Float 0.01,S.Char 'c') -- 1.0e-2 c
-> mapM_ (putStrLn . show_sexp) [S.Float 0.01,S.Char 'c'] -- 0.01 \#c
+> mapM_ (putStrLn . show_sexp) [S.Float 0.01,S.Char 'c'] -- 0.01 #\c
 -}
 show_sexp :: SEXP -> String
 show_sexp s =
     case s of
       S.Atom x -> x
-      S.Char x -> ['\\','#',x]
+      S.Char x -> ['#','\\',x]
       S.Float x -> Numeric.showFFloat Nothing x ""
       S.List x -> "(" ++ unwords (map show_sexp x) ++ ")"
       S.Number x -> show x
@@ -78,11 +78,32 @@ unwind_app (lhs,rhs) =
       E.App _ p q -> unwind_app (p,q) ++ [rhs]
       _ -> [lhs,rhs]
 
+sign_is_negative :: E.Sign l -> Bool
+sign_is_negative sgn =
+  case sgn of
+    E.Signless _ -> False
+    E.Negative _ -> True
+
+pat_sexp :: Show l => E.Pat l -> SEXP
+pat_sexp p =
+    case p of
+      E.PVar _ nm -> S.Atom (name_str nm)
+      E.PLit _ sgn lit -> literal_sexp (if sign_is_negative sgn then literal_negate lit else lit)
+      _ -> error_x "pat_sexp" p
+
+alt_sexp :: Show l => E.Alt l -> SEXP
+alt_sexp alt =
+  case alt of
+    E.Alt _ (E.PWildCard _) rhs Nothing -> S.List [S.Atom "else",exp_sexp (rhs_exp rhs)]
+    E.Alt _ lhs rhs Nothing -> S.List [S.List [pat_sexp lhs],exp_sexp (rhs_exp rhs)]
+    _ -> error_x "alt: bindings?" alt
+
 -- | Tuples map to lists but could be dotted lists or vectors.
 exp_sexp :: Show l => E.Exp l -> SEXP
 exp_sexp e =
     case e of
       E.App _ f x -> S.List (map exp_sexp (unwind_app (f,x)))
+      E.Case _ c a -> S.List (S.Atom "case" : exp_sexp c : map alt_sexp a)
       E.Con _ nm -> S.Atom (qname_str nm)
       E.EnumFromTo _ p q -> S.List (S.Atom "enum-from-to" : map exp_sexp [p,q])
       E.EnumFromThenTo _ p q r -> S.List (S.Atom "enum-from-then-to" : map exp_sexp [p,q,r])
@@ -108,14 +129,11 @@ binds_decl b =
       Just (E.BDecls _ d) -> d
       Just (E.IPBinds _ _) -> error_x "binds_decl" b
 
-pat_str :: Show l => E.Pat l -> String
-pat_str p =
+pat_var_str :: Show l => E.Pat l -> String
+pat_var_str p =
     case p of
       E.PVar _ nm -> name_str nm
-      _ -> error_x "pat_str" p
-
-pat_sexp :: Show l => E.Pat l -> SEXP
-pat_sexp = S.Atom . pat_str
+      _ -> error_x "pat_var_str" p
 
 match_sexp :: Show l => E.Match l -> (SEXP,SEXP)
 match_sexp m =
@@ -145,41 +163,53 @@ mod_decl_sexp d =
           in Just (S.List [S.Atom "define",nm,rhs])
       E.PatBind _ lhs rhs bnd ->
           case binds_decl bnd of
-            [] -> case pat_str lhs of
+            [] -> case pat_var_str lhs of
                     "main" -> Just (exp_sexp (rhs_exp rhs))
                     nm -> Just (S.List [S.Atom "define",S.Atom nm,exp_sexp (rhs_exp rhs)])
             _ -> error_x "mod_decl_sexp" bnd
       E.TypeSig _ _ _ -> Nothing
       _ -> error_x "mod_decl_sexp" d
 
-mod_decl :: Show l => E.Module l -> [E.Decl l]
-mod_decl m =
+module_decl :: Show l => E.Module l -> [E.Decl l]
+module_decl m =
     case m of
       E.Module _ _ _ _ d -> d
       _ -> error_x "mod_decl" m
 
--- | Read list of module level 'Decl'.
-hs_read :: String -> [E.Decl E.SrcSpanInfo]
-hs_read s =
-    case E.parseModule s of
-      E.ParseOk m -> mod_decl m
-      err -> error_x "hs_read" err
+-- > putStrLn $ show_sexp $ hs_exp_sexp "print x"
+-- > putStrLn $ show_sexp $ hs_exp_sexp "\\x -> case x of {0 -> 'a';1 -> 'b';_ -> 'c'}"
+hs_exp_sexp :: String -> SEXP
+hs_exp_sexp s =
+    case E.parseExp s of
+      E.ParseOk e -> exp_sexp e
+      err -> error_x "hs_read_exp" err
 
-{- | Haskell source to list of 'SEXP'.
+-- > putStrLn $ show_sexp $ hs_decl_sexp "x = 5"
+-- > putStrLn $ show_sexp $ hs_decl_sexp "f x = case x of {0 -> 'a';1 -> 'b';_ -> 'c'}"
+hs_decl_sexp :: String -> SEXP
+hs_decl_sexp s =
+    case E.parseDecl s of
+      E.ParseOk d -> fromMaybe (error "hs_decl_sexp") (mod_decl_sexp d)
+      err -> error_x "hs_decl_sexp" err
+
+{- | Haskell module source to list of 'SEXP'.
 
 > let m = ["import Sound.SC3"
 >         ,"o = let f = midiCPS (mce [65.0,65.1]) in sinOsc AR f 0"
 >         ,"a = dbAmp (-24)"
 >         ,"main = audition (out 0 (o * a))"]
-> in hs_sexp (unlines m)
+> in hs_modeul_sexp (unlines m)
 
 > > (define o (let ((f (midiCPS (mce (list 65.0 65.1))))) (sinOsc AR f 0)))
 > > (define a (dbAmp -24))
 > > (define main (audition (out 0 (* o a))))
 
 -}
-hs_sexp :: String -> [SEXP]
-hs_sexp = mapMaybe mod_decl_sexp . hs_read
+hs_module_sexp :: String -> [SEXP]
+hs_module_sexp s =
+    case E.parseModule s of
+      E.ParseOk m -> mapMaybe mod_decl_sexp (module_decl m)
+      err -> error_x "hs_read_module" err
 
 {- | Translate haskell @module@ code into @LISP@.
 
@@ -198,7 +228,7 @@ hs_sexp = mapMaybe mod_decl_sexp . hs_read
 
 -}
 hs_to_lisp :: String -> String
-hs_to_lisp = unlines . map show_sexp . hs_sexp
+hs_to_lisp = unlines . map show_sexp . hs_module_sexp
 
 hs_to_lisp_io :: FilePath -> FilePath -> IO ()
 hs_to_lisp_io i_fn o_fn = do
