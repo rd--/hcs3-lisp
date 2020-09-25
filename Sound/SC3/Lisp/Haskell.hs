@@ -2,37 +2,16 @@
 module Sound.SC3.Lisp.Haskell where
 
 import Data.Maybe {- base -}
-import qualified Numeric {- base -}
-
-import qualified Data.ByteString as B {- bytestring -}
 
 import qualified Language.Haskell.Exts as E {- haskell-src-exts -}
 import qualified Language.Scheme.Types as S {- husk-scheme -}
+
+import Sound.SC3.Lisp.Parse.Ethier {- hsc3-lisp -}
 
 import qualified Sound.SC3 {- hsc3 -}
 
 error_x :: Show a => String -> a -> t
 error_x nm x = error (nm ++ ": " ++ show x)
-
-type SEXP = S.LispVal
-
-{- | The HUSK printer uses "show" for Floats, prints 'Char' directly,
-   and uses literal syntax for bytevectors.
-
-> (S.Float 0.01,S.Char 'c',S.ByteVector (B.pack [0,1,2])) -- 1.0e-2 c #u8(0 1 2)
-> mapM_ (putStrLn . show_sexp) [S.Float 0.01,S.Char 'c',S.ByteVector (B.pack [0,1,2])] -- 0.01 #\c
--}
-show_sexp :: SEXP -> String
-show_sexp s =
-    case s of
-      S.Atom x -> x
-      S.Char x -> ['#','\\',x]
-      S.Float x -> Numeric.showFFloat Nothing x ""
-      S.List x -> "(" ++ unwords (map show_sexp x) ++ ")"
-      S.Number x -> show x
-      S.String x -> "\"" ++ x ++ "\""
-      S.ByteVector x -> "(bytevector " ++ unwords (map show (B.unpack x)) ++ ")"
-      _ -> error_x "show_sexp" s
 
 -- | Names are re-written from SC3 form (sinOsc) to LISP form (sin-osc).
 name_str :: E.Name l -> String
@@ -180,16 +159,16 @@ module_decl m =
       E.Module _ _ _ _ d -> d
       _ -> error_x "mod_decl" m
 
--- > putStrLn $ show_sexp $ hs_exp_sexp "print x"
--- > putStrLn $ show_sexp $ hs_exp_sexp "\\x -> case x of {0 -> 'a';1 -> 'b';_ -> 'c'}"
+-- > putStrLn $ sexp_show $ hs_exp_sexp "print x"
+-- > putStrLn $ sexp_show $ hs_exp_sexp "\\x -> case x of {0 -> 'a';1 -> 'b';_ -> 'c'}"
 hs_exp_sexp :: String -> SEXP
 hs_exp_sexp s =
     case E.parseExp s of
       E.ParseOk e -> exp_sexp e
       err -> error_x "hs_read_exp" err
 
--- > putStrLn $ show_sexp $ hs_decl_sexp "x = 5"
--- > putStrLn $ show_sexp $ hs_decl_sexp "f x = case x of {0 -> 'a';1 -> 'b';_ -> 'c'}"
+-- > putStrLn $ sexp_show $ hs_decl_sexp "x = 5"
+-- > putStrLn $ sexp_show $ hs_decl_sexp "f x = case x of {0 -> 'a';1 -> 'b';_ -> 'c'}"
 hs_decl_sexp :: String -> SEXP
 hs_decl_sexp s =
     case E.parseDecl s of
@@ -232,7 +211,7 @@ hs_module_sexp s =
 
 -}
 hs_to_lisp :: String -> String
-hs_to_lisp = unlines . map show_sexp . hs_module_sexp
+hs_to_lisp = unlines . map sexp_show . hs_module_sexp
 
 hs_to_lisp_io :: FilePath -> FilePath -> IO ()
 hs_to_lisp_io i_fn o_fn = do

@@ -16,7 +16,8 @@ Cabal-Version:     >= 1.8
 Data-files:        README
 
 library
-  build-depends:   base >= 4.8,
+  build-depends:   array,
+                   base >= 4.8,
                    bytestring,
                    containers,
                    directory,

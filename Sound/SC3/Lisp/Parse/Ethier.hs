@@ -1,27 +1,51 @@
 -- * HUSK-SCHEME <https://github.com/justinethier/husk-scheme>
 module Sound.SC3.Lisp.Parse.Ethier where
 
-import Control.Monad.Except {- mtl -}
+import qualified Numeric {- base -}
+
+import qualified Control.Monad.Except as E {- mtl -}
+import qualified Data.ByteString as B {- bytestring -}
 
 import qualified Language.Scheme.Parser as S {- husk-scheme -}
 import qualified Language.Scheme.Types as S {- husk-scheme -}
 
-import Sound.SC3.Lisp.Type {- hsc3-lisp -}
+import qualified Sound.SC3.Lisp.Type as L {- hsc3-lisp -}
 
 type SEXP = S.LispVal
 
-parse_sexp_vm :: String -> VM a [SEXP]
-parse_sexp_vm = either (throwError . show) return . S.readExprList
+parse_sexp_vm :: String -> L.VM a [SEXP]
+parse_sexp_vm = either (E.throwError . show) return . S.readExprList
 
-sexp_to_cell :: Lisp_Ty a => SEXP -> VM a (Cell a)
+sexp_to_cell :: L.Lisp_Ty a => SEXP -> L.VM a (L.Cell a)
 sexp_to_cell sexp =
     case sexp of
-      S.Number n -> return (Atom (fromIntegral n))
-      S.Float n -> return (Atom (realToFrac n))
-      S.Rational n -> return (Atom (fromRational n))
-      S.Atom nm -> return (Symbol nm)
-      S.String s -> return (String s)
-      S.Bool b -> return (Atom (ty_from_bool b))
-      S.List [] -> return Nil
-      S.List (e : l) -> sexp_to_cell e >>= \e' -> fmap (Cons e') (sexp_to_cell (S.List l))
-      _ -> throwError ("SEXP-TO-CELL: " ++ show sexp)
+      S.Number n -> return (L.Atom (fromIntegral n))
+      S.Float n -> return (L.Atom (realToFrac n))
+      S.Rational n -> return (L.Atom (fromRational n))
+      S.Atom nm -> return (L.Symbol nm)
+      S.String s -> return (L.String s)
+      S.Bool b -> return (L.Atom (L.ty_from_bool b))
+      S.List [] -> return L.Nil
+      S.List (e : l) -> sexp_to_cell e >>= \e' -> fmap (L.Cons e') (sexp_to_cell (S.List l))
+      _ -> E.throwError ("SEXP-TO-CELL: " ++ show sexp)
+
+{- | The HUSK printer uses "show" for Floats,
+     prints 'Char' directly,
+     and uses literal syntax for bytevectors.
+
+> (S.Float 0.01,S.Char 'c',S.ByteVector (B.pack [0,1,2])) -- 1.0e-2 c #u8(0 1 2)
+> mapM_ (putStrLn . show_sexp) [S.Float 0.01,S.Char 'c',S.ByteVector (B.pack [0,1,2])] -- 0.01 #\c
+-}
+sexp_show :: SEXP -> String
+sexp_show s =
+    case s of
+      S.Atom x -> x
+      S.Char x -> ['#','\\',x]
+      S.Float x -> Numeric.showFFloat Nothing x ""
+      S.List x -> "(" ++ unwords (map sexp_show x) ++ ")"
+      S.DottedList x y -> concat ["(",unwords (map sexp_show x)," . ",sexp_show y,")"]
+      S.Number x -> show x
+      S.String x -> "\"" ++ x ++ "\""
+      S.Vector _ -> show s
+      S.ByteVector x -> "(bytevector " ++ unwords (map show (B.unpack x)) ++ ")"
+      _ -> error ("sexp_show: " ++ show s)
