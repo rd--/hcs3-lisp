@@ -20,15 +20,15 @@ datum_to_lisp d =
     ASCII_String x -> S.String (ascii_to_string x)
     Blob x -> S.ByteVector (Lazy.toStrict x)
     TimeStamp x -> S.Float x
-    Midi (MIDI m1 m2 m3 m4) -> S.ByteVector (Lazy.toStrict (blob_pack [m1,m2,m3,m4]))
+    Midi (MIDI m1 m2 m3 m4) -> S.List (S.Atom "midi" : map (S.Number . fromIntegral) [m1,m2,m3,m4])
 
 -- > message_to_lisp False (Message "/c_set" [Int32 0,Float 1])
 message_to_lisp :: Bool -> Message -> S.LispVal
 message_to_lisp ty (Message a d) =
   if ty
-  then S.List (S.Atom a : S.Atom (',' : map datum_tag d) : map datum_to_lisp d)
+  then S.List (S.Atom a : S.String (',' : map datum_tag d) : map datum_to_lisp d)
   else S.List (S.Atom a : map datum_to_lisp d)
 
--- > bundle_to_lisp False (Bundle 0 [Message "/c_set" [Int32 0,Float 1]])
+-- > bundle_to_lisp False (Bundle 0 [Message "/c_set" [Int32 0,Float 1],Message "/nil" []])
 bundle_to_lisp :: Bool -> Bundle -> S.LispVal
-bundle_to_lisp ty (Bundle t m) = S.List (S.Atom "#bundle" : S.Float t : map (message_to_lisp ty) m)
+bundle_to_lisp ty (Bundle t m) = S.List (S.Atom "bundle" : S.Float t : map (message_to_lisp ty) m)

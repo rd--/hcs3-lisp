@@ -4,6 +4,8 @@ module Sound.SC3.Lisp.Haskell where
 import Data.Maybe {- base -}
 import qualified Numeric {- base -}
 
+import qualified Data.ByteString as B {- bytestring -}
+
 import qualified Language.Haskell.Exts as E {- haskell-src-exts -}
 import qualified Language.Scheme.Types as S {- husk-scheme -}
 
@@ -14,10 +16,11 @@ error_x nm x = error (nm ++ ": " ++ show x)
 
 type SEXP = S.LispVal
 
-{- | The HUSK printer uses "show" for Floats, and prints 'Char' directly.
+{- | The HUSK printer uses "show" for Floats, prints 'Char' directly,
+   and uses literal syntax for bytevectors.
 
-> (S.Float 0.01,S.Char 'c') -- 1.0e-2 c
-> mapM_ (putStrLn . show_sexp) [S.Float 0.01,S.Char 'c'] -- 0.01 #\c
+> (S.Float 0.01,S.Char 'c',S.ByteVector (B.pack [0,1,2])) -- 1.0e-2 c #u8(0 1 2)
+> mapM_ (putStrLn . show_sexp) [S.Float 0.01,S.Char 'c',S.ByteVector (B.pack [0,1,2])] -- 0.01 #\c
 -}
 show_sexp :: SEXP -> String
 show_sexp s =
@@ -28,6 +31,7 @@ show_sexp s =
       S.List x -> "(" ++ unwords (map show_sexp x) ++ ")"
       S.Number x -> show x
       S.String x -> "\"" ++ x ++ "\""
+      S.ByteVector x -> "(bytevector " ++ unwords (map show (B.unpack x)) ++ ")"
       _ -> error_x "show_sexp" s
 
 -- | Names are re-written from SC3 form (sinOsc) to LISP form (sin-osc).
