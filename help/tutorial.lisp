@@ -64,9 +64,9 @@
 ((λ exp (cons '- (cdr exp))) '(+ 1 2)) ; (- 1 2)
 
 ; The MACRO form takes an S-EXPRESSION re-writing program.
-; When applied the MACRO receives the remainder of expression as a LIST.
+; MACROS are expanded not applied.
 
-((macro (λ exp (cons '- (cdr exp)))) + 1 2) ; -1
+((macro (λ exp (cons '- (cdr exp)))) + 1 2) ; ERROR
 
 ; MACROS may expand to MACROS.
 
@@ -136,7 +136,7 @@ list-rw ; LAMBDA
 (cons (- 1 2) ((flip -) 1 2)) ; (cons -1 1)
 (id 1) ; 1
 
-(procedure? +)
+(procedure? +) ; #t
 
 ; There is a MACRO, lambda, that approximates the SCHEME form.
 
@@ -181,10 +181,10 @@ nil ; NIL
 (begin-rw (cdr '(begin (print 1)))) ; ((λ _ (print 1)) nil)
 (begin-rw (cdr '(begin (print 1) (print 2)))) ; ((λ _ (print 2)) ((λ _ (print 1)) nil))
 
-(begin (print 1) (print 2) (print 3))
-((λ _ (print 3)) ((λ _ (print 2)) ((λ _ (print 1)) nil)))
+(begin (print 1) (print 2) (print 3)) ; PRINTS 1 2 3 RESULT=nil
+((λ _ (print 3)) ((λ _ (print 2)) ((λ _ (print 1)) nil))) ; PRINTS 1 2 3 RESULT=nil
 
-((λ x (begin (display x) (set! x 5) (print x))) 0) ; 05
+((λ x (begin (display x) (set! x 5) (print x))) 0) ; PRINTS 05
 
 #| DEFINING LISP |#
 
