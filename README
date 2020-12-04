@@ -14,15 +14,15 @@ The only data type is the
 [Why](?t=hsc3-graphs&e=gr/jmcc/why-supercollider.scd) Lisp SuperCollider?
 
 ~~~~
-(HEAR
-  (LET ((R (RESONZ (MUL (DUST AR 0.2) 50) (RAND 200 3200) 0.003))
-        (S (MIX (CLONE 10 R)))
-        (Z (DELAY-N S 0.048 0.048))
-        (C (COMB-L Z 0.1 (MUL-ADD (LF-NOISE1 KR (RAND 0 0.1)) 0.04 0.05) 15))
-        (Y (MIX (CLONE 7 C)))
-        (F (LAMBDA (I) (ALLPASS-N I 0.05 (CLONE 2 (RAND 0 0.05)) 1)))
-        (X ((FOLDL1 COMPOSE (REPLICATE 4 F)) Y)))
-    (ADD S (MUL X 0.2))))
+(hear
+  (let ((r (resonz (mul (dust ar 0.2) 50) (rand 200 3200) 0.003))
+        (s (mix (clone 10 r)))
+        (z (delay-n s 0.048 0.048))
+        (c (comb-l z 0.1 (mul-add (lf-noise1 kr (rand 0 0.1)) 0.04 0.05) 15))
+        (y (mix (clone 7 c)))
+        (f (lambda (i) (allpass-n i 0.05 (clone 2 (rand 0 0.05)) 1)))
+        (x ((foldl1 compose (replicate 4 f)) y)))
+    (add s (mul x 0.2))))
 ~~~~
 
 There is an OSX (10.9.3) binary
