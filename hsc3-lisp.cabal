@@ -4,12 +4,12 @@ Synopsis:          LISP SUPERCOLLIDER
 Description:       LISP SUPERCOLLIDER
 License:           GPL
 Category:          Sound
-Copyright:         (c) Rohan Drape, 2014-2020
+Copyright:         (c) Rohan Drape, 2014-2021
 Author:            Rohan Drape
 Maintainer:        rd@rohandrape.net
 Stability:         Experimental
 Homepage:          http://rohandrape.net/t/hsc3-lisp
-Tested-With:       GHC == 8.8.3
+Tested-With:       GHC == 8.8.4
 Build-Type:        Simple
 Cabal-Version:     >= 1.8
 
