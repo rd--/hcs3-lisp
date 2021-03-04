@@ -1,4 +1,4 @@
--- * HUSK-SCHEME <https://github.com/justinethier/husk-scheme>
+-- | SEXP parser using husk-scheme <https://github.com/justinethier/husk-scheme> (Ethier)
 module Sound.SC3.Lisp.Parse.Ethier where
 
 import qualified Numeric {- base -}

@@ -1,3 +1,4 @@
+-- | SEXP parser using atto-lisp (Schilling).
 module Sound.SC3.Lisp.Parse.Schilling where
 
 import Control.Monad.Except {- mtl -}

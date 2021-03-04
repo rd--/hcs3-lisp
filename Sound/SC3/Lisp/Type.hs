@@ -1,11 +1,12 @@
 module Sound.SC3.Lisp.Type where
 
-import Control.Monad.State {- mtl -}
-import Control.Monad.Except {- mtl -}
 import Data.IORef {- base -}
 import Data.Maybe {- base -}
 
-import qualified Data.Map as M {- containers -}
+import qualified Control.Monad.State as Monad {- mtl -}
+import qualified Control.Monad.Except as Monad {- mtl -}
+
+import qualified Data.Map as Map {- containers -}
 
 -- * Types
 
@@ -14,7 +15,7 @@ class (Eq a,Ord a,Num a,Fractional a) => Lisp_Ty a where
     ty_to_int :: a -> Int -- ^ Coercion, ie. for Char.
     ty_from_bool :: Bool -> a -- ^ Boolean value represented in /a/, by convention @1@ and @0@.
 
-type Dict a = M.Map String (Cell a)
+type Dict a = Map.Map String (Cell a)
 
 data Env a = Frame (IORef (String,Cell a)) (Env a)
            | Toplevel (IORef (Dict a))
@@ -43,8 +44,8 @@ quoted_symbol x = (Cons (Symbol "quote") (Cons (Symbol x) Nil))
 
 instance Eq a => Eq (Cell a) where (==) = cell_eq
 
--- data ST a = ST {st_threads :: M.Map Int ThreadId,st_env :: Env a}
-type VM a r = ExceptT String (StateT (Env a) IO) r
+-- data ST a = ST {st_threads :: Map.Map Int ThreadId,st_env :: Env a}
+type VM a r = Monad.ExceptT String (Monad.StateT (Env a) IO) r
 
 -- * Instances
 

@@ -1,10 +1,12 @@
 ; uid
 (define uid 0)
 (define incr-uid (λ n (begin (set! uid (+ uid n)) uid)))
-(define clone (lambda (n u) (clone* (list (incr-uid 1) n u))))
+
+; clone/mce
+(define clone (lambda (n f) (make-mce (replicate-m n f))))
 
 ; mrg
-(define make-mrg (lambda (p q) (make-mrg* (list p q))))
+(define make-mrg (lambda (p q) (make-mrg* (list p q)))) ; make-mrg* is primitive
 
 ; scheme_rename_def
 (define abs u:abs)
@@ -66,3 +68,6 @@
 
 ; scheme
 (define expt pow)
+
+; control
+(define ctl (lambda (rt nm df) (mk-ctl (list rt nm df)))) ; mk-ctl is primitive

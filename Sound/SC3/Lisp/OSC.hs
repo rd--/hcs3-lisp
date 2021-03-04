@@ -1,3 +1,4 @@
+-- | Translation between OSC packets and s-expressions (ie. packet_to_lisp and lisp_to_packet).
 module Sound.SC3.Lisp.OSC where
 
 import Data.Word {- base -}
@@ -143,6 +144,7 @@ lisp_is_bundle l =
     S.List (S.String "#bundle" : S.Float _ : m) -> all lisp_is_message m
     _ -> False
 
+-- | Translate from s-expression 'S.LispVal' to OSC 'Packet'.
 lisp_to_packet :: (Integer -> Datum,Double -> Datum) -> S.LispVal -> Packet
 lisp_to_packet opt l =
   if lisp_is_bundle l
@@ -151,12 +153,14 @@ lisp_to_packet opt l =
        then Packet_Message (lisp_to_message opt l)
        else error "lisp_to_packet"
 
+-- | Translate OSC 'Packet' to 'S.LispVal'.
 packet_to_lisp :: (Bool, Bool) -> Packet -> S.LispVal
 packet_to_lisp opt pkt =
   case pkt of
     Packet_Bundle x -> bundle_to_lisp opt x
     Packet_Message x -> message_to_lisp opt x
 
+-- | 'S.sexp_show' of 'packet_to_lisp'
 lisp_print_packet :: (Bool, Bool) -> Packet -> String
 lisp_print_packet opt = S.sexp_show . packet_to_lisp opt
 

@@ -1,3 +1,4 @@
+-- | SEXP parser using sexpresso (Archambault).
 module Sound.SC3.Lisp.Parse.Archambault where
 
 import Data.Ratio {- base -}

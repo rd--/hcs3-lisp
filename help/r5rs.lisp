@@ -2,8 +2,8 @@
 
 ; 2.2
 
-(define fact (lambda (n) (if (= n 0) 1 (* n (fact (- n 1))))))
-(map fact (enum-from-to 0 12))
+(define fact (lambda (n) (if (= n 0) 1 (* n (fact (- n 1)))))) ; nil
+(map fact (enum-from-to 0 12)) ; (1 1 2 6 24 120 720 5040 40320 362880 3628800 39916800 479001600)
 
 ; 4.1.3
 
@@ -14,9 +14,9 @@
 
 (lambda (x) (+ x x)) ; (λ x (+ x x))
 ((lambda (x) (+ x x)) 4) ; 8
-(define reverse-subtract (lambda (x y) (- y x))) ; NIL
+(define reverse-subtract (lambda (x y) (- y x))) ; nil
 (reverse-subtract 7 10) ; 3
-(define add4 (let ((x 4)) (lambda (y) (+ x y)))) ; NIL
+(define add4 (let ((x 4)) (lambda (y) (+ x y)))) ; nil
 (add4 6) ; 10
 
 ; 4.1.5
@@ -27,9 +27,9 @@
 
 ; 4.1.6
 
-(define x 2) ; NIL
+(define x 2) ; nil
 (+ x 1) ; 3
-(set! x 4) ; NIL
+(set! x 4) ; nil
 (+ x 1) ; 5
 
 ; 4.2.1
@@ -49,7 +49,7 @@
 
 (let ((x 2) (y 3)) (let* ((x 7) (z (+ x y))) (* z x))) ; 70
 
-(define zero? (lambda (n) (equal? n 0)))
+(define zero? (lambda (n) (equal? n 0))) ; nil
 
 (letrec ((even?
           (lambda (n)
@@ -61,19 +61,19 @@
             (if (zero? n)
                 #f
                 (even? (- n 1))))))
-  (even? 89))
+  (even? 89)) ; ERROR
 
 ; 4.2.3
 
-(define x 0) ; NIL
+(define x 0) ; nil
 (begin (set! x 5) (+ x 1)) ; 6
 (begin (display "4 plus 1 equals ") (display (+ 4 1))) ; 4 plus 1 equals 5
 
 ; 5.2.1
 
-(define add3 (lambda (x) (+ x 3))) ; NIL
+(define add3 (lambda (x) (+ x 3))) ; nil
 (add3 3) ; 6
-(define first car) ; NIL
+(define first car) ; nil
 (first '(1 2)) ; 1
 
 ; 6.1

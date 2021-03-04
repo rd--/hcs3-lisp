@@ -289,7 +289,7 @@ not-defined ; 1
 ; RANDOM LISP
 
 (i-random 0 3)
-(replicate-m 12 (choose (list 1 2 3)))
+(replicate-m 12 (lambda () (choose (list 1 2 3))))
 
 ; TEMPORAL LISP
 
