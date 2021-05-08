@@ -8,41 +8,50 @@
 ; mrg
 (define make-mrg (lambda (p q) (make-mrg* (list p q)))) ; make-mrg* is primitive
 
+; [ugen] -> mrg
+(define mrg-n
+  (lambda (xs)
+    (if (null? xs)
+       (error "mrg-n" "nil input list" xs)
+       (if (null? (tail xs))
+           (head xs)
+           (mrg2 (head xs) (mrg-n (tail xs)))))))
+
 ; scheme_rename_def
-(define abs u:abs)
-(define cos u:cos)
-(define exp u:exp)
-(define floor u:floor)
-(define log u:log)
-(define not u:not)
-(define sin u:sin)
-(define sqrt u:sqrt)
-(define tan u:tan)
-(define gcd u:gcd)
-(define lcm u:lcm)
-(define max u:max)
-(define min u:min)
-(define mod u:mod)
-(define round u:round)
+;(define abs Abs)
+;(define cos Cos)
+;(define exp Exp)
+;(define floor Floor)
+;(define log Log)
+;(define not Not)
+;(define sin Sin)
+;(define sqrt Sqrt)
+;(define tan Tan)
+;(define gcd GCD)
+;(define lcm LCM)
+;(define max Max)
+;(define min Min)
+;(define mod Mod)
+;(define round Round)
 
 ; operator_sym_def
-(define + add)
-(define - sub)
-(define * mul)
-(define / f-div)
-(define % mod)
-(define == eq-)
-(define /= ne)
-(define < lt-)
-(define > gt-)
-(define <= le)
-(define >= ge)
-(define ** pow)
+(define + Add)
+(define - Sub)
+(define * Mul)
+(define / FDiv)
+(define % Mod)
+(define == EQ)
+(define /= NE)
+(define < LT)
+(define > GT)
+(define <= LE)
+(define >= GE)
+(define ** Pow)
 
 ; ord
-(define eq eq-)
-(define lt lt-)
-(define gt gt-)
+;(define eq EQ)
+;(define lt LT)
+;(define gt GT)
 
 (define play-at (lambda (fd u nid act grp) (play-at* (list fd u nid act grp))))
 (define audition (lambda (u) (play-at nil u -1 add-to-head 1)))
@@ -67,7 +76,7 @@
 (define useq (lambda (n f x) ((foldl1 compose (replicate n f)) x)))
 
 ; scheme
-(define expt pow)
+(define expt Pow)
 
 ; control
 (define ctl (lambda (rt nm df) (mk-ctl (list rt nm df)))) ; mk-ctl is primitive

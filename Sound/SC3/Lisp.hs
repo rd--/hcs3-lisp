@@ -219,7 +219,7 @@ expand c = do
 
 eval_str :: Lisp_Ty a => String -> VM a [Cell a]
 eval_str str = do
-  l <- Parse.parse_sexp_vm str
+  l <- Parse.parse_sexp_vm (map toLower str) -- case-insensitivity
   trace 5 "EVAL_STR" (str,l)
   mapM (\e -> Parse.sexp_to_cell e >>= expand >>= eval) l
 

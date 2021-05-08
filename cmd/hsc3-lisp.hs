@@ -186,7 +186,6 @@ main = do
             ,"ugen.lisp" -- sw/rsc3
             ,"hsc3.lisp"
             ,"rsc3.lisp" -- sw/rsc3
-            ,"rdu.lisp"
             ,"alias.lisp"
             ]
   a <- getArgs

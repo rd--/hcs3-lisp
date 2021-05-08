@@ -40,7 +40,7 @@
 
 ; The CONS cell is the primitive composite value.
 
-(cons 1 2) ; (1 . 2)
+(cons 1 2) ; (cons 1 2)
 
 ; CONS is undone with CAR and CDR.
 
@@ -52,6 +52,9 @@
 ; QUOTE protects an S-EXPRESSION from EXPAND and EVAL.
 
 (quote (+ 1 2)) ; (+ 1 2)
+
+; 'X is (QUOTE X)
+'(+ 1 2) ; (+ 1 2)
 
 ; EVAL is UNQUOTE.
 
@@ -406,3 +409,7 @@ three ; 3
 
 (maximum* (list 1 5 9 7 3)) ; 9
 (maximum* (list -5 -7 -3)) ; -3
+
+; interpreter
+
+(env-print)
