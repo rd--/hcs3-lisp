@@ -181,7 +181,7 @@ list-rw ; (λ exp ...)
 ; begin cannot be elided.
 
 ((lambda (p q) (display p) (print q))) ; error
-((lambda (p q) (begin (display p) (print q))) 1 2) ; 12
+((lambda (p q) (begin (display p) (print q))) 1 2) ; prints 12 ; result=nil
 
 ; Nil
 ; ---

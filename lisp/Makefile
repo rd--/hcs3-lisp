@@ -5,7 +5,7 @@ lisp_dir=$(HOME)/sw/hsc3-lisp/lisp
 
 rhs_lib=control/monad.scm data/bool.scm data/ord.scm data/function.scm data/list.scm data/tree.scm data/tree.scm prelude.scm
 rsc3_lib=command.scm constant.scm derived.scm envelope.scm list.scm sc3.scm
-ugen_lib=ugen.scm ugen/rdu.scm
+ugen_lib=ugen.scm ugen/rdu.scm hw.scm
 
 all: mk-rhs mk-rsc3
 	echo "hsc3-lisp/lisp"

@@ -1,9 +1,9 @@
-; DEFINE is an alias for SET!
+; define is an alias for set!
 
 (set! define-rw (λ exp (cons (quote set!) exp)))
 (set! define (macro define-rw))
 
-; C....R
+; c....r
 
 (define caar (λ c (car (car c))))
 (define cadr (λ c (car (cdr c))))
@@ -34,11 +34,11 @@
 (define cdddar (λ c (cdr (cdr (cdr (car c))))))
 (define cddddr (λ c (cdr (cdr (cdr (cdr c))))))
 
-; NIL
+; nil
 
 (define nil '())
 
-; LAMBDA
+; lambda
 
 (define lambda-rw-code
   (quote
@@ -46,31 +46,32 @@
      (let ((param (car exp))
            (code (cadr exp))
            (rem (cddr exp)))
-       (cond ((pair? rem) (error "LAMBDA: NOT UNARY?"))
+       (cond ((pair? rem) (error "lambda: not unary?"))
              ((null? param) (list (quote λ) (quote _) code))
              ((null? (cdr param)) (list (quote λ) (car param) code))
              (else (list (quote λ) (car param) (lambda-rw (list (cdr param) code)))))))))
 
 ; (expand lambda-rw-code)
-(define lambda-rw (λ exp ((λ param ((λ code (if (pair? (cddr exp)) (error "LAMBDA: NOT UNARY?") (if (null? param) (cons (quote λ) (cons (quote _) (cons code nil))) (if (null? (cdr param)) (cons (quote λ) (cons (car param) (cons code nil))) (cons (quote λ) (cons (car param) (cons (lambda-rw (cons (cdr param) (cons code nil))) nil))))))) (cadr exp))) (car exp))))
+;(define lambda-rw (λ exp ((λ param ((λ code (if (pair? (cddr exp)) (error "lambda: not unary?") (if (null? param) (cons (quote λ) (cons (quote _) (cons code nil))) (if (null? (cdr param)) (cons (quote λ) (cons (car param) (cons code nil))) (cons (quote λ) (cons (car param) (cons (lambda-rw (cons (cdr param) (cons code nil))) nil))))))) (cadr exp))) (car exp))))
+(define lambda-rw (λ exp ((λ param ((λ code ((λ rem (if (pair? rem) (error "lambda: not unary?") (if (null? param) (cons (quote λ) (cons (quote _) (cons code nil))) (if (null? (cdr param)) (cons (quote λ) (cons (car param) (cons code nil))) (cons (quote λ) (cons (car param) (cons (lambda-rw (cons (cdr param) (cons code nil))) nil))))))) (cddr exp))) (cadr exp))) (car exp))))
 
 (define lambda (macro lambda-rw))
 
-; GENSYM
+; gensym
 
 (define gensym-code
   (quote
    (let ((n 0))
      (lambda ()
-       (let ((r (string->symbol (string-append "GENSYM:" (show n)))))
+       (let ((r (string->symbol (string-append "gensym:" (show n)))))
          (begin
            (set! n (+ n 1))
            r))))))
 
 ; (expand gensym-code)
-(define gensym ((λ n (λ _ ((λ r ((λ _ r) ((λ _ (set! n (+ n 1))) nil))) (string->symbol (string-append "GENSYM:" (show n)))))) 0))
+(define gensym ((λ n (λ _ ((λ r ((λ _ r) ((λ _ (set! n (+ n 1))) nil))) (string->symbol (string-append "gensym:" (show n)))))) 0))
 
-; LET
+; let
 
 (define let-rw-code
   (quote
@@ -78,7 +79,7 @@
      (let ((bindings (car exp))
            (code (cadr exp))
            (rem (cddr exp)))
-       (cond ((pair? rem) (error "LET: NOT UNARY?"))
+       (cond ((pair? rem) (error "let: not unary?"))
              ((null? bindings) code)
              (else (let ((binding0 (car bindings)))
                      (list (list (quote λ) (car binding0) (let-rw (list (cdr bindings) code)))
@@ -89,7 +90,7 @@
 
 (define let (macro let-rw))
 
-; LIST
+; list
 
 (define append
   (lambda (a b)
@@ -97,7 +98,7 @@
         b
         (cons (car a) (append (cdr a) b)))))
 
-;; foldr :: (a -> b -> b) -> b -> [a] -> b
+; foldr :: (a -> b -> b) -> b -> [a] -> b
 (define foldr
   (lambda (f z l)
     (if (null? l)
@@ -111,7 +112,7 @@
 
 (define list (macro list-rw))
 
-; AND / OR
+; and / or
 
 (define and-rw (λ exp (list (quote if) (car exp) (cadr exp) #f)))
 (define and (macro and-rw))
@@ -119,7 +120,7 @@
 (define or-rw (λ exp (list (quote if) (car exp) #t (cadr exp))))
 (define or (macro or-rw))
 
-; COND
+; cond
 
 (define cond-rw
   (λ exp
@@ -140,7 +141,7 @@
 
 (define when (macro when-rw))
 
-; BEGIN
+; begin
 
 (define begin-rw*-code
   (quote
@@ -156,21 +157,26 @@
 
 (define begin (macro begin-rw))
 
-; LETREC
+; letrec
 
 (define letrec-rw-code
   (quote
-   (lambda (exp)
+   (λ exp
      (let ((bindings (car exp))
            (code (cadr exp))
-           (names (map car bindings))
-           (values (map cadr bindings))
-           (bindings* (zip-with list names (map (const nil) bindings)))
-           (initialisers (zip-with (lambda (p q) (list (quote set!) p q)) names values)))
-       (list (quote let) bindings* (cons (quote begin) (append initialisers (list code))))))))
+           (rem (cddr exp)))
+       (cond ((pair? rem) (error "letrec: not unary?"))
+             ((null? bindings) code)
+             (else (let ((names (map car bindings))
+                         (values (map cadr bindings))
+                         (bindings* (zip-with list names (map (const nil) bindings)))
+                         (initialisers (zip-with (lambda (p q) (list (quote set!) p q)) names values)))
+                     (list (quote let)
+                           bindings*
+                           (cons (quote begin) (append initialisers (list code)))))))))))
 
 ; (expand letrec-rw-code)
-(define letrec-rw (λ exp ((λ bindings ((λ code ((λ names ((λ values ((λ bindings* ((λ initialisers (cons (quote let) (cons bindings* (cons (cons (quote begin) (append initialisers (cons code nil))) nil)))) (zip-with (λ p (λ q (cons (quote set!) (cons p (cons q nil))))) names values))) (zip-with list names (map (const nil) bindings)))) (map cadr bindings))) (map car bindings))) (cadr exp))) (car exp))))
+(define letrec-rw (λ exp ((λ bindings ((λ code ((λ rem (if (pair? rem) (error "letrec: not unary?") (if (null? bindings) code ((λ names ((λ values ((λ bindings* ((λ initialisers (cons (quote let) (cons bindings* (cons (cons (quote begin) (append initialisers (cons code nil))) nil)))) (zip-with (λ p (λ q (cons (quote set!) (cons p (cons q nil))))) names values))) (zip-with list names (map (const nil) bindings)))) (map cadr bindings))) (map car bindings))))) (cddr exp))) (cadr exp))) (car exp))))
 
 (define letrec (macro letrec-rw))
 

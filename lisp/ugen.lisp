@@ -3696,3 +3696,38 @@
 (define PV_Split
   (lambda (bufferA bufferB)
     (mk-ugen (list "PV_Split" kr (list bufferA bufferB) nil 2 nil nil))))
+
+; Zero local buffer.
+;
+; ClearBuf does not copy the buffer number through so this is an MRG node.
+;
+; ClearBuf :: ugen -> ugen
+(define ClearBuf
+  (lambda (b)
+    (mrg2 b (mk-ugen (list "ClearBuf" ir (list b) nil 1 nil nil)))))
+
+(define PackFFT
+  (lambda (b sz fr to z mp)
+    (mk-ugen (list "PackFFT" kr (list b sz fr to z) mp 1 nil nil))))
+
+(define string->ugen
+  (lambda (s)
+    (make-mce
+     (cons (string-length s)
+           (map char->integer (string->list s))))))
+
+(define Poll
+  (lambda (trig input trigid label_)
+    (mk-ugen (list "Poll" (list 1) (list trig input trigid) (string->ugen label_) 1 nil nil))))
+
+(define PV_HainsworthFoote
+  (lambda (buf h f thr wt)
+    (mk-ugen (list "PV_HainsworthFoote" ar (list buf h f thr wt) nil 1 nil nil))))
+
+(define PV_JensenAndersen
+  (lambda (buffer propsc prophfe prophfc propsf threshold waittime)
+    (mk-ugen (list "PV_JensenAndersen" ar (list buffer propsc prophfe prophfc propsf threshold waittime) nil 1 nil nil))))
+
+(define Unpack1FFT
+  (lambda (c b bi wm)
+    (mk-ugen (list "Unpack1FFT" dr (list c b bi wm) nil 1 nil nil))))

@@ -13,6 +13,13 @@ import qualified Sound.SC3.Lisp.Type as L {- hsc3-lisp -}
 
 type SEXP = S.LispVal
 
+{-
+import Text.Printf {- base -}
+let fn = "/home/rohan/sw/rsc3/help/graph/jmcc-bowed-string.scm"
+txt <- readFile fn
+S.readExprList (printf "(show-graph %s)" txt)
+-}
+
 parse_sexp_vm :: String -> L.VM a [SEXP]
 parse_sexp_vm = either (E.throwError . show) return . S.readExprList
 

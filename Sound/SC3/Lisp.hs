@@ -10,20 +10,22 @@ module Sound.SC3.Lisp where
 import Control.Concurrent {- base -}
 import Control.Monad.State {- mtl -}
 import Control.Monad.Except {- mtl -}
-import Data.Char {- base -}
 import Data.IORef {- base -}
-import qualified Data.Map as M {- containers -}
+import Data.Maybe {- base -}
 import System.Directory {- directory -}
 import System.Environment {- base -}
 import System.Exit {- base -}
 import System.FilePath {- filepath -}
 import System.IO {- base -}
 
+import qualified Data.Map as Map {- containers -}
+
 import Sound.SC3.Lisp.Type {- hsc3-lisp -}
 import qualified Sound.SC3.Lisp.Parse.Ethier as Parse {- hsc3-lisp -}
 
 -- * ENV
 
+-- | 'newIORef' of 'readIORef'
 ioref_cpy :: IORef a -> IO (IORef a)
 ioref_cpy r = readIORef r >>= newIORef
 
@@ -44,7 +46,7 @@ env_print e =
 
 env_empty :: IO (Env a)
 env_empty = do
-  d <- newIORef M.empty
+  d <- newIORef Map.empty
   return (Toplevel d)
 
 env_lookup_m :: String -> Env a -> VM a (Maybe (Cell a))
@@ -55,19 +57,21 @@ env_lookup_m w e =
              if w == k then return (Just v) else env_lookup_m w e'
       Toplevel d -> do
              d' <- liftIO (readIORef d)
-             case M.lookup w d' of
+             case Map.lookup w d' of
                Just r -> return (Just r)
                Nothing -> return Nothing
 
-trace :: Show d => Int -> String -> d -> VM a ()
-trace lev msg val = when (lev < 3) (liftIO (putStrLn ("TRACE: " ++ msg ++ ": " ++ show val)))
+type Trace_Level = Int
+
+trace :: Show d => Trace_Level -> String -> d -> VM a ()
+trace lvl msg val = when (lvl < 3) (liftIO (putStrLn ("trace: " ++ msg ++ ": " ++ show val)))
 
 env_lookup :: Lisp_Ty a => String -> Env a -> VM a (Cell a)
 env_lookup w e = do
   r <- env_lookup_m w e
-  trace 5 "ENV_LOOKUP" (w,r)
+  trace 5 "env_lookup" (w,r)
   case r of
-    Nothing -> throwError ("ENV-LOOKUP: " ++ w)
+    Nothing -> throwError ("env-lookup: " ++ w)
     Just c -> return c
 
 env_add_frame :: String -> (Cell a) -> Env a -> IO (Env a)
@@ -81,7 +85,7 @@ env_set e nm c =
       Frame f e' -> do
              (k,_) <- liftIO (readIORef f)
              if nm == k then writeIORef f (nm,c) else env_set e' nm c
-      Toplevel d -> modifyIORef d (M.insert nm c)
+      Toplevel d -> modifyIORef d (Map.insert nm c)
 
 gen_toplevel :: Dict a -> IO (Env a)
 gen_toplevel = fmap Toplevel . newIORef
@@ -98,7 +102,7 @@ maybe_to_err :: String -> Maybe a -> VM a a
 maybe_to_err msg = maybe (throwError msg) return
 
 atom_err :: Lisp_Ty a => Cell a -> VM a a
-atom_err c = maybe_to_err ("NOT ATOM: " ++ show c) (atom c)
+atom_err c = maybe_to_err ("not atom: " ++ show c) (atom c)
 
 from_list :: [Cell a] -> Cell a
 from_list = foldr Cons Nil
@@ -125,6 +129,8 @@ l_equal lhs = Fun (\rhs -> if lhs == rhs then l_true else l_false)
 apply_lambda :: Lisp_Ty a => Env a -> String -> Cell a -> Cell a -> VM a (Cell a)
 apply_lambda l_env nm code arg = do
   c_env <- get
+  r <- env_lookup_m nm l_env
+  when (isJust r) (trace 3 "env_add_frame: shadowing" nm)
   put =<< liftIO (env_add_frame nm arg l_env)
   res <- eval code
   put c_env
@@ -133,16 +139,16 @@ apply_lambda l_env nm code arg = do
 -- | Functions are one argument, but allow (+ 1 2) for ((+ 1) 2).
 apply :: Lisp_Ty a => Cell a -> Cell a -> Cell a -> VM a (Cell a)
 apply lhs arg var_arg = do
-  let msg = from_list [Symbol "LHS:",lhs,Symbol "RHS:",arg,Symbol "REM:",var_arg]
+  let msg = from_list [Symbol "lhs:",lhs,Symbol "rhs:",arg,Symbol "rem:",var_arg]
   r <- case lhs of
          Fun f -> eval arg >>= return . f
          Proc f -> eval arg >>= f
          Lambda env nm code -> eval arg >>= apply_lambda env nm code
-         _ -> throwError ("APPLY: INVALID LHS: " ++ show msg)
+         _ -> throwError ("apply: invalid lhs: " ++ show msg)
   case var_arg of
     Nil -> return r
     Cons e l' -> apply r e l'
-    _ -> throwError ("APPLY: INVALID VAR-ARG: " ++ show msg)
+    _ -> throwError ("apply: invalid var-arg: " ++ show msg)
 
 l_apply :: Lisp_Ty a => Cell a -> VM a (Cell a)
 l_apply c = do
@@ -150,10 +156,10 @@ l_apply c = do
   (p,l) <- case rhs of
              Nil -> return (Nil,Nil)
              Cons p' q' -> return (p',q')
-             _ -> throwError ("APPLY: RHS not NIL or CONS: " ++ show rhs)
+             _ -> throwError ("apply: rhs not nil or cons: " ++ show rhs)
   f <- eval lhs
   case f of
-    Macro _ -> throwError ("APPLY: MACRO? " ++ show c)
+    Macro _ -> throwError ("apply: macro? " ++ show c)
     _ -> apply f p l
 
 l_quote :: Cell a -> Cell a
@@ -186,14 +192,14 @@ eval c =
              _ <- liftIO (forkIO f)
              return Nil
       Cons _ _ -> l_apply c
-      _ -> throwError ("EVAL: ILLEGAL FORM: " ++ show c)
+      _ -> throwError ("eval: illegal form: " ++ show c)
 
 l_mapM :: Lisp_Ty a => (Cell a -> VM a (Cell a)) -> Cell a -> VM a (Cell a)
 l_mapM f c =
     case c of
       Nil -> return Nil
       Cons lhs rhs -> f lhs >>= \lhs' -> fmap (Cons lhs') (l_mapM f rhs)
-      _ -> throwError ("L_MAPM: NOT LIST? " ++ show c)
+      _ -> throwError ("l_mapM: not list? " ++ show c)
 
 -- | If /c/ is a Macro call expand it, and then expand the result.
 -- Do not expand quoted forms.
@@ -217,10 +223,11 @@ expand c = do
 
 -- * LOAD
 
-eval_str :: Lisp_Ty a => String -> VM a [Cell a]
-eval_str str = do
-  l <- Parse.parse_sexp_vm str -- (map toLower str) -- case-insensitivity
-  trace 5 "EVAL_STR" (str,l)
+eval_str :: Lisp_Ty a => Int -> String -> VM a [Cell a]
+eval_str lvl str = do
+  trace lvl "eval_str" str
+  l <- Parse.parse_sexp_vm str
+  trace lvl "eval_str" l
   mapM (\e -> Parse.sexp_to_cell e >>= expand >>= eval) l
 
 load :: Lisp_Ty a => Cell a -> VM a ()
@@ -228,15 +235,15 @@ load c = do
   case c of
     String nm -> do
                x <- liftIO (doesFileExist nm)
-               when (not x) (throwError ("LOAD: FILE MISSING: " ++ nm))
-               liftIO (putStrLn nm >> readFile nm) >>= eval_str >> return ()
-    _ -> throwError ("LOAD: " ++ show c)
+               when (not x) (throwError ("load: file missing: " ++ nm))
+               liftIO (putStrLn nm >> readFile nm) >>= eval_str 5 >> return ()
+    _ -> throwError ("load: " ++ show c)
 
 load_files :: Lisp_Ty a => [String] -> VM a ()
 load_files nm = do
   r <- liftIO (lookupEnv "HSC3_LISP_DIR")
   case r of
-    Nothing -> throwError "HSC3_LISP_DIR NOT SET"
+    Nothing -> throwError "HSC3_LISP_DIR not set"
     Just dir -> mapM_ load (map (String . (dir </>)) nm)
 
 -- * CORE
@@ -248,19 +255,19 @@ l_string_to_symbol :: Lisp_Ty a => Cell a -> Cell a
 l_string_to_symbol c =
     case c of
       String s -> Symbol s
-      _ -> Error ("STRING->SYMBOL: " ++ show c)
+      _ -> Error ("string->symbol: " ++ show c)
 
 l_string_append :: Lisp_Ty a => Cell a -> Cell a -> Cell a
 l_string_append p q =
     case (p,q) of
       (String r,String s) -> String (r ++ s)
-      _ -> Error ("STRING-APPEND: " ++ show (p,q))
+      _ -> Error ("string-append: " ++ show (p,q))
 
 l_write_string :: Lisp_Ty a => Cell a -> VM a (Cell a)
 l_write_string c =
     case c of
       String s -> liftIO (putStr s) >> return Nil
-      _ -> throwError ("WRITE-STRING: " ++ show c)
+      _ -> throwError ("write-string: " ++ show c)
 
 l_env_print :: Lisp_Ty a => Cell a -> VM a (Cell a)
 l_env_print x = do
@@ -270,15 +277,15 @@ l_env_print x = do
 
 core_dict :: Lisp_Ty a => Dict a
 core_dict =
-    M.fromList
+    Map.fromList
     [("#t",l_true)
     ,("#f",l_false)
-    ,("car",Fun (\c -> case c of {Cons lhs _ -> lhs; _ -> Error ("CAR: " ++ show c)}))
-    ,("cdr",Fun (\c -> case c of {Cons _ rhs -> rhs; _ -> Error ("CDR: " ++ show c)}))
+    ,("car",Fun (\c -> case c of {Cons lhs _ -> lhs; _ -> Error ("car: " ++ show c)}))
+    ,("cdr",Fun (\c -> case c of {Cons _ rhs -> rhs; _ -> Error ("cdr: " ++ show c)}))
     ,("cons",Fun (\lhs -> Fun (\rhs -> Cons lhs rhs)))
     ,("env-print", Proc l_env_print)
     ,("equal?",Fun l_equal)
-    ,("error",Proc (\c -> throwError ("ERROR: " ++ show c)))
+    ,("error",Proc (\c -> throwError ("error: " ++ show c)))
     ,("eval",Proc (\c -> eval c >>= eval))
     ,("exit",Proc (\_ -> liftIO exitSuccess))
     ,("expand",Proc (\c -> expand c))
@@ -299,22 +306,22 @@ core_dict =
 
 get_sexp :: String -> Handle -> IO String
 get_sexp s h = do
-  l <- hGetLine h
+  l <- hGetLine h -- no eol
   r <- hReady h
-  let s' = s ++ l
-  if r then get_sexp s' h else return s' -- (map toLower s')
+  let s' = s ++ (l ++ "\n")
+  if r then get_sexp s' h else return s'
 
 repl' :: Lisp_Ty a => Env a -> IO ()
 repl' env = do
   str <- get_sexp "" stdin
-  (r,env') <- runStateT (runExceptT (eval_str str)) env
+  (r,env') <- runStateT (runExceptT (eval_str 2 str)) env
   case r of
-    Left msg -> putStrLn ("ERROR: " ++ msg) >> repl' env
-    Right res -> mapM_ (\res' -> putStrLn ("RESULT: " ++ show res')) res >> repl' env'
+    Left msg -> putStrLn ("error: " ++ msg) >> repl' env
+    Right res -> mapM_ (\res' -> putStrLn ("result: " ++ show res')) res >> repl' env'
 
 repl :: Lisp_Ty a => Env a -> VM a () -> IO ()
 repl env initialise = do
   (r,env') <- runStateT (runExceptT initialise) env
   case r of
-    Left msg -> error ("REPL: INIT ERROR: " ++ msg)
+    Left msg -> error ("repl: init error: " ++ msg)
     Right () -> repl' env'
