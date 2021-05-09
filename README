@@ -49,7 +49,7 @@ and [translations](?t=hsc3-lisp&e=help/jmcc.lisp) of graphs by [James
 McCartney](http://audiosynth.com/autobio/emu.jpg) from the `SC2`
 manual.
 
-hsc3-lisp is `case-insensitive`.
+<!-- hsc3-lisp is `case-insensitive`. -->
 
 <!-- In emacs you can type `C-x C-l` to time travel. -->
 
@@ -71,6 +71,7 @@ Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 
 - [adc-bit-reduction.scm](?t=rsc3&e=help/graph/adc-bit-reduction.scm)
 - [adc-down-sample.scm](?t=rsc3&e=help/graph/adc-down-sample.scm)
+- [adc-shepard-tones.scm](?t=rsc3&e=help/graph/adc-shepard-tones.scm)
 - [cr-lucier.scm](?t=rsc3&e=help/graph/cr-lucier.scm)
 - [f0-red-frik.scm](?t=rsc3&e=help/graph/f0-red-frik.scm)
 - [jmcc-aleatoric-quartet.scm](?t=rsc3&e=help/graph/jmcc-aleatoric-quartet.scm) *
@@ -191,7 +192,6 @@ Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [ring-modulated-klank.scm](?t=rsc3&e=help/graph/ring-modulated-klank.scm)
 - [scritto.scm](?t=rsc3&e=help/graph/scritto.scm)
 - [seqr.scm](?t=rsc3&e=help/graph/seqr.scm)
-- [shepard-tones.scm](?t=rsc3&e=help/graph/shepard-tones.scm)
 - [sosc-lp.scm](?t=rsc3&e=help/graph/sosc-lp.scm)
 - [status.scm](?t=rsc3&e=help/graph/status.scm)
 - [strtchd-scrmbld.scm](?t=rsc3&e=help/graph/strtchd-scrmbld.scm)

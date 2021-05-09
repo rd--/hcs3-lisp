@@ -7,7 +7,7 @@
 ; Emacs
 ; -----
 
-; rsc3-mode more or less works.  Type:
+; rsc3-mode can be used, type:
 ;
 ; (setq rsc3-interpreter (list "hsc3-lisp"))
 ;
@@ -34,10 +34,19 @@
 
 (+ 1 2) ; 3
 ((λ _ 1)) ; 1
+((if #f + *) 3 4) ; 12
 
 ; Single argument λ is against the grain of traditional variadic notation.
 
 (+ 1 2 3) ; error: (3 3)
+
+; R4RS
+
+((lambda (x) (+ x x)) 4) ; 8
+(define reverse-subtract (lambda (x y) (- y x))) ; nil
+(reverse-subtract 7 10) ; 3
+(define add4 (let ((x 4)) (lambda (y) (+ x y)))) ; nil
+(add4 6) ; 10
 
 ; Cons
 ; ----
@@ -71,10 +80,23 @@
 
 ; quote protects an s-expression from expand and eval.
 
+(quote a) ; a
 (quote (+ 1 2)) ; (+ 1 2)
 
 ; 'x is (quote x)
+'a ; a
+'() ; nil
 '(+ 1 2) ; (+ 1 2)
+'(quote a) ; (quote a)
+''a ; (quote a)
+
+; consants
+'"abc" ; "abc"
+"abc" ; "abc"
+'145932 ; 145932
+145932 ; 145932
+'#t ; 1
+#t ; 1
 
 ; eval is unquote.
 
@@ -105,12 +127,16 @@ b ; 5
 
 ; define, lambda, let, and, or, cond, begin, when, and list are all macros.
 
-; Mutation
-; --------
+; Assignments & mutation
+; ----------------------
 
 ; set! is the primitive environment editor.
 ; set! creates a new entry at the top-level environment if the variable is not otherwise located.
 
+(define x 2) ; nil
+(+ x 1) ; 3
+(set! x 4) ; nil
+(+ x 1) ; 5
 (set! a nil) ; nil
 a ; nil
 (set! b (λ _ a)) ; nil
@@ -127,10 +153,25 @@ a ; nil
 (if #t 'a 'b) ; a
 (if #f (print 'a) (print 'b)) ; b nil
 (if 'false 'true 'false) ; true
+(if (> 3 2) 'yes 'no) ; yes
+(if (> 2 3) 'yes 'no) ; no
+(if (> 3 2) (- 3 2) (+ 3 2)) ; 1
 
 ; if requires both true and false branches, see when for an alternate.
 
 (if #t 'true) ; error
+
+; Cond
+; ----
+
+(cond-rw (cdr '(cond))) ; nil
+(cond-rw (cdr '(cond (a b)))) ; (if a b nil)
+(cond-rw (cdr '(cond (a b) (c d)))) ; (if a b (if c d nil))
+(cond-rw (cdr '(cond (a b) (c d) (else e)))) ; (if a b (if c d e))
+(cond-rw (cdr '(cond ((> x y) 'gt) ((< x y) 'lt) (else 'eq))))
+
+(cond ((> 3 2) 'greater) ((< 3 2) 'less)) ; greater
+(cond ((> 3 3) 'greater) ((< 3 3) 'less) (else 'equal)) ; equal
 
 ; Evaluation
 ; ----------
@@ -149,7 +190,7 @@ list ; macro
 (list) ; nil
 (list 1 2 3) ; (1 2 3)
 
-; The standard macroS also define the associated re-writer.
+; The standard macros also define the associated re-writer.
 
 list-rw ; (λ exp ...)
 (list-rw (cdr '(list))) ; nil
@@ -207,8 +248,8 @@ nil ; nil
 (compare 2 1) ; 'gt
 (compare 1 1) ; 'eq
 
-; Begin
-; -----
+; Sequencing & begin
+; ------------------
 
 (begin-rw (cdr '(begin))) ; nil
 (begin-rw (cdr '(begin (print 1)))) ; ((λ _ (print 1)) nil)
@@ -219,8 +260,15 @@ nil ; nil
 
 ((λ x (begin (display x) (set! x 5) (print x))) 0) ; prints 05
 
+(define x 0) ; nil
+(begin (set! x 5) (+ x 1)) ; 6
+(begin (display "4 plus 1 equals ") (display (+ 4 1))) ; prints 4 plus 1 equals 5
+
 ; Define
 ; ------
+
+(define x 28) ; nil
+x ; 28
 
 (define-rw (cdr '(define one 1))) ; (set! one 1)
 (define one 1) ; nil
@@ -251,17 +299,21 @@ not-defined ; 1
 (let ((set! 0) (set! 1)) set!) ; 1
 set! ; error
 
+(let ((x 2) (y 3)) (* x y)) ; 6
+
 ; Let is unary
 
 (let ((a 1)) (display a) (newline)) ; error
 (let ((a 1)) (begin (display a) (newline))) ; 1\n
 
-; Let is schemes let*.
+; Let is schemes let*, below z is bound to 7 + 3 in 7 * 10, not 2 + 3 in 7 * 5
 
 (let ((x 2) (y 3)) (let ((x 7) (z (+ x y))) (* z x))) ; 70 (not 35)
 
-(letrec-rw (cdr '(letrec ((a 5) (b 6)) (cons a b))))
-; (let ((a nil) (b nil)) (begin (set! a 5) (set! b 6) (cons a b)))
+; Recursive let
+; -------------
+
+(letrec-rw (cdr '(letrec ((a 5)) a))) ; (let ((a undefined)) (begin (set! a 5) a))
 
 (define add-count
   (lambda (l)
@@ -270,24 +322,37 @@ set! ; error
 
 (add-count (list 'a 'b 'c)) ; ((cons 0 a) (cons 1 b) (cons 2 c))
 
+(letrec ((even? (lambda (n) (if (== n 0) #t (odd? (- n 1)))))
+         (odd? (lambda (n) (if (== n 0) #f (even? (- n 1))))))
+  (even? 88)) ; #t
+
 ; Logic
 ; -----
 
 (not #t) ; #f
 (not #f) ; #t
 (not 'sym) ; 0 ; #f
+(not 3) ; #f
+(not (list 3)) ; #f
+(not '()) ; #f
+(not (list)) ; #f
+(not 'nil) ; #f
 
 (and-rw (cdr '(and p q))) ; (if p q 0)
 (list (and #t #t) (and #t #f) (and #f #t) (and #f #f)) ; (#t #f #f #f)
+(and (= 2 2) (> 2 1)) ; 1
+(and (= 2 2) (< 2 1)) ; 0
 
 (or-rw (cdr '(or p q))) ; (if p #t q)
 (list (or #t #t) (or #t #f) (or #f #t) (or #f #f)) ; (#t #t #t #f)
+(or (= 2 2) (> 2 1)) ; 1
+(or (= 2 2) (< 2 1)) ; 1
+(or #f #f) ; 0
 
-(cond-rw (cdr '(cond))) ; nil
-(cond-rw (cdr '(cond (a b)))) ; (if a b nil)
-(cond-rw (cdr '(cond (a b) (c d)))) ; (if a b (if c d nil))
-(cond-rw (cdr '(cond (a b) (c d) (else e)))) ; (if a b (if c d e))
-(cond-rw (cdr '(cond ((> x y) 'gt) ((< x y) 'lt) (else 'eq))))
+; and and or are binary
+
+(and 'x 'x 'x) ; error
+(or 'x 'x 'x) ; error
 
 (when-rw (cdr '(when a b))) ; (if a b nil)
 (when #t (print 'true)) ; prints true
@@ -339,13 +404,14 @@ set! ; error
 ; --
 
 newline-char ; 10
-(write-char newline-char)
-(newline) ; \n
-(print 1) ; 1
-(print (+ 1 2)) ; 3
-(begin (display 1) (print 2)) ; 12
+(write-char newline-char) ; prints newline ; \n
+(newline) ; prints newline ; \n
+(print 1) ; prints 1 and newline
+(print (+ 1 2)) ; prints 3 and newline
+(begin (display 1) (print 2)) ; prints 12 and newline
 (define three (begin (display* 1) (print 2) 3)) ; 1 2 nil
 three ; 3
+(display "text") ; prints "text" ; ought not to print quotes
 
 ; Strings
 ; -------
@@ -454,3 +520,37 @@ three ; 3
 ; -----------
 
 (env-print)
+
+; Vector
+; ------
+
+; vector is not implemented
+
+(vector 1 2 3) ; error
+#(1 2 3) ; error
+
+; Case
+; ----
+
+; case is not implemented
+
+(case (* 2 3) ((2 3 5 7) 'prime) ((1 4 6 8 9) 'composite)) ; error
+
+; Do
+; --
+
+; do is not implemented
+
+(let ((x '(1 3 5 7 9)))
+  (do ((x x (cdr x))
+       (sum 0 (+ sum (car x))))
+      ((null? x) sum))) ; 25
+
+; Boolean
+; -------
+
+; boolean? is not implemented
+
+(boolean? #f) ; #t
+(boolean? 0) ; #f
+(boolean? '()) ; #f

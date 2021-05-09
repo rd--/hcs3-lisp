@@ -114,10 +114,10 @@
 
 ; and / or
 
-(define and-rw (λ exp (list (quote if) (car exp) (cadr exp) #f)))
+(define and-rw (λ exp (if (pair? (cddr exp)) (error "and: not binary?") (list (quote if) (car exp) (cadr exp) #f))))
 (define and (macro and-rw))
 
-(define or-rw (λ exp (list (quote if) (car exp) #t (cadr exp))))
+(define or-rw (λ exp (if (pair? (cddr exp)) (error "or: not binary?") (list (quote if) (car exp) #t (cadr exp)))))
 (define or (macro or-rw))
 
 ; cond
@@ -169,14 +169,14 @@
              ((null? bindings) code)
              (else (let ((names (map car bindings))
                          (values (map cadr bindings))
-                         (bindings* (zip-with list names (map (const nil) bindings)))
+                         (bindings* (map (λ x (list x (quote undefined))) names))
                          (initialisers (zip-with (lambda (p q) (list (quote set!) p q)) names values)))
                      (list (quote let)
                            bindings*
                            (cons (quote begin) (append initialisers (list code)))))))))))
 
 ; (expand letrec-rw-code)
-(define letrec-rw (λ exp ((λ bindings ((λ code ((λ rem (if (pair? rem) (error "letrec: not unary?") (if (null? bindings) code ((λ names ((λ values ((λ bindings* ((λ initialisers (cons (quote let) (cons bindings* (cons (cons (quote begin) (append initialisers (cons code nil))) nil)))) (zip-with (λ p (λ q (cons (quote set!) (cons p (cons q nil))))) names values))) (zip-with list names (map (const nil) bindings)))) (map cadr bindings))) (map car bindings))))) (cddr exp))) (cadr exp))) (car exp))))
+(define letrec-rw (λ exp ((λ bindings ((λ code ((λ rem (if (pair? rem) (error "letrec: not unary?") (if (null? bindings) code ((λ names ((λ values ((λ bindings* ((λ initialisers (cons (quote let) (cons bindings* (cons (cons (quote begin) (append initialisers (cons code nil))) nil)))) (zip-with (λ p (λ q (cons (quote set!) (cons p (cons q nil))))) names values))) (map (λ x (cons x (cons (quote undefined) nil))) names))) (map cadr bindings))) (map car bindings))))) (cddr exp))) (cadr exp))) (car exp))))
 
 (define letrec (macro letrec-rw))
 
@@ -204,7 +204,7 @@
 
 (define newline-char 10)
 (define newline (λ _ (write-char newline-char)))
-(define display (λ s (write-string (show s))))
+(define display (λ s (write-string (show s)))) ; prints string quotes...
 
 (define print (λ o (begin (display o) (newline))))
 
