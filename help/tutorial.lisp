@@ -516,6 +516,22 @@ three ; 3
 (maximum* (list 1 5 9 7 3)) ; 9
 (maximum* (list -5 -7 -3)) ; -3
 
+; Factorial
+; ---------
+
+; https://oeis.org/A000142
+
+(define factorial (lambda (x) (if (== x 0) 1 (* x (factorial (- x 1))))))
+(map factorial (list 0 1 2 3 4 5 6 7 8 9 10)) ; (1 1 2 6 24 120 720 5040 40320 362880 3628800)
+
+; Fibonacci
+; ---------
+
+; https://oeis.org/A000045
+
+(define fib (lambda (x) (if (<= x 1) 1 (+ (fib (- x 1)) (fib (- x 2))))))
+(map fib (enum-from-to 0 19)) ; (1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765)
+
 ; Interpreter
 ; -----------
 
