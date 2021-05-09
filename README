@@ -1,4 +1,4 @@
-LISP SUPERCOLLIDER
+Lisp Supercollider
 ------------------
 
 <!-- AMERICAN PRIMITIVE, VOL. 2 -->
@@ -11,17 +11,15 @@ The only data type is the
 [SuperCollider](http://audiosynth.com/)
 `Unit Generator`.
 
-[Why](?t=hsc3-graphs&e=gr/jmcc/why-supercollider.scd) Lisp SuperCollider?
+[Why](?t=hsc3-graphs&e=lib/sc/graph/jmcc-why-supercollider.scd) Lisp SuperCollider?
 
 ~~~~
-(let ((r (resonz (mul (dust ar 0.2) 50) (rand 200 3200) 0.003))
-      (s (mix (clone 10 r)))
-      (z (delay-n s 0.048 0.048))
-      (c (comb-l z 0.1 (mul-add (lf-noise1 kr (rand 0 0.1)) 0.04 0.05) 15))
-      (y (mix (clone 7 c)))
-      (f (lambda (i) (allpass-n i 0.05 (clone 2 (rand 0 0.05)) 1)))
-      (x ((foldl1 compose (replicate 4 f)) y)))
-  (add s (mul x 0.2))))
+(let* ((s (mix-fill 10 (lambda (_) (Resonz (Mul (Dust ar 0.2) 50) (Rand 200 3200) 0.003))))
+       (z (DelayN s 0.048 0.048))
+       (y (mix-fill 7 (lambda (_) (CombL z 0.1 (MulAdd (LFNoise1 kr (Rand 0 0.1)) 0.04 0.05) 15))))
+       (f (lambda (i) (AllpassN i 0.05 (RRandN 2 0 0.05) 1)))
+       (x ((foldl1 compose (replicate 4 f)) y)))
+  (Add s (Mul x 0.2)))
 ~~~~
 
 There is an OSX (10.9.3) binary
@@ -73,6 +71,9 @@ Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 
 - [adc-bit-reduction.scm](?t=rsc3&e=help/graph/adc-bit-reduction.scm)
 - [adc-down-sample.scm](?t=rsc3&e=help/graph/adc-down-sample.scm)
+- [cr-lucier.scm](?t=rsc3&e=help/graph/cr-lucier.scm)
+- [f0-red-frik.scm](?t=rsc3&e=help/graph/f0-red-frik.scm)
+- [jmcc-aleatoric-quartet.scm](?t=rsc3&e=help/graph/jmcc-aleatoric-quartet.scm) *
 - [jmcc-analog-bubbles.scm](?t=rsc3&e=help/graph/jmcc-analog-bubbles.scm)
 - [jmcc-analog-bubbles-mouse.scm](?t=rsc3&e=help/graph/jmcc-analog-bubbles-mouse.scm)
 - [jmcc-babbling-brook.scm](?t=rsc3&e=help/graph/jmcc-babbling-brook.scm)
@@ -83,17 +84,9 @@ Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [jmcc-deep-trip.scm](?t=rsc3&e=help/graph/jmcc-deep-trip.scm)
 - [jmcc-demanding-studies.scm](?t=rsc3&e=help/graph/jmcc-demanding-studies.scm)
 - [jmcc-doppler.scm](?t=rsc3&e=help/graph/jmcc-doppler.scm)
-
-<!--
-
-- [cr-lucier.scm](?t=rsc3&e=help/graph/cr-lucier.scm)
-- [f0-red-frik.scm](?t=rsc3&e=help/graph/f0-red-frik.scm)
-- [jmcc-aleatoric-quartet.scm](?t=rsc3&e=help/graph/jmcc-aleatoric-quartet.scm)
-- [jmcc-analogue-daze.scm](?t=rsc3&e=help/graph/jmcc-analogue-daze.scm)
 - [jmcc-harmonic-swimming.scm](?t=rsc3&e=help/graph/jmcc-harmonic-swimming.scm)
 - [jmcc-harmonic-tumbling.scm](?t=rsc3&e=help/graph/jmcc-harmonic-tumbling.scm)
 - [jmcc-impulse-sequencer.scm](?t=rsc3&e=help/graph/jmcc-impulse-sequencer.scm)
-- [jmcc-landon-rose.scm](?t=rsc3&e=help/graph/jmcc-landon-rose.scm)
 - [jmcc-lfo-modulation.scm](?t=rsc3&e=help/graph/jmcc-lfo-modulation.scm)
 - [jmcc-modal-space.scm](?t=rsc3&e=help/graph/jmcc-modal-space.scm)
 - [jmcc-moto-rev.scm](?t=rsc3&e=help/graph/jmcc-moto-rev.scm)
@@ -103,7 +96,6 @@ Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [jmcc-police-state.scm](?t=rsc3&e=help/graph/jmcc-police-state.scm)
 - [jmcc-pulsing-bottles.scm](?t=rsc3&e=help/graph/jmcc-pulsing-bottles.scm)
 - [jmcc-random-panning-sines.scm](?t=rsc3&e=help/graph/jmcc-random-panning-sines.scm)
-- [jmcc-random-pulsations.scm](?t=rsc3&e=help/graph/jmcc-random-pulsations.scm)
 - [jmcc-resonant-dust.scm](?t=rsc3&e=help/graph/jmcc-resonant-dust.scm)
 - [jmcc-reverberated-noise-bursts.scm](?t=rsc3&e=help/graph/jmcc-reverberated-noise-bursts.scm)
 - [jmcc-reverberated-sine-percussion.scm](?t=rsc3&e=help/graph/jmcc-reverberated-sine-percussion.scm)
@@ -111,8 +103,6 @@ Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [jmcc-saucer-base.scm](?t=rsc3&e=help/graph/jmcc-saucer-base.scm)
 - [jmcc-scratchy.scm](?t=rsc3&e=help/graph/jmcc-scratchy.scm)
 - [jmcc-sidereal-time.scm](?t=rsc3&e=help/graph/jmcc-sidereal-time.scm)
-- [jmcc-snare-909.scm](?t=rsc3&e=help/graph/jmcc-snare-909.scm)
-- [jmcc-spe.scm](?t=rsc3&e=help/graph/jmcc-spe.scm)
 - [jmcc-sprinkler.scm](?t=rsc3&e=help/graph/jmcc-sprinkler.scm)
 - [jmcc-sprinkler-mouse.scm](?t=rsc3&e=help/graph/jmcc-sprinkler-mouse.scm)
 - [jmcc-strummable-guitar.scm](?t=rsc3&e=help/graph/jmcc-strummable-guitar.scm)
@@ -123,6 +113,19 @@ Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [jmcc-what-was-i-thinking.scm](?t=rsc3&e=help/graph/jmcc-what-was-i-thinking.scm)
 - [jmcc-why-supercollider.scm](?t=rsc3&e=help/graph/jmcc-why-supercollider.scm)
 - [jmcc-zizle.scm](?t=rsc3&e=help/graph/jmcc-zizle.scm)
+- [rd-trkl.scm](?t=rsc3&e=help/graph/rd-trkl.scm)
+- [rd-tr-out.scm](?t=rsc3&e=help/graph/rd-tr-out.scm)
+- [rd-wial.scm](?t=rsc3&e=help/graph/rd-wial.scm)
+- [rd-xy-interference.scm](?t=rsc3&e=help/graph/rd-xy-interference.scm)
+- [tm-drummer.scm](?t=rsc3&e=help/graph/tm-drummer.scm)
+
+<!--
+
+- [jmcc-analogue-daze.scm](?t=rsc3&e=help/graph/jmcc-analogue-daze.scm)
+- [jmcc-landon-rose.scm](?t=rsc3&e=help/graph/jmcc-landon-rose.scm)
+- [jmcc-random-pulsations.scm](?t=rsc3&e=help/graph/jmcc-random-pulsations.scm)
+- [jmcc-snare-909.scm](?t=rsc3&e=help/graph/jmcc-snare-909.scm)
+- [jmcc-spe.scm](?t=rsc3&e=help/graph/jmcc-spe.scm)
 - [jrhb-deep-sea.scm](?t=rsc3&e=help/graph/jrhb-deep-sea.scm)
 - [jrhb-dial-history.scm](?t=rsc3&e=help/graph/jrhb-dial-history.scm)
 - [jrhb-half-life.scm](?t=rsc3&e=help/graph/jrhb-half-life.scm)
@@ -156,8 +159,6 @@ Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [rd-three-cpsw.scm](?t=rsc3&e=help/graph/rd-three-cpsw.scm)
 - [rd-tipnso.scm](?t=rsc3&e=help/graph/rd-tipnso.scm)
 - [rd-trmlo.scm](?t=rsc3&e=help/graph/rd-trmlo.scm)
-- [rd-wial.scm](?t=rsc3&e=help/graph/rd-wial.scm)
-- [rd-xy-interference.scm](?t=rsc3&e=help/graph/rd-xy-interference.scm)
 
 - [alien-froggies.scm](?t=rsc3&e=help/graph/alien-froggies.scm)
 - [alien-meadow.scm](?t=rsc3&e=help/graph/alien-meadow.scm)
@@ -169,7 +170,6 @@ Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [choip.scm](?t=rsc3&e=help/graph/choip.scm)
 - [cymbalism-accelerando.scm](?t=rsc3&e=help/graph/cymbalism-accelerando.scm)
 - [cymbalism.scm](?t=rsc3&e=help/graph/cymbalism.scm)
-- [drummer.scm](?t=rsc3&e=help/graph/drummer.scm)
 - [hard-sync-sawtooth-with-lfo.scm](?t=rsc3&e=help/graph/hard-sync-sawtooth-with-lfo.scm)
 - [hell-is-busy.scm](?t=rsc3&e=help/graph/hell-is-busy.scm)
 - [karplus-strong.scm](?t=rsc3&e=help/graph/karplus-strong.scm)
@@ -197,8 +197,6 @@ Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [tgb.scm](?t=rsc3&e=help/graph/tgb.scm)
 - [tgr-rpr.scm](?t=rsc3&e=help/graph/tgr-rpr.scm)
 - [tremulate.scm](?t=rsc3&e=help/graph/tremulate.scm)
-- [trkl.scm](?t=rsc3&e=help/graph/trkl.scm)
-- [tr-out.scm](?t=rsc3&e=help/graph/tr-out.scm)
 - [tsort.scm](?t=rsc3&e=help/graph/tsort.scm)
 - [uplink.scm](?t=rsc3&e=help/graph/uplink.scm)
 - [voscil.scm](?t=rsc3&e=help/graph/voscil.scm)

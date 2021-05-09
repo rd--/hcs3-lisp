@@ -1,28 +1,31 @@
-#| HSC3-LISP |#
+; hsc3-lisp
+; ---------
 
-; AMERICAN PRIMITIVE, VOL. 2
-; λ, MACRO, SET!, IF, QUOTE, CONS
+; primitives are: λ, macro, set!, if, quote, fork, cons
+λ ; error: env-lookup: λ
 
-#| EMACS LISP |#
+; Emacs
+; -----
 
-; The RSC3-MODE more or less works.  Type:
+; rsc3-mode more or less works.  Type:
 ;
 ; (setq rsc3-interpreter (list "hsc3-lisp"))
 ;
 ; C-\    = lambda
 ; M-\    = λ
-; C-cC-a = (hear <point>)
-; C-cC-g = (draw <point>)
-; C-cC-k = (reset)
+; C-cC-a = play graph
+; C-cC-g = draw graph
+; C-cC-k = reset scsynth
 
-#| CHURCH LISP |#
+; Lambda
+; ------
 
 ; Functions and procedures are of the form λ α → β.
 
 ((λ n ((* n) n)) 3) ; 9
 
-+ ; (λ a (λ b (PRIM:+ (cons a b))))
-(+ 1) ; (λ b (PRIM:+ (cons 1 b)))
++ ; (λ a (λ b (mk-ugen...)))
+(+ 1) ; (λ b (mk-ugen...))
 ((+ 1) 2) ; 3
 
 ; The evaluator allows two notational simplifications.
@@ -34,103 +37,126 @@
 
 ; Single argument λ is against the grain of traditional variadic notation.
 
-(+ 1 2 3) ; ERROR: (3 3)
+(+ 1 2 3) ; error: (3 3)
 
-#| CELLULAR LISP |#
+; Cons
+; ----
 
-; The CONS cell is the primitive composite value.
+; The cons cell is the primitive composite value.
 
 (cons 1 2) ; (cons 1 2)
 
-; CONS is undone with CAR and CDR.
+; cons cell elements are accessed using car and cdr.
 
 (car (cons 1 2)) ; 1
 (cdr (cons 1 2)) ; 2
 
-#| QUOTING LISP |#
+; Predicates are:
 
-; QUOTE protects an S-EXPRESSION from EXPAND and EVAL.
+(pair? c) ; #t
+(list? c) ; #f
+(null? c) ; #f
+(null? nil) ; #t
+(null? '()) ; #t
+
+; List
+; ----
+
+(list 1 2 3) ; (1 2 3)
+(take 2 (list 1 2 3)) ; (1 2)
+(list-ref (list 1 2 3) 1) ; 2 ; zero-indexed
+
+; Quote
+; -----
+
+; quote protects an s-expression from expand and eval.
 
 (quote (+ 1 2)) ; (+ 1 2)
 
-; 'X is (QUOTE X)
+; 'x is (quote x)
 '(+ 1 2) ; (+ 1 2)
 
-; EVAL is UNQUOTE.
+; eval is unquote.
 
 (eval (quote (+ 1 2))) ; 3
 
-#| REWRITING LISP |#
+; Macros
+; ------
 
-; MACROS are programs that re-write S-EXPRESSION programs.
+; Macros are programs that re-write s-expression programs.
 
 ((λ exp (cons '- (cdr exp))) '(+ 1 2)) ; (- 1 2)
 
-; The MACRO form takes an S-EXPRESSION re-writing program.
-; MACROS are expanded not applied.
+; The macro form takes an s-expression re-writing program.
+; Macros are expanded not applied.
 
-((macro (λ exp (cons '- (cdr exp)))) + 1 2) ; ERROR
+((macro (λ exp (cons '- (cdr exp)))) + 1 2) ; error
 
-; MACROS may expand to MACROS.
+; Macros may expand to macros.
 
-b ; ERROR: ENV-LOOKUP
-(set! a (macro (λ exp (list 'set! 'b (car exp))))) ; NIL
-(a 5) ; NIL
+b ; error: env-lookup
+(set! a (macro (λ exp (list 'set! 'b (car exp))))) ; nil
+(a 5) ; nil
 b ; 5
 
-; EXPAND expands a form where the LHS is a MACRO.
+; Expand expands a form where the left hand side (lhs) is a macro.
 
 (expand '(a 5)) ; (set! b 5)
 
-; DEFINE, LAMBDA, LET, AND, OR, COND, BEGIN, WHEN, and LIST are all MACROS.
+; define, lambda, let, and, or, cond, begin, when, and list are all macros.
 
-#| MUTATING LISP |#
+; Mutation
+; --------
 
-; SET! is the primitive environment editor.
-; SET! creates a new entry at the TOP-LEVEL if the variable is not otherwise located.
+; set! is the primitive environment editor.
+; set! creates a new entry at the top-level environment if the variable is not otherwise located.
 
-(set! a nil) ; NIL
-a ; NIL
-(set! b (λ _ a)) ; NIL
-(b) ; NIL
-(set! a 'a) ; NIL
+(set! a nil) ; nil
+a ; nil
+(set! b (λ _ a)) ; nil
+(b) ; nil
+(set! a 'a) ; nil
 (b) ; a
 
-#| CONDITIONAL LISP |#
+; Conditionals
+; ------------
 
-; IF THEN ELSE is the primitive conditional.
+; if then else is the primitive conditional.
 ; The only false value is #f, all other values are #t.
 
 (if #t 'a 'b) ; a
-(if #f (print 'a) (print 'b)) ; b NIL
+(if #f (print 'a) (print 'b)) ; b nil
 (if 'false 'true 'false) ; true
 
-; IF requires both true and false branches, see WHEN for alternate.
+; if requires both true and false branches, see when for an alternate.
 
-(if #t 'true) ; ERROR
+(if #t 'true) ; error
 
-#| EVALUATING LISP |#
+; Evaluation
+; ----------
 
 (eval 1) ; 1
 (eval (eval 1)) ; 1
 
-(1) ; ERROR
+(1) ; error
 
-#| VARIADIC LISP |#
+; Variadic Expressions
+; --------------------
 
-; MACROS can implement variable argument functions.
+; Macros can implement variable argument functions.
 
-list ; MACRO
+list ; macro
 (list) ; nil
 (list 1 2 3) ; (1 2 3)
 
-; The standard MACROS also define the associated re-writer.
+; The standard macroS also define the associated re-writer.
 
-list-rw ; LAMBDA
-(list-rw (cdr '(list))) ; NIL
+list-rw ; (λ exp ...)
+(list-rw (cdr '(list))) ; nil
 (list-rw (cdr '(list 1 2 3))) ; (cons 1 (cons 2 (cons 3 nil)))
 
-#| STANDARDISED LISP |#
+; Scheme
+; ------
 
 (map (+ 1) (list 1 2 3)) ; (2 3 4)
 (map (compose (+ 1) (* 2)) (list 1 2 3)) ; (3 5 7)
@@ -141,7 +167,7 @@ list-rw ; LAMBDA
 
 (procedure? +) ; #t
 
-; There is a MACRO, lambda, that approximates the SCHEME form.
+; There is a macro, lambda, that approximates the scheme form.
 
 (lambda-rw (cdr '(lambda () x))) ; (λ _ x)
 (lambda-rw (cdr '(lambda (x) x))) ; (λ x x)
@@ -152,23 +178,26 @@ list-rw ; LAMBDA
 ((lambda (n) (* n n)) 3) ; 9
 ((lambda (x y z) (+ x (+ y ((lambda (n) (* n n)) z)))) 1 2 3) ; 12
 
-; BEGIN cannot be elided.
+; begin cannot be elided.
 
-((lambda (p q) (display p) (print q))) ; ERROR
+((lambda (p q) (display p) (print q))) ; error
 ((lambda (p q) (begin (display p) (print q))) 1 2) ; 12
 
-; NIL LISP
+; Nil
+; ---
 
-nil ; NIL
+nil ; nil
 (null? nil) ; #t
 
-; EQ LISP
+; Eq
+; --
 
 (equal? 'a 'a) ; #t
 (equal? "b" "b") ; #t
 (= 5 5) ; #t
 
-; ORD LISP
+; Ord
+; ---
 
 (< 0 1) ; #t
 (> 0 1) ; #f
@@ -178,34 +207,37 @@ nil ; NIL
 (compare 2 1) ; 'gt
 (compare 1 1) ; 'eq
 
-; SEQUENTIAL LISP
+; Begin
+; -----
 
-(begin-rw (cdr '(begin))) ; NIL
+(begin-rw (cdr '(begin))) ; nil
 (begin-rw (cdr '(begin (print 1)))) ; ((λ _ (print 1)) nil)
 (begin-rw (cdr '(begin (print 1) (print 2)))) ; ((λ _ (print 2)) ((λ _ (print 1)) nil))
 
-(begin (print 1) (print 2) (print 3)) ; PRINTS 1 2 3 RESULT=nil
-((λ _ (print 3)) ((λ _ (print 2)) ((λ _ (print 1)) nil))) ; PRINTS 1 2 3 RESULT=nil
+(begin (print 1) (print 2) (print 3)) ; prints 1 2 3 ; result=nil
+((λ _ (print 3)) ((λ _ (print 2)) ((λ _ (print 1)) nil))) ; prints 1 2 3 ; result=nil
 
-((λ x (begin (display x) (set! x 5) (print x))) 0) ; PRINTS 05
+((λ x (begin (display x) (set! x 5) (print x))) 0) ; prints 05
 
-#| DEFINING LISP |#
+; Define
+; ------
 
 (define-rw (cdr '(define one 1))) ; (set! one 1)
-(define one 1) ; NIL
+(define one 1) ; nil
 one ; 1
 
-(define sq (λ n ((* n) n))) ; NIL
+(define sq (λ n ((* n) n))) ; nil
 (sq 5) ; 25
 
-(define sum-sq (lambda (p q) (+ (sq p) (sq q)))) ; NIL
+(define sum-sq (lambda (p q) (+ (sq p) (sq q)))) ; nil
 (sum-sq 7 9) ; 130
 
-not-defined ; ERROR
-((lambda (_) (define not-defined 1)) nil) ; NIL
+not-defined ; error
+((lambda (_) (define not-defined 1)) nil) ; nil
 not-defined ; 1
 
-#| BINDING LISP |#
+; Let Binding
+; -----------
 
 (let-rw (cdr '(let () 1))) ; 1
 (let-rw (cdr '(let ((a 5)) (+ a 1)))) ; ((λ a (+ a 1)) 5)
@@ -217,42 +249,33 @@ not-defined ; 1
 (let ((a 5) (b (+ a 3))) (* a b)) ; 40
 
 (let ((set! 0) (set! 1)) set!) ; 1
+set! ; error
 
-; LET is unary
+; Let is unary
 
-(let ((a 1)) (display a) (newline)) ; ERROR
+(let ((a 1)) (display a) (newline)) ; error
 (let ((a 1)) (begin (display a) (newline))) ; 1\n
 
-; LET is schemes LET*.
+; Let is schemes let*.
 
-(let ((x 2) (y 3)) (let ((x 7) (z (+ x y))) (* z x))) ; 70 (NOT 35)
+(let ((x 2) (y 3)) (let ((x 7) (z (+ x y))) (* z x))) ; 70 (not 35)
 
 (letrec-rw (cdr '(letrec ((a 5) (b 6)) (cons a b))))
-; (let ((a NIL) (b NIL)) (begin (set! a 5) (set! b 6) (cons a b)))
+; (let ((a nil) (b nil)) (begin (set! a 5) (set! b 6) (cons a b)))
 
 (define add-count
   (lambda (l)
     (letrec ((f (lambda (n l) (if (null? l) '() (cons (cons n (car l)) (f (+ n 1) (cdr l)))))))
       (f 0 l))))
 
-(add-count (list 'a 'b 'c)) ; ((CONS 0 a) (CONS 1 b) (CONS 2 c))
+(add-count (list 'a 'b 'c)) ; ((cons 0 a) (cons 1 b) (cons 2 c))
 
-; CONS LISP
-
-(define c (cons 1 2)) ; NIL
-(car c) ; 1
-(cdr c) ; 2
-(pair? c) ; #t
-(list? c) ; #f
-(null? c) ; #f
-(null? nil) ; #t
-(null? '()) ; #t
-
-; LOGICAL LISP
+; Logic
+; -----
 
 (not #t) ; #f
 (not #f) ; #t
-(not 'SYM) ; ERROR
+(not 'sym) ; 0 ; #f
 
 (and-rw (cdr '(and p q))) ; (if p q 0)
 (list (and #t #t) (and #t #f) (and #f #t) (and #f #f)) ; (#t #f #f #f)
@@ -260,24 +283,25 @@ not-defined ; 1
 (or-rw (cdr '(or p q))) ; (if p #t q)
 (list (or #t #t) (or #t #f) (or #f #t) (or #f #f)) ; (#t #t #t #f)
 
-(cond-rw (cdr '(cond))) ; NIL
+(cond-rw (cdr '(cond))) ; nil
 (cond-rw (cdr '(cond (a b)))) ; (if a b nil)
 (cond-rw (cdr '(cond (a b) (c d)))) ; (if a b (if c d nil))
 (cond-rw (cdr '(cond (a b) (c d) (else e)))) ; (if a b (if c d e))
 (cond-rw (cdr '(cond ((> x y) 'gt) ((< x y) 'lt) (else 'eq))))
 
-(when-rw (cdr '(when a b))) ; (if a b NIL)
-(when #t (print 'TRUE)) ; TRUE
-(when #f (print 'FALSE)) ; NIL
+(when-rw (cdr '(when a b))) ; (if a b nil)
+(when #t (print 'true)) ; prints true
+(when #f (print 'false)) ; nil
 
-(when ((lambda (_) #t) nil) (print 'TRUE)) ; TRUE
-(when ((lambda (_) #f) nil) (print 'FALSE)) ; NIL
+(when ((lambda (_) #t) nil) (print 'true)) ; prints true
+(when ((lambda (_) #f) nil) (print 'false)) ; nil
 
-; MATHEMATICAL LISP
+; Mathematics
+; -----------
 
 ; Binary operator UGens are optimising.
 
-(add 1 2) ; 3
+(Add 1 2) ; 3
 
 ; Symbolic aliases are given.
 
@@ -287,29 +311,32 @@ not-defined ; 1
 
 (number? 1) ; #t
 (number? 'one) ; #f
-(number? (sin-osc kr 5 0)) ; #f
+(number? (SinOsc kr 5 0)) ; #f
 
-; RANDOM LISP
+; Random
+; ------
 
-(i-random 0 3)
-(replicate-m 12 (lambda () (choose (list 1 2 3))))
+(s:rand 0 1) ; random floating point number in (0,1)
+(s:irand 0 3) ; random integer in (0,2)
 
-; TEMPORAL LISP
+; Time
+; ----
 
-(begin (print 'BEFORE) (pause-thread 1) (print 'AFTER))
+(begin (print 'before) (thread-sleep 1) (print 'after))
 
 (utcr) ; <real>
 
 (let ((t (utcr)))
   (begin
-    (print 'BEFORE)
+    (print 'before)
     (pause-thread-until (+ t 1))
-    (print 'AFTER)))
+    (print 'after)))
 
-(define random-sine (mul (sin-osc ar (rand 220 440) 9) 0.01))
-(dt-rescheduler (lambda (t) (begin (hear random-sine) 1)) (utcr))
+(define random-sine (Mul (SinOsc ar (Rand 220 440) 9) 0.01))
+(dt-rescheduler (lambda (t) (begin (audition (Out 0 random-sine)) 1)) (utcr))
 
-; IO LISP
+; IO
+; --
 
 newline-char ; 10
 (write-char newline-char)
@@ -317,25 +344,29 @@ newline-char ; 10
 (print 1) ; 1
 (print (+ 1 2)) ; 3
 (begin (display 1) (print 2)) ; 12
-(define three (begin (display* 1) (print 2) 3)) ; 1 2 NIL
+(define three (begin (display* 1) (print 2) 3)) ; 1 2 nil
 three ; 3
 
-; STRING LISP
+; Strings
+; -------
 
 "string" ; "string"
 (string? "string") ; #t
 
-; LOADING LISP
+; Load
+; ----
 
 (load "/home/rohan/sw/hsc3-lisp/lisp/stdlib.lisp")
 
-; FLOATING LISP
+; Floating Point
+; --------------
 
-(map sin (enum-from-then-to 0 0.05 pi))
+(map Sin (enum-from-then-to 0 0.05 pi))
 
 ; SICP
+; ----
 
-(define square (lambda (n) (* n n))) ; NIL
+(define square (lambda (n) (* n n))) ; nil
 
 (define f
   (lambda (x y)
@@ -345,40 +376,48 @@ three ; 3
 
 (f 7 9) ; 28088
 
-; UGEN
+; UGen
+; ----
 
 (reset nil)
-(draw (* (sin-osc ar 440 0) 0.1))
-(draw (* (sin-osc ar (mouse-x kr 440 880 0 0.1) 0) 0.1))
-(draw (* (hpz1 (white-noise ar)) 0.1))
+(reset)
+(draw (Mul (SinOsc ar 440 0) 0.1))
+(draw (Mul (SinOsc ar (MouseX kr 440 880 0 0.1) 0) 0.1))
+(draw (Mul (HPZ1 (WhiteNoise ar)) 0.1))
 (display-server-status nil)
-(hear (* (sin-osc ar 440 0) 0.1))
+(audition (Out 0 (Mul (SinOsc ar 440 0) 0.1)))
 
-; INSENSITIVE LISP
+; Case Sensitivity
+; ----------------
 
-(hear (MUL (SIN-OSC AR 440 0) 0.1))
+(audition (Out 0 (Mul (SinOsc ar 440 0) 0.1)))
 
 ; UID
+; ---
 
-(set! uid 0) ; NIL
+(set! uid 0) ; nil
 (map incr-uid '(1 1 1)) ; (1 2 3)
+(unique-uid) ; 4
 
-#| CONCURRENT LISP |#
+; Concurrency
+; -----------
 
 (begin
-  (fork (begin (print 'A) (pause-thread 4) (print 'C)))
-  (pause-thread 2)
-  (print' B))
+  (fork (begin (print 'a) (thread-sleep 4) (print 'c)))
+  (thread-sleep 2)
+  (print' b))
 
 ; After a thread is begun, it runs until it completes.
 
-#| GENSYM |#
+; Gensym
+; ------
 
 (list (gensym) (gensym))
 
-#| DERIVATIVE CONS |#
+; Derived cons
+; ------------
 
-; CONS need not be primitive, it can be in terms of λ.
+; Cons need not be primitive, it can be in terms of λ.
 
 (define kons (λ x (λ y (λ m (m x y)))))
 (define kar (λ z (z (λ p (λ q p)))))
@@ -388,7 +427,8 @@ three ; 3
 (kar (kons 1 2)) ; 1
 (kdr (kons 1 2)) ; 2
 
-#| Y |#
+; Y
+; -
 
 (define length*
   ((λ h (h h))
@@ -410,6 +450,7 @@ three ; 3
 (maximum* (list 1 5 9 7 3)) ; 9
 (maximum* (list -5 -7 -3)) ; -3
 
-; interpreter
+; Interpreter
+; -----------
 
 (env-print)
