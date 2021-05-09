@@ -1,6 +1,7 @@
 ; uid
 (define uid 0)
 (define incr-uid (λ n (begin (set! uid (+ uid n)) uid)))
+(define unique-uid (lambda () (incr-uid 1)))
 
 ; clone/mce
 (define clone (lambda (n f) (make-mce (replicate-m n f))))
