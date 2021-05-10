@@ -13,7 +13,7 @@ Tested-With:       GHC == 8.8.4
 Build-Type:        Simple
 Cabal-Version:     >= 1.8
 
-Data-files:        README
+Data-files:        README.md
 
 library
   build-depends:   array,
@@ -40,5 +40,5 @@ library
                    Sound.SC3.Lisp.Type
 
 Source-Repository  head
-  Type:            darcs
-  Location:        http://rohandrape.net/sw/hsc3-lisp/
+  Type:            git
+  Location:        https://gitlab.com/rd--/hsc3-lisp
