@@ -3,7 +3,7 @@
 Translate a subset of [haskell](http://haskell.org) into
 `s-expression` (LISP) notation.
 
-- comments, `import` statements and type signatures are discarded
+- comments, `import` statements, type signatures and type annotations are discarded
 - function application `f x` is written `(f x)`
 - function application `f x y` is written `(f x y)` rather than `((f x) y)`
 - infix operations `x + y` are written `(+ x y)`

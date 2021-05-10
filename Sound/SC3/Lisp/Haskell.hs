@@ -111,6 +111,7 @@ exp_sexp tbl e =
       E.Paren _ e' -> exp_sexp tbl e'
       E.Tuple _ _ l -> S.List (S.Atom "list" : map (exp_sexp tbl) l)
       E.Var _ nm -> S.Atom (qname_str tbl nm)
+      E.ExpTypeSig _ e' _ -> exp_sexp tbl e' -- discard type annotation
       _ -> error_x "exp_sexp: unimplemented expression type" e
 
 binds_decl :: Show l => Maybe (E.Binds l) -> [E.Decl l]
