@@ -4,9 +4,10 @@ module Sound.SC3.Lisp.Haskell where
 import Data.Maybe {- base -}
 
 import qualified Language.Haskell.Exts as E {- haskell-src-exts -}
+
 import qualified Language.Scheme.Types as S {- husk-scheme -}
 
-import Sound.SC3.Lisp.Parse.Ethier {- hsc3-lisp -}
+import qualified Sound.SC3.Lisp.Parse.Ethier as L {- hsc3-lisp -}
 
 error_x :: Show a => String -> a -> t
 error_x nm x = error (nm ++ ": " ++ show x)
@@ -46,7 +47,7 @@ rhs_exp r =
       E.UnGuardedRhs _ e -> e
       _ -> error_x "rhs_exp" r
 
-literal_sexp :: Show l => E.Literal l -> SEXP
+literal_sexp :: Show l => E.Literal l -> L.SExp
 literal_sexp l =
     case l of
       E.Char _ c _ -> S.Char c
@@ -74,14 +75,14 @@ sign_is_negative sgn =
     E.Signless _ -> False
     E.Negative _ -> True
 
-pat_sexp :: Show l => Name_Table -> E.Pat l -> SEXP
+pat_sexp :: Show l => Name_Table -> E.Pat l -> L.SExp
 pat_sexp tbl p =
     case p of
       E.PVar _ nm -> S.Atom (name_str tbl nm)
       E.PLit _ sgn lit -> literal_sexp (if sign_is_negative sgn then literal_negate lit else lit)
       _ -> error_x "pat_sexp" p
 
-alt_sexp :: Show l => Name_Table -> E.Alt l -> SEXP
+alt_sexp :: Show l => Name_Table -> E.Alt l -> L.SExp
 alt_sexp tbl alt =
   case alt of
     E.Alt _ (E.PWildCard _) rhs Nothing -> S.List [S.Atom "else",exp_sexp tbl (rhs_exp rhs)]
@@ -89,7 +90,7 @@ alt_sexp tbl alt =
     _ -> error_x "alt: bindings?" alt
 
 -- | Tuples map to lists but could be dotted lists or vectors.
-exp_sexp :: Show l => Name_Table -> E.Exp l -> SEXP
+exp_sexp :: Show l => Name_Table -> E.Exp l -> L.SExp
 exp_sexp tbl e =
     case e of
       E.App _ f x -> S.List (map (exp_sexp tbl) (unwind_app (f,x)))
@@ -110,7 +111,7 @@ exp_sexp tbl e =
       E.Paren _ e' -> exp_sexp tbl e'
       E.Tuple _ _ l -> S.List (S.Atom "list" : map (exp_sexp tbl) l)
       E.Var _ nm -> S.Atom (qname_str tbl nm)
-      _ -> error_x "exp_sexp" e
+      _ -> error_x "exp_sexp: unimplemented expression type" e
 
 binds_decl :: Show l => Maybe (E.Binds l) -> [E.Decl l]
 binds_decl b =
@@ -125,7 +126,7 @@ pat_var_str tbl p =
       E.PVar _ nm -> name_str tbl nm
       _ -> error_x "pat_var_str" p
 
-match_sexp :: Show l => Name_Table -> E.Match l -> (SEXP,SEXP)
+match_sexp :: Show l => Name_Table -> E.Match l -> (L.SExp,L.SExp)
 match_sexp tbl m =
     case m of
       E.Match _ nm param rhs Nothing ->
@@ -135,7 +136,7 @@ match_sexp tbl m =
           in (nm',S.List [S.Atom "lambda",S.List param',rhs'])
       _ -> error_x "match_sexp" m
 
-decl_sexp :: Show l => Name_Table -> E.Decl l -> SEXP
+decl_sexp :: Show l => Name_Table -> E.Decl l -> L.SExp
 decl_sexp tbl d =
     case d of
       E.FunBind _ [m] -> let (nm,rhs) = match_sexp tbl m in S.List [nm,rhs]
@@ -145,7 +146,7 @@ decl_sexp tbl d =
             _ -> error_x "decl_sexp" bnd
       _ -> error_x "decl_sexp" d
 
-mod_decl_sexp :: Show l => Name_Table -> E.Decl l -> Maybe SEXP
+mod_decl_sexp :: Show l => Name_Table -> E.Decl l -> Maybe L.SExp
 mod_decl_sexp tbl d =
     case d of
       E.FunBind _ [m] ->
@@ -166,7 +167,7 @@ module_decl m =
       E.Module _ _ _ _ d -> d
       _ -> error_x "mod_decl" m
 
-hs_exp_sexp :: Name_Table -> String -> SEXP
+hs_exp_sexp :: Name_Table -> String -> L.SExp
 hs_exp_sexp tbl s =
     case E.parseExp s of
       E.ParseOk e -> exp_sexp tbl e
@@ -174,27 +175,41 @@ hs_exp_sexp tbl s =
 
 {- | Haskell expression to s-expression.
 
-> let rw = putStrLn . hs_exp_to_lisp []
-> rw "print x"
-> rw "\\x -> case x of {0 -> 'a';1 -> 'b';_ -> 'c'}"
+> let rw = hs_exp_to_lisp []
+> rw "f x" == "(f x)"
+> rw "f x y" == "(f x y)"
+> rw "x + y" == "(+ x y)"
+> rw "let x = y in x" == "(let ((x y)) x)"
+> rw "let {x = i;y = j} in x + y" == "(let ((x i) (y j)) (+ x y))"
+> rw "\\x -> x * x" == "(lambda (x) (* x x))"
+> rw "\\x y -> x * x + y * y" == "(lambda (x y) (+ (* x x) (* y y)))"
+> rw "[1,2,3]" == "(list 1 2 3)"
+> rw "(1,2.0,'3',\"4\")" == "(list 1 2.0 #\\3 \"4\")"
+> rw "[x .. y]" == "(enum-from-to x y)"
+> rw "[x,y .. z]" == "(enum-from-then-to x y z)"
+> rw "if x then y else z" == "(if x y z)"
+> rw "\\x -> case x of {0 -> a;1 -> b;_ -> c}" == "(lambda (x) (case x ((0) a) ((1) b) (else c)))"
 -}
 hs_exp_to_lisp :: Name_Table -> String -> String
-hs_exp_to_lisp tbl = sexp_show . hs_exp_sexp tbl
+hs_exp_to_lisp tbl = L.sexp_show . hs_exp_sexp tbl
 
 {- | Rewrite Haskell declaration to s-expression
 
-> let rw = putStrLn . sexp_show . hs_decl_sexp []
-> rw "x = 5"
-> rw "f x = case x of {0 -> 'a';1 -> 'b';_ -> 'c'}"
+> let rw = L.sexp_show . hs_decl_sexp []
+> rw "x = y" == "(define x y)"
+> rw "f x = case x of {0 -> a;1 -> b;_ -> c}" == "(define f (lambda (x) (case x ((0) a) ((1) b) (else c))))"
+> rw "x = y" == "(define x y)"
+> rw "f x = x * x" == "(define f (lambda (x) (* x x)))"
+> rw "main = x" == "x"
 -}
-hs_decl_sexp :: Name_Table -> String -> SEXP
+hs_decl_sexp :: Name_Table -> String -> L.SExp
 hs_decl_sexp tbl s =
     case E.parseDecl s of
       E.ParseOk d -> fromMaybe (error "hs_decl_sexp") (mod_decl_sexp tbl d)
       err -> error_x "hs_decl_sexp" err
 
--- | Haskell module source to list of 'SEXP'.
-hs_module_sexp :: Name_Table -> String -> [SEXP]
+-- | Haskell module source to list of 'L.SExp'.
+hs_module_sexp :: Name_Table -> String -> [L.SExp]
 hs_module_sexp tbl s =
     case E.parseModule s of
       E.ParseOk m -> mapMaybe (mod_decl_sexp tbl) (module_decl m)
@@ -203,7 +218,7 @@ hs_module_sexp tbl s =
 {- | Translate haskell @module@ code into @LISP@.
 
 > let rw = hs_to_lisp []
-> rw "import Sound.SC3"
+> rw "import Sound.SC3" == ""
 > rw "o = let f = midiCPS (mce [65.0,65.1]) in sinOsc AR f 0"
 > rw "a = dbAmp (-24)"
 > rw "main = audition (out 0 (o * a))"
@@ -220,7 +235,7 @@ hs_module_sexp tbl s =
 > rw "main = putStrLn \"text\""
 -}
 hs_to_lisp :: Name_Table -> String -> String
-hs_to_lisp tbl = unlines . map sexp_show . hs_module_sexp tbl
+hs_to_lisp tbl = unlines . map L.sexp_show . hs_module_sexp tbl
 
 -- | Load table given name re-writing rules, one per line.
 name_tbl_load :: FilePath -> IO Name_Table

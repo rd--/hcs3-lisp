@@ -1,4 +1,4 @@
--- | SEXP parser using atto-lisp (Schilling).
+-- | SExp parser using atto-lisp (Schilling).
 module Sound.SC3.Lisp.Parse.Schilling where
 
 import Control.Monad.Except {- mtl -}
@@ -37,4 +37,4 @@ sexp_to_cell sexp =
     L.String s -> return (String (T.unpack s))
     L.List [] -> return Nil
     L.List (e : l) -> sexp_to_cell e >>= \e' -> fmap (Cons e') (sexp_to_cell (L.List l))
-    _ -> throwError ("SEXP-TO-CELL: " ++ show sexp)
+    _ -> throwError ("sexp-to-cell: " ++ show sexp)

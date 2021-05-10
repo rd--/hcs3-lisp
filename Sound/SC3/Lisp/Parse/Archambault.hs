@@ -1,4 +1,4 @@
--- | SEXP parser using sexpresso (Archambault).
+-- | SExp parser using sexpresso (Archambault).
 module Sound.SC3.Lisp.Parse.Archambault where
 
 import Data.Ratio {- base -}
@@ -18,22 +18,22 @@ import qualified Data.SExpresso.Language.SchemeR5RS as S {- sexpresso -}
 
 import Sound.SC3.Lisp.Type {- hsc3-lisp -}
 
-type SEXP = S.Datum -- S.SExpr S.SExprType S.SchemeToken
+type SExp = S.Datum -- S.SExpr S.SExprType S.SchemeToken
 
 parse_sexp_raw :: String -> Either (M.ParseErrorBundle String Void) [S.SExpr S.SExprType S.SchemeToken]
 parse_sexp_raw = M.parse (S.decode S.sexpr) ""
 
 -- > parse_sexp_plain "-1 -2.3"
-parse_sexp_plain :: String -> Either String [SEXP]
+parse_sexp_plain :: String -> Either String [SExp]
 parse_sexp_plain =
   either (Left . M.errorBundlePretty) (either Left Right . S.sexpr2Datum) .
   parse_sexp_raw
 
 -- > parse_sexp_m "(c_set 0 440.0)"
-parse_sexp_m :: String -> Maybe [SEXP]
+parse_sexp_m :: String -> Maybe [SExp]
 parse_sexp_m = either (const Nothing) Just . parse_sexp_plain
 
-parse_sexp_vm :: String -> VM t [SEXP]
+parse_sexp_vm :: String -> VM t [SExp]
 parse_sexp_vm = either throwError return . parse_sexp_plain
 
 -- > map decimal_to_fractional [(123,456),(123456789,123456789)] == [123.456,123456789.123456789]
@@ -56,7 +56,7 @@ num_to_cell (ty,c) =
       Just (Atom (with_sgn sgn (fromRational (n % d))))
     _ -> Nothing
 
-sexp_to_cell_m :: Lisp_Ty a => SEXP -> Maybe (Cell a)
+sexp_to_cell_m :: Lisp_Ty a => SExp -> Maybe (Cell a)
 sexp_to_cell_m sexp =
   case sexp of
     S.DNumber (S.SchemeNumber ty c) -> num_to_cell (ty,c)
@@ -69,9 +69,9 @@ sexp_to_cell_m sexp =
     S.DList (e : l) -> sexp_to_cell_m e >>= \e' -> fmap (Cons e') (sexp_to_cell_m (S.DList l))
     _ -> Nothing
 
-sexp_to_cell :: Lisp_Ty a => SEXP -> VM a (Cell a)
+sexp_to_cell :: Lisp_Ty a => SExp -> VM a (Cell a)
 sexp_to_cell sexp =
-  let err = throwError ("SEXP-TO-CELL: " ++ show sexp)
+  let err = throwError ("sexp-to-cell: " ++ show sexp)
   in case sexp of
        S.DNumber (S.SchemeNumber ty c) -> maybe err return (num_to_cell (ty,c))
        S.DIdentifier nm -> return (Symbol (T.unpack nm))

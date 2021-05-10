@@ -6,9 +6,9 @@ Translate a subset of [haskell](http://haskell.org) into
 - comments, `import` statements and type signatures are discarded
 - function application `f x` is written `(f x)`
 - function application `f x y` is written `(f x y)` rather than `((f x) y)`
-- infix operations `1 + 1` are written `(+ 1 1)`
-- local bindings `let x = 1 in x` are written `(let ((x 1)) x)`
-- local bindings `let {x = 1;y = 2} in x + y` are written `(let ((x 1) (y 2)) (+ x y))`
+- infix operations `x + y` are written `(+ x y)`
+- local bindings `let x = 1 in x` are written `(let ((x y)) x)`
+- local bindings `let {x = i;y = j} in x + y` are written `(let ((x i) (y j)) (+ x y))`
 - functions `\x -> x * x` are written `(lambda (x) (* x x))`
 - functions `\x y -> x * x + y * y` are written `(lambda (x y) (+ (* x x) (* y y)))`
 - lists `[1,2,3]` are written `(list 1 2 3)`
@@ -16,6 +16,7 @@ Translate a subset of [haskell](http://haskell.org) into
 - ranges `[x .. y]` are written `(enum-from-to x y)`
 - series `[x,y .. z]` are written `(enum-from-then-to x y z)`
 - conditionals `if x then y else z` are written `(if x y z)`
+- cases `\x -> case x of {0 -> a;_ -> b}` are written `(lambda (x) (case x ((0) a) (else c)))`
 - module bindings `x = y` are written `(define x y)`
 - module bindings `f x = x * x` are written `(define f (lambda (x) (* x x)))`
 - the module binding `main = x` is written `x`

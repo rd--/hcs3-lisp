@@ -2,7 +2,7 @@
 
 NOTE: the primitive lambda form is monadic, ie. λx → y
 
-For parsers that allow unicode (ie. HUSK-SCHEME) the primitive lambda can be written λ
+For parsers that allow unicode (ie. Ethier) the primitive lambda can be written λ
 
 -}
 module Sound.SC3.Lisp where
