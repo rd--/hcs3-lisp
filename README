@@ -36,18 +36,24 @@ An environment variable locates the hsc3-lisp library files:
 export HSC3_LISP_DIR=$HOME/sw/hsc3-lisp/lisp
 ~~~~
 
-To hear the above type `C-cC-e` in
-[Emacs](http://www.gnu.org/software/emacs/),
-or in a shell type:
+To hear the above type `C-cC-a` in
+[Emacs](http://www.gnu.org/software/emacs/).
+
+<!--
+Or in a shell type:
 
 ~~~~
-hsc3-lisp ~/sw/rsc3/help/graph/why-supercollider.lisp
+hsc3-lisp ~/sw/rsc3/help/graph/jmcc-why-supercollider.scm
 ~~~~
+-->
 
-There is a [tutorial](?t=hsc3-lisp&e=help/tutorial.lisp),
+There is a terse [tutorial](?t=hsc3-lisp&e=help/tutorial.scm).
+
+<!--
 and [translations](?t=hsc3-lisp&e=help/jmcc.lisp) of graphs by [James
 McCartney](http://audiosynth.com/autobio/emu.jpg) from the `SC2`
 manual.
+-->
 
 <!-- hsc3-lisp is `case-insensitive`. -->
 
@@ -59,7 +65,7 @@ SuperCollider
 ([hsc3](http://rohandrape.net/?t=hsc3))
 rules.
 
-hsc3-lisp thinks `scsynth` is listening at the standard port (57110).
+hsc3-lisp requires `scsynth` be listening at the standard port (57110).
 
 hsc3-lisp is Post-[ML](http://standardml.org), ie.
 
@@ -67,14 +73,14 @@ hsc3-lisp is Post-[ML](http://standardml.org), ie.
     RESULT: 1
 
 hsc3-lisp is not [scheme](http://library.readscheme.org/standards.html).
-Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
+Nonetheless, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 
 - [adc-bit-reduction.scm](?t=rsc3&e=help/graph/adc-bit-reduction.scm)
 - [adc-down-sample.scm](?t=rsc3&e=help/graph/adc-down-sample.scm)
 - [adc-shepard-tones.scm](?t=rsc3&e=help/graph/adc-shepard-tones.scm)
 - [cr-lucier.scm](?t=rsc3&e=help/graph/cr-lucier.scm)
 - [f0-red-frik.scm](?t=rsc3&e=help/graph/f0-red-frik.scm)
-- [jmcc-aleatoric-quartet.scm](?t=rsc3&e=help/graph/jmcc-aleatoric-quartet.scm) *
+- [jmcc-aleatoric-quartet.scm](?t=rsc3&e=help/graph/jmcc-aleatoric-quartet.scm)
 - [jmcc-analog-bubbles.scm](?t=rsc3&e=help/graph/jmcc-analog-bubbles.scm)
 - [jmcc-analog-bubbles-mouse.scm](?t=rsc3&e=help/graph/jmcc-analog-bubbles-mouse.scm)
 - [jmcc-analogue-daze.scm](?t=rsc3&e=help/graph/jmcc-analogue-daze.scm)
@@ -121,18 +127,12 @@ Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [jmcc-what-was-i-thinking.scm](?t=rsc3&e=help/graph/jmcc-what-was-i-thinking.scm)
 - [jmcc-why-supercollider.scm](?t=rsc3&e=help/graph/jmcc-why-supercollider.scm)
 - [jmcc-zizle.scm](?t=rsc3&e=help/graph/jmcc-zizle.scm)
-- [rd-trkl.scm](?t=rsc3&e=help/graph/rd-trkl.scm)
-- [rd-tr-out.scm](?t=rsc3&e=help/graph/rd-tr-out.scm)
-- [rd-wial.scm](?t=rsc3&e=help/graph/rd-wial.scm)
-- [rd-xy-interference.scm](?t=rsc3&e=help/graph/rd-xy-interference.scm)
-- [tm-drummer.scm](?t=rsc3&e=help/graph/tm-drummer.scm)
-
-<!--
-
+- [jrhb-chain-saw.scm](?t=rsc3&e=help/graph/jrhb-chain-saw.scm)
 - [jrhb-deep-sea.scm](?t=rsc3&e=help/graph/jrhb-deep-sea.scm)
 - [jrhb-dial-history.scm](?t=rsc3&e=help/graph/jrhb-dial-history.scm)
 - [jrhb-half-life.scm](?t=rsc3&e=help/graph/jrhb-half-life.scm)
 - [lp-one-line.scm](?t=rsc3&e=help/graph/lp-one-line.scm)
+- [mp-rm-octaver.scm](?t=rsc3&e=help/graph/mp-rm-octaver.scm.scm)
 - [pj-forest-sounds.scm](?t=rsc3&e=help/graph/pj-forest-sounds.scm)
 - [rb-hh-808.scm](?t=rsc3&e=help/graph/rb-hh-808.scm)
 - [rd-ccomb.scm](?t=rsc3&e=help/graph/rd-ccomb.scm)
@@ -152,6 +152,7 @@ Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [rd-k-ppr.scm](?t=rsc3&e=help/graph/rd-k-ppr.scm)
 - [rd-lf-pulses.scm](?t=rsc3&e=help/graph/rd-lf-pulses.scm)
 - [rd-lg-timed.scm](?t=rsc3&e=help/graph/rd-lg-timed.scm)
+- [rd-lz-bf.scm](?t=rsc3&e=help/graph/rd-lz-bf.scm)
 - [rd-mouse-clatter.scm](?t=rsc3&e=help/graph/rd-mouse-clatter.scm)
 - [rd-oscillator-cluster.scm](?t=rsc3&e=help/graph/rd-oscillator-cluster.scm)
 - [rd-prts.scm](?t=rsc3&e=help/graph/rd-prts.scm)
@@ -159,17 +160,24 @@ Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [rd-s-chirp.scm](?t=rsc3&e=help/graph/rd-s-chirp.scm)
 - [rd-shifting-pulses.scm](?t=rsc3&e=help/graph/rd-shifting-pulses.scm)
 - [rd-slly-wlk.scm](?t=rsc3&e=help/graph/rd-slly-wlk.scm)
+- [rd-sosc-lp.scm](?t=rsc3&e=help/graph/rd-sosc-lp.scm)
+- [rd-tgb.scm](?t=rsc3&e=help/graph/rd-tgb.scm)
 - [rd-three-cpsw.scm](?t=rsc3&e=help/graph/rd-three-cpsw.scm)
 - [rd-tipnso.scm](?t=rsc3&e=help/graph/rd-tipnso.scm)
 - [rd-trmlo.scm](?t=rsc3&e=help/graph/rd-trmlo.scm)
+- [rd-trkl.scm](?t=rsc3&e=help/graph/rd-trkl.scm)
+- [rd-tr-out.scm](?t=rsc3&e=help/graph/rd-tr-out.scm)
+- [rd-wial.scm](?t=rsc3&e=help/graph/rd-wial.scm)
+- [rd-xy-interference.scm](?t=rsc3&e=help/graph/rd-xy-interference.scm)
+- [tm-drummer.scm](?t=rsc3&e=help/graph/tm-drummer.scm)
 
+<!--
 - [alien-froggies.scm](?t=rsc3&e=help/graph/alien-froggies.scm)
 - [alien-meadow.scm](?t=rsc3&e=help/graph/alien-meadow.scm)
 - [blips-001.scm](?t=rsc3&e=help/graph/blips-001.scm)
 - [bottle.scm](?t=rsc3&e=help/graph/bottle.scm)
 - [bouncing-objects.scm](?t=rsc3&e=help/graph/bouncing-objects.scm)
 - [bowed-string.scm](?t=rsc3&e=help/graph/bowed-string.scm)
-- [chain-saw.scm](?t=rsc3&e=help/graph/chain-saw.scm)
 - [choip.scm](?t=rsc3&e=help/graph/choip.scm)
 - [cymbalism-accelerando.scm](?t=rsc3&e=help/graph/cymbalism-accelerando.scm)
 - [cymbalism.scm](?t=rsc3&e=help/graph/cymbalism.scm)
@@ -177,7 +185,6 @@ Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [hell-is-busy.scm](?t=rsc3&e=help/graph/hell-is-busy.scm)
 - [karplus-strong.scm](?t=rsc3&e=help/graph/karplus-strong.scm)
 - [lots-o-sines.scm](?t=rsc3&e=help/graph/lots-o-sines.scm)
-- [lz-bf.scm](?t=rsc3&e=help/graph/lz-bf.scm)
 - [narrow-band-filtered-crackle-noise.scm](?t=rsc3&e=help/graph/narrow-band-filtered-crackle-noise.scm)
 - [nharm.scm](?t=rsc3&e=help/graph/nharm.scm)
 - [pattern-buffer.scm](?t=rsc3&e=help/graph/pattern-buffer.scm)
@@ -192,17 +199,14 @@ Still, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are working:
 - [ring-modulated-klank.scm](?t=rsc3&e=help/graph/ring-modulated-klank.scm)
 - [scritto.scm](?t=rsc3&e=help/graph/scritto.scm)
 - [seqr.scm](?t=rsc3&e=help/graph/seqr.scm)
-- [sosc-lp.scm](?t=rsc3&e=help/graph/sosc-lp.scm)
 - [status.scm](?t=rsc3&e=help/graph/status.scm)
 - [strtchd-scrmbld.scm](?t=rsc3&e=help/graph/strtchd-scrmbld.scm)
 - [swept-resonant-noise.scm](?t=rsc3&e=help/graph/swept-resonant-noise.scm)
-- [tgb.scm](?t=rsc3&e=help/graph/tgb.scm)
 - [tgr-rpr.scm](?t=rsc3&e=help/graph/tgr-rpr.scm)
 - [tremulate.scm](?t=rsc3&e=help/graph/tremulate.scm)
 - [uplink.scm](?t=rsc3&e=help/graph/uplink.scm)
 - [voscil.scm](?t=rsc3&e=help/graph/voscil.scm)
 - [wind-metals.scm](?t=rsc3&e=help/graph/wind-metals.scm)
-
 -->
 
 There is also an haskell to lisp translator (October, 2014) that re-writes a
@@ -210,19 +214,20 @@ There is also an haskell to lisp translator (October, 2014) that re-writes a
 
 ## LISP
 
-- [hsc3.lisp](?t=hsc3-lisp&e=lisp/hsc3.lisp)
-- [rhs.lisp](?t=hsc3-lisp&e=lisp/rhs.lisp)
-- [rhs.syntax.lisp](?t=hsc3-lisp&e=lisp/rhs.syntax.lisp)
-- [rsc3.lisp](?t=hsc3-lisp&e=lisp/rsc3.lisp)
-- [scheme.lisp](?t=hsc3-lisp&e=lisp/scheme.lisp)
-- [stdlib.lisp](?t=hsc3-lisp&e=lisp/stdlib.lisp)
-- [ugen.lisp](?t=hsc3-lisp&e=lisp/ugen.lisp)
+- [hsc3.scm](?t=hsc3-lisp&e=lisp/hsc3.scm)
+- [rhs.scm](?t=hsc3-lisp&e=lisp/rhs.scm)
+- [rhs.syntax.scm](?t=hsc3-lisp&e=lisp/rhs.syntax.scm)
+- [rsc3.scm](?t=hsc3-lisp&e=lisp/rsc3.scm)
+- [scheme.scm](?t=hsc3-lisp&e=lisp/scheme.scm)
+- [stdlib.scm](?t=hsc3-lisp&e=lisp/stdlib.scm)
+- [ugen.scm](?t=hsc3-lisp&e=lisp/ugen.scm)
 
 ## HELP
 
-- [jmcc.lisp](?t=hsc3-lisp&e=help/jmcc.lisp)
-- [tutorial.lisp](?t=hsc3-lisp&e=help/tutorial.lisp)
-- [r5rs.lisp](?t=hsc3-lisp&e=help/r5rs.lisp)
+<!-- - [jmcc.scm](?t=hsc3-lisp&e=help/jmcc.scm) -->
+
+- [tutorial.scm](?t=hsc3-lisp&e=help/tutorial.scm)
+- [r5rs.scm](?t=hsc3-lisp&e=help/r5rs.scm)
 
 initial announcement:
 [[haskell-art](http://lurk.org/groups/haskell-art/messages/topic/5i1PSjCHQvVQwcAcLhUaE6/),

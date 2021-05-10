@@ -90,7 +90,7 @@
 '(quote a) ; (quote a)
 ''a ; (quote a)
 
-; consants
+; constants
 '"abc" ; "abc"
 "abc" ; "abc"
 '145932 ; 145932

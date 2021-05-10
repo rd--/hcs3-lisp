@@ -23,13 +23,13 @@ import Sound.SC3.Lisp.Type {- hsc3-lisp -}
 
 ugen_to_int :: String -> UGen -> Int
 ugen_to_int c u =
-    let err = error ("UGEN_TO_INT: " ++ c ++ ": " ++ show u)
+    let err = error ("ugen_to_int: " ++ c ++ ": " ++ show u)
         f = floor . fromMaybe err . u_constant
     in f u
 
 instance Lisp_Ty UGen where
     ty_show = ugen_concise_pp
-    ty_to_int = ugen_to_int "TY_TO_INT"
+    ty_to_int = ugen_to_int "ty_to_int"
     ty_from_bool t = if t then 1 else 0
 
 lift_io :: IO () -> VM a (Cell a)
@@ -39,55 +39,55 @@ constant_err :: Cell UGen -> Double
 constant_err c =
     case fmap constant_opt (atom c) of
       Just (Just n) -> n
-      _ -> error "NOT CONSTANT?"
+      _ -> error "not constant?"
 
 ugen_to_double :: String -> UGen -> Double
 ugen_to_double c u =
-    let err = error ("UGEN_TO_DOUBLE: " ++ c ++ ": " ++ show u)
+    let err = error ("ugen_to_double: " ++ c ++ ": " ++ show u)
         f = fromMaybe err . u_constant
     in f u
 
 l_mk_ctl :: Cell UGen -> VM UGen (Cell UGen)
 l_mk_ctl c = do
   let l = to_list c
-  [rt,nm,df] <- if length l == 3 then return l else Monad.throwError ("MK-CTL: INCORRECT INPUT: " ++ show c)
+  [rt,nm,df] <- if length l == 3 then return l else Monad.throwError ("mk-ctl: incorrect input: " ++ show c)
   rt' <- case rt of
            Symbol sym -> return (fromJust (rate_parse (map toUpper sym)))
-           _ -> Monad.throwError ("MK-CTL: RATE: " ++ show rt)
+           _ -> Monad.throwError ("mk-ctl: rate: " ++ show rt)
   nm' <- case nm of
            String str -> return str
-           _ -> Monad.throwError ("MK-CTL: NAME NOT STRING: " ++ show nm)
+           _ -> Monad.throwError ("mk-ctl: name not string: " ++ show nm)
   df' <- case df of
-          Atom u -> return (ugen_to_double "CTL-DEF" u)
-          _ -> Monad.throwError ("MK-CTL: DEF: " ++ show df)
+          Atom u -> return (ugen_to_double "ctl-def" u)
+          _ -> Monad.throwError ("mk-ctl: def: " ++ show df)
   return (Atom (control rt' nm' df'))
 
 l_mk_ugen :: Cell UGen -> VM UGen (Cell UGen)
 l_mk_ugen c = do
   let l = to_list c
-  [nm,rt,inp,inp_mce,outp,sp,k] <- if length l == 7 then return l else Monad.throwError ("MK-UGEN: INCORRECT INPUT: " ++ show c)
+  [nm,rt,inp,inp_mce,outp,sp,k] <- if length l == 7 then return l else Monad.throwError ("mk-ugen: incorrect input: " ++ show c)
   inp_mce' <- case inp_mce of
                 Atom u -> return (mceChannels u)
                 Nil -> return []
-                _ -> Monad.throwError ("MK-UGEN: MCE-INPUT: " ++ show inp_mce)
+                _ -> Monad.throwError ("mk-ugen: mce-input: " ++ show inp_mce)
   sp' <- case sp of
-           Atom u -> return (Special (ugen_to_int "SPECIAL" u))
+           Atom u -> return (Special (ugen_to_int "special" u))
            Nil -> return (Special 0)
-           _ -> Monad.throwError "MK-UGEN: SPECIAL?"
+           _ -> Monad.throwError "mk-ugen: special?"
   k' <- case k of
-          Atom u -> return (UId (ugen_to_int "UID" u))
+          Atom u -> return (UId (ugen_to_int "uid" u))
           Nil -> return NoId
-          _ -> Monad.throwError "MK-UGEN: UID?"
+          _ -> Monad.throwError "mk-ugen: uid?"
   inp' <- fmap (++ inp_mce') (mapM atom_err (to_list inp))
   rt' <- case rt of
            Symbol sym -> return (fromJust (rate_parse (map toUpper sym)))
            Cons _ _ -> do
-             let f = rateOf . Safe.atNote ("MK-UGEN: RATE: " ++ show c) inp' . ugen_to_int "RATE"
+             let f = rateOf . Safe.atNote ("mk-ugen: rate: " ++ show c) inp' . ugen_to_int "rate"
              fmap maximum (mapM (fmap f . atom_err) (to_list rt))
-           _ -> Monad.throwError ("MK-UGEN: RATE: " ++ show rt)
+           _ -> Monad.throwError ("mk-ugen: rate: " ++ show rt)
   nm' <- case nm of
            String str -> return str
-           _ -> Monad.throwError ("MK-UGEN: NAME NOT STRING: " ++ show nm)
+           _ -> Monad.throwError ("mk-ugen: name not string: " ++ show nm)
   let outp' = floor (constant_err outp)
   return (Atom (ugen_optimise_const_operator (mk_plain rt' nm' inp' outp' sp' k')))
 
@@ -95,6 +95,12 @@ l_is_number :: Cell UGen -> Cell UGen
 l_is_number c =
     case c of
       Atom u -> if isConstant u then l_true else l_false
+      _ -> l_false
+
+l_is_mce :: Cell UGen -> Cell UGen
+l_is_mce c =
+    case c of
+      Atom u -> if isMCE u then l_true else l_false
       _ -> l_false
 
 l_is_procedure :: Cell UGen -> Cell UGen
@@ -110,8 +116,8 @@ l_clone_star :: Cell UGen -> VM UGen (Cell UGen)
 l_clone_star c =
     case to_list c of
       [Atom k,Atom n,Atom u] ->
-         let k' = ugen_to_int "CLONE-K" k
-             n' = ugen_to_int "CLONE-N" n
+         let k' = ugen_to_int "clone-k" k
+             n' = ugen_to_int "clone-n" n
          in return (Atom (Protect.uclone (const False) k' n' u))
       _ -> Monad.throwError ("clone*: " ++ show c)
 
@@ -119,9 +125,9 @@ l_play_at_star :: Cell UGen -> VM UGen (Cell UGen)
 l_play_at_star c =
     case to_list c of
      [_,Atom u,Atom nid,Atom act,Atom grp] ->
-         let nid' = ugen_to_int "PLAY-AT: NID" nid
-             act' = ugen_to_int "PLAY-AT: ACT" act
-             grp' = ugen_to_int "PLAY-AT: GRP" grp
+         let nid' = ugen_to_int "play-at: nid" nid
+             act' = ugen_to_int "play-at: act" act
+             grp' = ugen_to_int "play-at: grp" grp
          in lift_io (withSC3 (play_at (nid',toEnum act',grp',[]) u)) >>
             return Nil
      _ -> Monad.throwError ("play-at*: " ++ show c)
@@ -138,13 +144,13 @@ cell_to_datum c =
       Symbol str -> return (string str)
       String str -> return (string str)
       Atom (Constant_U (Constant n)) -> return (float n)
-      _ -> Monad.throwError ("CELL-TO-DATUM: " ++ show c)
+      _ -> Monad.throwError ("cell-to-datum: " ++ show c)
 
 cell_to_message :: Cell UGen -> VM a Message
 cell_to_message c =
     case to_list_m c of
       Just (String addr : l) -> mapM cell_to_datum l >>= \l' -> return (Message addr l')
-      _ -> Monad.throwError ("CELL-TO-MESSAGE: " ++ show c)
+      _ -> Monad.throwError ("cell-to-message: " ++ show c)
 
 l_async_star :: Cell UGen -> VM a (Cell a)
 l_async_star c = cell_to_message c >>= \c' -> lift_io (withSC3 (void (async c')))
@@ -156,6 +162,7 @@ ugen_dict :: Dict UGen
 ugen_dict =
     Map.fromList
     [("number?",Fun l_is_number)
+    ,("mce?",Fun l_is_mce)
     ,("string?",Fun (\c -> case c of {String _ -> l_true; _ -> l_false}))
     ,("symbol?",Fun (\c -> case c of {Symbol _ -> l_true; _ -> l_false}))
     ,("procedure?",Fun l_is_procedure)
@@ -177,16 +184,16 @@ ugen_dict =
 
 main :: IO ()
 main = do
-  putStrLn "HSC3-LISP"
+  putStrLn "hsc3-lisp"
   env <- gen_toplevel (Map.unions [core_dict,ugen_dict]) :: IO (Env UGen)
-  let lib = ["stdlib.lisp"
-            ,"scheme.lisp"
-            ,"rhs.lisp" -- sw/rhs
-            ,"rsc3.prereq.lisp"
-            ,"ugen.lisp" -- sw/rsc3
-            ,"hsc3.lisp"
-            ,"rsc3.lisp" -- sw/rsc3
-            ,"alias.lisp"
+  let lib = ["stdlib.scm"
+            ,"scheme.scm"
+            ,"rhs.scm" -- sw/rhs
+            ,"rsc3.prereq.scm"
+            ,"ugen.scm" -- sw/rsc3
+            ,"hsc3.scm"
+            ,"rsc3.scm" -- sw/rsc3
+            ,"alias.scm"
             ]
   a <- getArgs
   repl env (load_files (lib ++ a))

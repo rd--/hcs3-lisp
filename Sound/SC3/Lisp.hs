@@ -314,7 +314,7 @@ get_sexp s h = do
 repl' :: Lisp_Ty a => Env a -> IO ()
 repl' env = do
   str <- get_sexp "" stdin
-  (r,env') <- runStateT (runExceptT (eval_str 2 str)) env
+  (r,env') <- runStateT (runExceptT (eval_str 3 str)) env
   case r of
     Left msg -> putStrLn ("error: " ++ msg) >> repl' env
     Right res -> mapM_ (\res' -> putStrLn ("result: " ++ show res')) res >> repl' env'

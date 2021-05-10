@@ -25,7 +25,7 @@ Translate a subset of [haskell](http://haskell.org) into
 
 The immediate reason for this re-writer is to translate
 [SuperCollider](http://audiosynth.com) graphs written in haskell for
-[hsc3](?t=hsc3) into LISP graphs for [hsc3-lisp](?t=hsc3-lisp).
+[hsc3](?t=hsc3) into LISP graphs for [rsc3](?r=rsc3) and [hsc3-lisp](?t=hsc3-lisp).
 
 The haskell notation of the
 [analog bubbles](?t=hsc3&e=Help/Graph/jmcc-analog-bubbles.hs) graph
