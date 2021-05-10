@@ -21,4 +21,4 @@ update-rd:
 	ssh rd@rohandrape.net "(cd sw/hsc3-lisp; git pull $(GL_HTTP))"
 
 push-all:
-	make push-gl push-gh update-rd
+	make push-gl update-rd
