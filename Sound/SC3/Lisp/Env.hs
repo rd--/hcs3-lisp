@@ -9,25 +9,28 @@ import qualified Control.Monad.State as Monad {- mtl -}
 import qualified Control.Monad.Except as Monad {- mtl -}
 import qualified Data.Map as Map {- containers -}
 
+-- | Dictionary key.
 type Name = String
 
+-- | Dictionary.
 type Dict t = Map.Map Name t
 
+-- | Enviroment, either a Frame or a Toplevel.
 data Env t = Frame (IORef (Dict t)) (Env t)
            | Toplevel (IORef (Dict t))
 
 -- | 'newIORef' of 'readIORef'
-ioref_cpy :: IORef a -> IO (IORef a)
-ioref_cpy r = readIORef r >>= newIORef
+ioref_copy :: IORef a -> IO (IORef a)
+ioref_copy r = readIORef r >>= newIORef
 
 -- | Copy environment.
 env_copy :: Env a -> IO (Env a)
 env_copy e =
     case e of
-      Frame f e' -> do f' <- ioref_cpy f
+      Frame f e' -> do f' <- ioref_copy f
                        e'' <- env_copy e'
                        return (Frame f' e'')
-      Toplevel d -> do d' <- ioref_cpy d
+      Toplevel d -> do d' <- ioref_copy d
                        return (Toplevel d')
 
 -- | Print environment.
