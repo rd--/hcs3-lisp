@@ -8,6 +8,8 @@ import qualified Control.Monad.Except as Monad {- mtl -}
 
 import qualified Data.Map as Map {- containers -}
 
+import Sound.SC3.Lisp.Env {- hsc3-lisp -}
+
 -- * Types
 
 class (Eq a,Ord a,Num a,Fractional a) => Lisp_Ty a where
@@ -15,17 +17,14 @@ class (Eq a,Ord a,Num a,Fractional a) => Lisp_Ty a where
     ty_to_int :: a -> Int -- ^ Coercion, ie. for Char.
     ty_from_bool :: Bool -> a -- ^ Boolean value represented in /a/, by convention @1@ and @0@.
 
-type Dict a = Map.Map String (Cell a)
-
-data Env a = Frame (IORef (String,Cell a)) (Env a)
-           | Toplevel (IORef (Dict a))
+type Trace_Level = Int
 
 data Cell a = Symbol String | String String
             | Atom a
             | Nil | Cons (Cell a) (Cell a)
             | Fun (Cell a -> Cell a)
-            | Proc (Cell a -> VM a (Cell a))
-            | Lambda (Env a) String (Cell a)
+            | Proc (Cell a -> VM (Cell a) (Cell a))
+            | Lambda (Env (Cell a)) String (Cell a)
             | Macro (Cell a)
             | Error String
 
@@ -43,9 +42,6 @@ quoted_symbol :: String -> Cell a
 quoted_symbol x = (Cons (Symbol "quote") (Cons (Symbol x) Nil))
 
 instance Eq a => Eq (Cell a) where (==) = cell_eq
-
--- data ST a = ST {st_threads :: Map.Map Int ThreadId,st_env :: Env a}
-type VM a r = Monad.ExceptT String (Monad.StateT (Env a) IO) r
 
 -- * Instances
 

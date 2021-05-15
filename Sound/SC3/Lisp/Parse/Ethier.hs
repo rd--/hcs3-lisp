@@ -9,6 +9,7 @@ import qualified Data.ByteString as B {- bytestring -}
 import qualified Language.Scheme.Parser as S {- husk-scheme -}
 import qualified Language.Scheme.Types as S {- husk-scheme -}
 
+import qualified Sound.SC3.Lisp.Env as L {- hsc3-lisp -}
 import qualified Sound.SC3.Lisp.Type as L {- hsc3-lisp -}
 
 -- | S-expression
@@ -21,10 +22,10 @@ txt <- readFile fn
 S.readExprList (printf "(show-graph %s)" txt)
 -}
 
-parse_sexp_vm :: String -> L.VM a [SExp]
+parse_sexp_vm :: String -> L.VM (L.Cell a) [SExp]
 parse_sexp_vm = either (E.throwError . show) return . S.readExprList
 
-sexp_to_cell :: L.Lisp_Ty a => SExp -> L.VM a (L.Cell a)
+sexp_to_cell :: L.Lisp_Ty a => SExp -> L.VM (L.Cell a) (L.Cell a)
 sexp_to_cell sexp =
     case sexp of
       S.Number n -> return (L.Atom (fromIntegral n))

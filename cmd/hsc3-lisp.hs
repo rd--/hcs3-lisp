@@ -19,6 +19,7 @@ import qualified Sound.SC3.UGen.Protect as Protect {- hsc3-rw -}
 import qualified Sound.SC3.UGen.Dot as Dot {- hsc3-dot -}
 
 import Sound.SC3.Lisp {- hsc3-lisp -}
+import Sound.SC3.Lisp.Env {- hsc3-lisp -}
 import Sound.SC3.Lisp.Type {- hsc3-lisp -}
 
 ugen_to_int :: String -> UGen -> Int
@@ -32,7 +33,7 @@ instance Lisp_Ty UGen where
     ty_to_int = ugen_to_int "ty_to_int"
     ty_from_bool t = if t then 1 else 0
 
-lift_io :: IO () -> VM a (Cell a)
+lift_io :: IO () -> LispVM t
 lift_io f = liftIO f >> return Nil
 
 constant_err :: Cell UGen -> Double
@@ -47,7 +48,7 @@ ugen_to_double c u =
         f = fromMaybe err . u_constant
     in f u
 
-l_mk_ctl :: Cell UGen -> VM UGen (Cell UGen)
+l_mk_ctl :: Cell UGen -> LispVM UGen
 l_mk_ctl c = do
   let l = to_list c
   [rt,nm,df] <- if length l == 3 then return l else Monad.throwError ("mk-ctl: incorrect input: " ++ show c)
@@ -62,7 +63,7 @@ l_mk_ctl c = do
           _ -> Monad.throwError ("mk-ctl: def: " ++ show df)
   return (Atom (control rt' nm' df'))
 
-l_mk_ugen :: Cell UGen -> VM UGen (Cell UGen)
+l_mk_ugen :: Cell UGen -> LispVM UGen
 l_mk_ugen c = do
   let l = to_list c
   [nm,rt,inp,inp_mce,outp,sp,k] <- if length l == 7 then return l else Monad.throwError ("mk-ugen: incorrect input: " ++ show c)
@@ -112,7 +113,7 @@ l_is_procedure c =
       Macro _ -> l_true
       _ -> l_false
 
-l_clone_star :: Cell UGen -> VM UGen (Cell UGen)
+l_clone_star :: Cell UGen -> LispVM UGen
 l_clone_star c =
     case to_list c of
       [Atom k,Atom n,Atom u] ->
@@ -121,7 +122,7 @@ l_clone_star c =
          in return (Atom (Protect.uclone (const False) k' n' u))
       _ -> Monad.throwError ("clone*: " ++ show c)
 
-l_play_at_star :: Cell UGen -> VM UGen (Cell UGen)
+l_play_at_star :: Cell UGen -> LispVM UGen
 l_play_at_star c =
     case to_list c of
      [_,Atom u,Atom nid,Atom act,Atom grp] ->
@@ -132,13 +133,13 @@ l_play_at_star c =
             return Nil
      _ -> Monad.throwError ("play-at*: " ++ show c)
 
-l_thread_sleep :: Cell UGen -> VM UGen (Cell UGen)
+l_thread_sleep :: Cell UGen -> LispVM UGen
 l_thread_sleep c = do
     u <- atom_err c
     liftIO (pauseThread (ugen_to_double "pause" u))
     return Nil
 
-cell_to_datum :: Cell UGen -> VM a Datum
+cell_to_datum :: Cell UGen -> VM (Cell t) Datum
 cell_to_datum c =
     case c of
       Symbol str -> return (string str)
@@ -146,19 +147,19 @@ cell_to_datum c =
       Atom (Constant_U (Constant n)) -> return (float n)
       _ -> Monad.throwError ("cell-to-datum: " ++ show c)
 
-cell_to_message :: Cell UGen -> VM a Message
+cell_to_message :: Cell UGen -> VM (Cell t) Message
 cell_to_message c =
     case to_list_m c of
       Just (String addr : l) -> mapM cell_to_datum l >>= \l' -> return (Message addr l')
       _ -> Monad.throwError ("cell-to-message: " ++ show c)
 
-l_async_star :: Cell UGen -> VM a (Cell a)
+l_async_star :: Cell UGen -> LispVM t
 l_async_star c = cell_to_message c >>= \c' -> lift_io (withSC3 (void (async c')))
 
-l_send_star :: Cell UGen -> VM a (Cell a)
+l_send_star :: Cell UGen -> LispVM t
 l_send_star c = cell_to_message c >>= \c' -> lift_io (withSC3 (void (sendMessage c')))
 
-ugen_dict :: Dict UGen
+ugen_dict :: Dict (Cell UGen)
 ugen_dict =
     Map.fromList
     [("number?",Fun l_is_number)
@@ -185,7 +186,7 @@ ugen_dict =
 main :: IO ()
 main = do
   putStrLn "hsc3-lisp"
-  env <- gen_toplevel (Map.unions [core_dict,ugen_dict]) :: IO (Env UGen)
+  env <- gen_toplevel (Map.unions [core_dict,ugen_dict]) :: IO (Env (Cell UGen))
   let lib = ["stdlib.scm"
             ,"scheme.scm"
             ,"rhs.scm" -- sw/rhs

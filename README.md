@@ -33,7 +33,7 @@ or to build type:
 An environment variable locates the hsc3-lisp library files:
 
 ~~~~
-export HSC3_LISP_DIR=$HOME/sw/hsc3-lisp/lisp
+export HSC3_LISP_DIR=$HOME/sw/hsc3-lisp/scm
 ~~~~
 
 To hear the above type `C-cC-a` in
@@ -214,13 +214,13 @@ There is also an haskell to lisp translator (October, 2014) that re-writes a
 
 ## LISP
 
-- [hsc3.scm](?t=hsc3-lisp&e=lisp/hsc3.scm)
-- [rhs.scm](?t=hsc3-lisp&e=lisp/rhs.scm)
-- [rhs.syntax.scm](?t=hsc3-lisp&e=lisp/rhs.syntax.scm)
-- [rsc3.scm](?t=hsc3-lisp&e=lisp/rsc3.scm)
-- [scheme.scm](?t=hsc3-lisp&e=lisp/scheme.scm)
-- [stdlib.scm](?t=hsc3-lisp&e=lisp/stdlib.scm)
-- [ugen.scm](?t=hsc3-lisp&e=lisp/ugen.scm)
+- [hsc3.scm](?t=hsc3-lisp&e=scm/hsc3.scm)
+- [rhs.scm](?t=hsc3-lisp&e=scm/rhs.scm)
+- [rhs.syntax.scm](?t=hsc3-lisp&e=scm/rhs.syntax.scm)
+- [rsc3.scm](?t=hsc3-lisp&e=scm/rsc3.scm)
+- [scheme.scm](?t=hsc3-lisp&e=scm/scheme.scm)
+- [stdlib.scm](?t=hsc3-lisp&e=scm/stdlib.scm)
+- [ugen.scm](?t=hsc3-lisp&e=scm/ugen.scm)
 
 ## HELP
 

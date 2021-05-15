@@ -34,6 +34,7 @@ library
                    unix
   ghc-options:     -Wall -fno-warn-orphans -fwarn-tabs
   exposed-modules: Sound.SC3.Lisp,
+                   Sound.SC3.Lisp.Env,
                    Sound.SC3.Lisp.Haskell,
                    Sound.SC3.Lisp.OSC,
                    Sound.SC3.Lisp.Parse.Ethier,

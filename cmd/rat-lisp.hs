@@ -2,6 +2,7 @@ import qualified Data.Map as M {- containers -}
 import Data.Ratio {- base -}
 
 import Sound.SC3.Lisp {- hsc3-lisp -}
+import Sound.SC3.Lisp.Env {- hsc3-lisp -}
 import Sound.SC3.Lisp.Type {- hsc3-lisp -}
 
 -- * RATIONAL
@@ -60,7 +61,7 @@ lift_binop f =
                   _ -> Error "BINOP: NOT-ATOM?"
     in Fun (\lhs -> Fun (\rhs -> g (atom lhs) (atom rhs)))
 
-rat_dict :: Lisp_Ty a => Dict a
+rat_dict :: Lisp_Ty a => Dict (Cell a)
 rat_dict =
     M.fromList
     [("+",lift_binop (+))
@@ -85,5 +86,5 @@ float_dict =
 main :: IO ()
 main = do
   putStrLn "RAT-LISP"
-  env <- gen_toplevel (M.union core_dict rat_dict) :: IO (Env Rational)
+  env <- gen_toplevel (M.union core_dict rat_dict) :: IO (Env (Cell Rational))
   repl env (load_files ["stdlib.lisp","rhs.lisp"])
