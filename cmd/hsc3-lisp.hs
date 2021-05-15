@@ -186,7 +186,7 @@ ugen_dict =
 main :: IO ()
 main = do
   putStrLn "hsc3-lisp"
-  env <- gen_toplevel (Map.unions [core_dict,ugen_dict]) :: IO (Env (Cell UGen))
+  env <- env_gen_toplevel (Map.unions [core_dict,ugen_dict]) :: IO (Env (Cell UGen))
   let lib = ["stdlib.scm"
             ,"scheme.scm"
             ,"rhs.scm" -- sw/rhs

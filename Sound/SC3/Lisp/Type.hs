@@ -1,23 +1,22 @@
 module Sound.SC3.Lisp.Type where
 
-import Data.IORef {- base -}
 import Data.Maybe {- base -}
 
 import qualified Control.Monad.State as Monad {- mtl -}
 import qualified Control.Monad.Except as Monad {- mtl -}
 
-import qualified Data.Map as Map {- containers -}
-
 import Sound.SC3.Lisp.Env {- hsc3-lisp -}
 
 -- * Types
+
+type Trace_Level = Int
 
 class (Eq a,Ord a,Num a,Fractional a) => Lisp_Ty a where
     ty_show :: a -> String -- ^ String representation of /a/, pretty printer.
     ty_to_int :: a -> Int -- ^ Coercion, ie. for Char.
     ty_from_bool :: Bool -> a -- ^ Boolean value represented in /a/, by convention @1@ and @0@.
 
-type Trace_Level = Int
+type VM t r = Monad.ExceptT Name (Monad.StateT (Env t) IO) r
 
 data Cell a = Symbol String | String String
             | Atom a

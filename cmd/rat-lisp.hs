@@ -86,5 +86,5 @@ float_dict =
 main :: IO ()
 main = do
   putStrLn "RAT-LISP"
-  env <- gen_toplevel (M.union core_dict rat_dict) :: IO (Env (Cell Rational))
+  env <- env_gen_toplevel (M.union core_dict rat_dict) :: IO (Env (Cell Rational))
   repl env (load_files ["stdlib.lisp","rhs.lisp"])

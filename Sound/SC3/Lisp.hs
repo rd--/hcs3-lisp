@@ -54,6 +54,9 @@ l_equal lhs = Fun (\rhs -> if lhs == rhs then l_true else l_false)
 
 -- * EVAL / APPLY
 
+trace :: Show t => Int -> String -> t -> VM a ()
+trace lvl msg val = when (lvl < 3) (liftIO (putStrLn ("trace: " ++ msg ++ ": " ++ show val)))
+
 -- | Apply works by:
 --   1. saving the current environment (c_env)
 --   2. extending the lambda environment (l_env) with the binding (nm,arg)
@@ -67,7 +70,7 @@ apply_lambda l_env nm code arg = do
   c_env <- get
   r <- env_lookup_m nm l_env
   when (isJust r) (trace 3 "env_add_frame: shadowing" nm)
-  put =<< liftIO (env_add_frame nm arg l_env)
+  put =<< liftIO (env_add_frame [(nm,arg)] l_env)
   res <- eval code
   put c_env
   return res
