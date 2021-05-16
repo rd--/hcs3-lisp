@@ -31,13 +31,13 @@ atom c =
       Atom a -> Just a
       _ -> Nothing
 
-type CellVM t r = EnvMonad (Cell t) r
+type CellVM t r = EnvMonad IO (Cell t) r
 type LispVM t = CellVM t (Cell t)
 
-maybe_to_err :: String -> Maybe r -> EnvMonad t r
+maybe_to_err :: String -> Maybe r -> EnvMonad IO t r
 maybe_to_err msg = maybe (throwError msg) return
 
-atom_err :: Lisp_Ty r => Cell r -> EnvMonad t r
+atom_err :: Lisp_Ty r => Cell r -> EnvMonad IO t r
 atom_err c = maybe_to_err ("not atom: " ++ show c) (atom c)
 
 from_list :: [Cell a] -> Cell a
@@ -54,8 +54,8 @@ l_equal lhs = Fun (\rhs -> if lhs == rhs then l_true else l_false)
 
 -- * EVAL / APPLY
 
-trace :: Show t => Int -> String -> t -> EnvMonad a ()
-trace lvl msg val = when (lvl < 3) (liftIO (putStrLn ("trace: " ++ msg ++ ": " ++ show val)))
+trace :: Show t => Trace_Level -> String -> t -> EnvMonad IO a ()
+trace (Trace_Level lvl) msg val = when (lvl < 3) (liftIO (putStrLn ("trace: " ++ msg ++ ": " ++ show val)))
 
 -- | Apply works by:
 --   1. saving the current environment (c_env)
@@ -69,7 +69,7 @@ apply_lambda :: Lisp_Ty t => Env (Cell t) -> String -> Cell t -> Cell t -> LispV
 apply_lambda l_env nm code arg = do
   c_env <- get
   r <- env_lookup_m nm l_env
-  when (isJust r) (trace 3 "env_add_frame: shadowing" nm)
+  when (isJust r) (trace (Trace_Level 3) "env_add_frame: shadowing" nm)
   put =<< liftIO (env_add_frame [(nm,arg)] l_env)
   res <- eval code
   put c_env
@@ -162,7 +162,7 @@ expand c = do
 
 -- * LOAD
 
-eval_str :: Lisp_Ty t => Int -> String -> CellVM t [Cell t]
+eval_str :: Lisp_Ty t => Trace_Level -> String -> CellVM t [Cell t]
 eval_str lvl str = do
   trace lvl "eval_str" str
   l <- Parse.parse_sexp_vm str
@@ -175,7 +175,7 @@ load c = do
     String nm -> do
                x <- liftIO (doesFileExist nm)
                when (not x) (throwError ("load: file missing: " ++ nm))
-               liftIO (putStrLn nm >> readFile nm) >>= eval_str 5 >> return ()
+               liftIO (putStrLn nm >> readFile nm) >>= eval_str (Trace_Level 5) >> return ()
     _ -> throwError ("load: " ++ show c)
 
 load_files :: Lisp_Ty t => [String] -> CellVM t ()
@@ -250,17 +250,17 @@ get_sexp s h = do
   let s' = s ++ (l ++ "\n")
   if r then get_sexp s' h else return s'
 
-repl' :: Lisp_Ty a => Env (Cell a) -> IO ()
-repl' env = do
+repl_cont :: Lisp_Ty a => Env (Cell a) -> IO ()
+repl_cont env = do
   str <- get_sexp "" stdin
-  (r,env') <- runStateT (runExceptT (eval_str 3 str)) env
+  (r,env') <- runStateT (runExceptT (eval_str (Trace_Level 3) str)) env
   case r of
-    Left msg -> putStrLn ("error: " ++ msg) >> repl' env
-    Right res -> mapM_ (\res' -> putStrLn ("result: " ++ show res')) res >> repl' env'
+    Left msg -> putStrLn ("error: " ++ msg) >> repl_cont env
+    Right res -> mapM_ (\res' -> putStrLn ("result: " ++ show res')) res >> repl_cont env'
 
-repl :: Lisp_Ty t => Env (Cell t) -> CellVM t () -> IO ()
-repl env initialise = do
+repl_init :: Lisp_Ty t => Env (Cell t) -> CellVM t () -> IO ()
+repl_init env initialise = do
   (r,env') <- runStateT (runExceptT initialise) env
   case r of
-    Left msg -> error ("repl: init error: " ++ msg)
-    Right () -> repl' env'
+    Left msg -> error ("repl_init: init error: " ++ msg)
+    Right () -> repl_cont env'

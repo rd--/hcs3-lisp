@@ -6,7 +6,7 @@ import Sound.SC3.Lisp.Env {- hsc3-lisp -}
 
 -- * Types
 
-type Trace_Level = Int
+data Trace_Level = Trace_Level Int
 
 class (Eq a,Ord a,Num a,Fractional a) => Lisp_Ty a where
     ty_show :: a -> String -- ^ String representation of /a/, pretty printer.
@@ -17,7 +17,7 @@ data Cell a = Symbol String | String String
             | Atom a
             | Nil | Cons (Cell a) (Cell a)
             | Fun (Cell a -> Cell a)
-            | Proc (Cell a -> EnvMonad (Cell a) (Cell a))
+            | Proc (Cell a -> EnvMonad IO (Cell a) (Cell a))
             | Lambda (Env (Cell a)) String (Cell a)
             | Macro (Cell a)
             | Error String

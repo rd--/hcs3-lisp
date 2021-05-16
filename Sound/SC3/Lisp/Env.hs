@@ -1,9 +1,11 @@
 -- | Environment
 module Sound.SC3.Lisp.Env where
 
+import Control.Monad.ST {- base -}
 import Control.Monad.State {- mtl -}
 import Control.Monad.Except {- mtl -}
 import Data.IORef {- base -}
+import Data.STRef {- base -}
 
 import qualified Control.Monad.State as Monad {- mtl -}
 import qualified Control.Monad.Except as Monad {- mtl -}
@@ -15,26 +17,39 @@ type Name = String
 -- | Dictionary.
 type Dict t = Map.Map Name t
 
--- | Enviroment, either a Frame or a Toplevel.
-data Env t = Frame (IORef (Dict t)) (Env t)
-           | Toplevel (IORef (Dict t))
+-- | Enviroment, either a Frame or a Toplevel, f is the reference type, t is the value type.
+data Env_ f t = Frame (f (Dict t)) (Env_ f t)
+              | Toplevel (f (Dict t))
 
 -- | State monad wrapped in Execption monad.
-type EnvMonad t r = Monad.ExceptT Name (Monad.StateT (Env t) IO) r
+type EnvMonad_ f m t r = Monad.ExceptT Name (Monad.StateT (Env_ f t) m) r
+
+-- | Env_ at IORef, there could be but is not an STRef variant
+type Env t = Env_ IORef t
+
+-- | EnvMonad_ at IORef, there could be but is not an STRef variant
+type EnvMonad m t r = EnvMonad_ IORef m t r
 
 -- | 'newIORef' of 'readIORef'
 ioref_copy :: IORef a -> IO (IORef a)
 ioref_copy r = readIORef r >>= newIORef
 
+-- | 'newSTRef' of 'readSTRef'
+stref_copy :: STRef s a -> ST s (STRef s a)
+stref_copy r = readSTRef r >>= newSTRef
+
+env_copy_ :: Monad m => (f (Dict t) -> m (f (Dict t))) -> Env_ f t -> m (Env_ f t)
+env_copy_ copy e =
+    case e of
+      Frame f e' -> do f' <- copy f
+                       e'' <- env_copy_ copy e'
+                       return (Frame f' e'')
+      Toplevel d -> do d' <- copy d
+                       return (Toplevel d')
+
 -- | Copy environment.
 env_copy :: Env a -> IO (Env a)
-env_copy e =
-    case e of
-      Frame f e' -> do f' <- ioref_copy f
-                       e'' <- env_copy e'
-                       return (Frame f' e'')
-      Toplevel d -> do d' <- ioref_copy d
-                       return (Toplevel d')
+env_copy = env_copy_ ioref_copy
 
 -- | Print environment.
 env_print :: Show t => Env t -> IO ()
@@ -67,7 +82,7 @@ env_lookup_m w e =
                Nothing -> return Nothing
 
 -- | Lookup value in environment, error variant.
-env_lookup :: Show t => Name -> Env t -> EnvMonad t t
+env_lookup :: MonadIO m => Name -> Env t -> EnvMonad m t t
 env_lookup w e = do
   r <- env_lookup_m w e
   case r of
@@ -79,6 +94,13 @@ env_add_frame :: [(Name,t)] -> Env t -> IO (Env t)
 env_add_frame d e = do
   f <- newIORef (Map.fromList d)
   return (Frame f e)
+
+-- | Delete current frame from environment, error if at toplevel.
+env_del_frame :: MonadIO m => Env t -> EnvMonad m t (Env t)
+env_del_frame e =
+  case e of
+    Frame _ e' -> return e'
+    Toplevel _ -> throwError "env_del_frame: at toplevel?"
 
 -- | Set value in environment.  If no entry exists for Name create an entry at the top level.
 env_set :: Env t -> Name -> t -> IO ()

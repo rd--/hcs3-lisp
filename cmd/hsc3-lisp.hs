@@ -19,7 +19,7 @@ import qualified Sound.SC3.UGen.Protect as Protect {- hsc3-rw -}
 import qualified Sound.SC3.UGen.Dot as Dot {- hsc3-dot -}
 
 import Sound.SC3.Lisp {- hsc3-lisp -}
-import Sound.SC3.Lisp.Env {- hsc3-lisp -}
+import qualified Sound.SC3.Lisp.Env as Env {- hsc3-lisp -}
 import Sound.SC3.Lisp.Type {- hsc3-lisp -}
 
 ugen_to_int :: String -> UGen -> Int
@@ -159,7 +159,7 @@ l_async_star c = cell_to_message c >>= \c' -> lift_io (withSC3 (void (async c'))
 l_send_star :: Cell UGen -> LispVM t
 l_send_star c = cell_to_message c >>= \c' -> lift_io (withSC3 (void (sendMessage c')))
 
-ugen_dict :: Dict (Cell UGen)
+ugen_dict :: Env.Dict (Cell UGen)
 ugen_dict =
     Map.fromList
     [("number?",Fun l_is_number)
@@ -186,7 +186,7 @@ ugen_dict =
 main :: IO ()
 main = do
   putStrLn "hsc3-lisp"
-  env <- env_gen_toplevel (Map.unions [core_dict,ugen_dict]) :: IO (Env (Cell UGen))
+  env <- Env.env_gen_toplevel (Map.unions [core_dict,ugen_dict]) :: IO (Env.Env (Cell UGen))
   let lib = ["stdlib.scm"
             ,"scheme.scm"
             ,"rhs.scm" -- sw/rhs
@@ -197,4 +197,4 @@ main = do
             ,"alias.scm"
             ]
   a <- getArgs
-  repl env (load_files (lib ++ a))
+  repl_init env (load_files (lib ++ a))
