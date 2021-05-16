@@ -139,7 +139,7 @@ l_thread_sleep c = do
     liftIO (pauseThread (ugen_to_double "pause" u))
     return Nil
 
-cell_to_datum :: Cell UGen -> VM (Cell t) Datum
+cell_to_datum :: Cell UGen -> CellVM t Datum
 cell_to_datum c =
     case c of
       Symbol str -> return (string str)
@@ -147,7 +147,7 @@ cell_to_datum c =
       Atom (Constant_U (Constant n)) -> return (float n)
       _ -> Monad.throwError ("cell-to-datum: " ++ show c)
 
-cell_to_message :: Cell UGen -> VM (Cell t) Message
+cell_to_message :: Cell UGen -> CellVM t Message
 cell_to_message c =
     case to_list_m c of
       Just (String addr : l) -> mapM cell_to_datum l >>= \l' -> return (Message addr l')

@@ -2,9 +2,6 @@ module Sound.SC3.Lisp.Type where
 
 import Data.Maybe {- base -}
 
-import qualified Control.Monad.State as Monad {- mtl -}
-import qualified Control.Monad.Except as Monad {- mtl -}
-
 import Sound.SC3.Lisp.Env {- hsc3-lisp -}
 
 -- * Types
@@ -16,13 +13,11 @@ class (Eq a,Ord a,Num a,Fractional a) => Lisp_Ty a where
     ty_to_int :: a -> Int -- ^ Coercion, ie. for Char.
     ty_from_bool :: Bool -> a -- ^ Boolean value represented in /a/, by convention @1@ and @0@.
 
-type VM t r = Monad.ExceptT Name (Monad.StateT (Env t) IO) r
-
 data Cell a = Symbol String | String String
             | Atom a
             | Nil | Cons (Cell a) (Cell a)
             | Fun (Cell a -> Cell a)
-            | Proc (Cell a -> VM (Cell a) (Cell a))
+            | Proc (Cell a -> EnvMonad (Cell a) (Cell a))
             | Lambda (Env (Cell a)) String (Cell a)
             | Macro (Cell a)
             | Error String

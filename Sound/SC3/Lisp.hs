@@ -31,13 +31,13 @@ atom c =
       Atom a -> Just a
       _ -> Nothing
 
-type CellVM t r = VM (Cell t) r
+type CellVM t r = EnvMonad (Cell t) r
 type LispVM t = CellVM t (Cell t)
 
-maybe_to_err :: String -> Maybe r -> VM t r
+maybe_to_err :: String -> Maybe r -> EnvMonad t r
 maybe_to_err msg = maybe (throwError msg) return
 
-atom_err :: Lisp_Ty r => Cell r -> VM t r
+atom_err :: Lisp_Ty r => Cell r -> EnvMonad t r
 atom_err c = maybe_to_err ("not atom: " ++ show c) (atom c)
 
 from_list :: [Cell a] -> Cell a
@@ -54,7 +54,7 @@ l_equal lhs = Fun (\rhs -> if lhs == rhs then l_true else l_false)
 
 -- * EVAL / APPLY
 
-trace :: Show t => Int -> String -> t -> VM a ()
+trace :: Show t => Int -> String -> t -> EnvMonad a ()
 trace lvl msg val = when (lvl < 3) (liftIO (putStrLn ("trace: " ++ msg ++ ": " ++ show val)))
 
 -- | Apply works by:
@@ -162,14 +162,14 @@ expand c = do
 
 -- * LOAD
 
-eval_str :: Lisp_Ty a => Int -> String -> VM (Cell a) [Cell a]
+eval_str :: Lisp_Ty t => Int -> String -> CellVM t [Cell t]
 eval_str lvl str = do
   trace lvl "eval_str" str
   l <- Parse.parse_sexp_vm str
   trace lvl "eval_str" l
   mapM (\e -> Parse.sexp_to_cell e >>= expand >>= eval) l
 
-load :: Lisp_Ty t => Cell t -> VM (Cell t) ()
+load :: Lisp_Ty t => Cell t -> CellVM t ()
 load c = do
   case c of
     String nm -> do
@@ -178,7 +178,7 @@ load c = do
                liftIO (putStrLn nm >> readFile nm) >>= eval_str 5 >> return ()
     _ -> throwError ("load: " ++ show c)
 
-load_files :: Lisp_Ty a => [String] -> VM (Cell a) ()
+load_files :: Lisp_Ty t => [String] -> CellVM t ()
 load_files nm = do
   r <- liftIO (lookupEnv "HSC3_LISP_DIR")
   case r of
@@ -258,7 +258,7 @@ repl' env = do
     Left msg -> putStrLn ("error: " ++ msg) >> repl' env
     Right res -> mapM_ (\res' -> putStrLn ("result: " ++ show res')) res >> repl' env'
 
-repl :: Lisp_Ty a => Env (Cell a) -> VM (Cell a) () -> IO ()
+repl :: Lisp_Ty t => Env (Cell t) -> CellVM t () -> IO ()
 repl env initialise = do
   (r,env') <- runStateT (runExceptT initialise) env
   case r of

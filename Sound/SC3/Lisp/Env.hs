@@ -19,6 +19,9 @@ type Dict t = Map.Map Name t
 data Env t = Frame (IORef (Dict t)) (Env t)
            | Toplevel (IORef (Dict t))
 
+-- | State monad wrapped in Execption monad.
+type EnvMonad t r = Monad.ExceptT Name (Monad.StateT (Env t) IO) r
+
 -- | 'newIORef' of 'readIORef'
 ioref_copy :: IORef a -> IO (IORef a)
 ioref_copy r = readIORef r >>= newIORef
@@ -64,7 +67,7 @@ env_lookup_m w e =
                Nothing -> return Nothing
 
 -- | Lookup value in environment, error variant.
-env_lookup :: Show t => Name -> Env t -> Monad.ExceptT Name (Monad.StateT (Env t) IO) t
+env_lookup :: Show t => Name -> Env t -> EnvMonad t t
 env_lookup w e = do
   r <- env_lookup_m w e
   case r of
