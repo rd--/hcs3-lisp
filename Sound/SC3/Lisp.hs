@@ -57,14 +57,13 @@ l_equal lhs = Fun (\rhs -> if lhs == rhs then l_true else l_false)
 trace :: Show t => Trace_Level -> String -> t -> EnvMonad IO a ()
 trace (Trace_Level lvl) msg val = when (lvl < 3) (liftIO (putStrLn ("trace: " ++ msg ++ ": " ++ show val)))
 
--- | Apply works by:
---   1. saving the current environment (c_env)
---   2. extending the lambda environment (l_env) with the binding (nm,arg)
---      and making this the current environment
---   3. running 'eval' of /code/ in the current (extended l_env) environment
---      and saving the result
---   4. restoring the saved environment (c_env)
---   5. returning the saved result
+{- | Apply works by:
+   1. saving the current environment (c_env);
+   2. extending the lambda environment (l_env) with the binding (nm,arg) and making this the current environment;
+   3. running 'eval' of /code/ in the current (extended l_env) environment and saving the result;
+   4. restoring the saved environment (c_env);
+   5. returning the saved result
+-}
 apply_lambda :: Lisp_Ty t => Env (Cell t) -> String -> Cell t -> Cell t -> LispVM t
 apply_lambda l_env nm code arg = do
   c_env <- get

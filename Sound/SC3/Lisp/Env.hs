@@ -5,6 +5,7 @@ import Control.Monad.ST {- base -}
 import Control.Monad.State {- mtl -}
 import Control.Monad.Except {- mtl -}
 import Data.IORef {- base -}
+import Data.Maybe {- base -}
 import Data.STRef {- base -}
 
 import qualified Control.Monad.State as Monad {- mtl -}
@@ -81,6 +82,12 @@ env_lookup_m w e =
                Just r -> return (Just r)
                Nothing -> return Nothing
 
+-- | Lookup with default.
+env_lookup_def :: MonadIO m => Name -> Env t -> t -> EnvMonad m t t
+env_lookup_def w e t = do
+  r <- env_lookup_m w e
+  return (fromMaybe t r)
+
 -- | Lookup value in environment, error variant.
 env_lookup :: MonadIO m => Name -> Env t -> EnvMonad m t t
 env_lookup w e = do
@@ -110,3 +117,19 @@ env_set e nm c =
              d <- liftIO (readIORef f)
              if Map.member nm d then writeIORef f (Map.insert nm c d) else env_set e' nm c
       Toplevel d -> modifyIORef d (Map.insert nm c)
+
+-- | Lookup value or error, apply f, set value to result, return result.
+env_alter :: MonadIO m => Env t -> Name -> (t -> t) -> EnvMonad m t t
+env_alter e nm f = do
+  v <- env_lookup nm e
+  let r = f v
+  liftIO (env_set e nm r)
+  return r
+
+-- | Lookup value or default, apply f, set value to result, return result.
+env_alter_def :: MonadIO m => Env t -> Name -> t -> (t -> t) -> EnvMonad m t t
+env_alter_def e nm t f = do
+  v <- env_lookup_def nm e t
+  let r = f v
+  liftIO (env_set e nm r)
+  return r
