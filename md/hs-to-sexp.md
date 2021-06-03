@@ -1,14 +1,13 @@
 # sexp (October, 2014)
 
-Translate a subset of [haskell](http://haskell.org) into
-`s-expression` (LISP) notation.
+Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) notation.
 
 - comments, `import` statements, type signatures and type annotations are discarded
 - function application `f x` is written `(f x)`
 - function application `f x y` is written `(f x y)` rather than `((f x) y)`
 - infix operations `x + y` are written `(+ x y)`
-- local bindings `let x = 1 in x` are written `(let ((x y)) x)`
-- local bindings `let {x = i;y = j} in x + y` are written `(let ((x i) (y j)) (+ x y))`
+- local bindings `let x = 1 in x` are written `(letrec ((x y)) x)`
+- local bindings `let {x = i;y = j} in x + y` are written `(letrec ((x i) (y j)) (+ x y))`
 - functions `\x -> x * x` are written `(lambda (x) (* x x))`
 - functions `\x y -> x * x + y * y` are written `(lambda (x y) (+ (* x x) (* y y)))`
 - lists `[1,2,3]` are written `(list 1 2 3)`
@@ -33,14 +32,23 @@ The haskell notation of the
 is re-written as:
 
 ~~~~
-$ hs-to-sexp \
-  exp \
-  ~/sw/hsc3-lisp/lib/hs-name-tbl.text \
-  ~/sw/hsc3/Help/Graph/jmcc-analog-bubbles.hs \
-  /dev/stdout
-(let ((o (Add (Mul (LFSaw kr (mce2 8 7.23) 0) 3) 80))
-      (f (Add (Mul (LFSaw kr 0.4 0) 24) o))
-      (s (Mul (SinOsc ar (MIDICPS f) 0) 0.04)))
+$ hs-to-sexp < ~/sw/hsc3/Help/Graph/jmcc-analog-bubbles.hs
+(letrec ((o (+ (* (lfSaw KR (mce2 8 7.23) 0) 3) 80))
+         (f (+ (* (lfSaw KR 0.4 0) 24) o))
+         (s (* (sinOsc AR (midiCPS f) 0) 0.04)))
+  (* (combN s 0.2 0.2 4) 0.1))
+$
+~~~~
+
+There is a table for renaming hsc3 graphs to rsc3 graphs at `hsc3-lisp/lib/hs-name-tbl.text`.
+
+$ cat `which rsc3-to-hsc3.sh`
+#!/bin/bash
+hs-to-sexp --name-rewrite-table=/home/rohan/sw/hsc3-lisp/lib/hs-name-tbl.text
+$ rsc3-to-hsc3.sh < ~/sw/hsc3/Help/Graph/jmcc-analog-bubbles.hs
+(letrec ((o (Add (Mul (LFSaw kr (mce2 8 7.23) 0) 3) 80))
+         (f (Add (Mul (LFSaw kr 0.4 0) 24) o))
+         (s (Mul (SinOsc ar (MIDICPS f) 0) 0.04)))
   (CombN s 0.2 0.2 4))
 $
 ~~~~

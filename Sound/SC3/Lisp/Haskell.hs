@@ -101,7 +101,7 @@ exp_sexp tbl e =
       E.If _ p q r -> S.List (S.Atom "if" : map (exp_sexp tbl) [p,q,r])
       E.InfixApp _ lhs qop rhs -> S.List [S.Atom (qop_str tbl qop),exp_sexp tbl lhs,exp_sexp tbl rhs]
       E.Lambda _ p c -> S.List [S.Atom "lambda",S.List (map (pat_sexp tbl) p),exp_sexp tbl c]
-      E.Let _ b e' -> S.List [S.Atom "let",S.List (map (decl_sexp tbl) (binds_decl (Just b))),exp_sexp tbl e']
+      E.Let _ b e' -> S.List [S.Atom "letrec",S.List (map (decl_sexp tbl) (binds_decl (Just b))),exp_sexp tbl e']
       E.List _ l -> S.List (S.Atom "list" : map (exp_sexp tbl) l)
       E.Lit _ l -> literal_sexp l
       E.NegApp _ n ->
@@ -180,8 +180,8 @@ hs_exp_sexp tbl s =
 > rw "f x" == "(f x)"
 > rw "f x y" == "(f x y)"
 > rw "x + y" == "(+ x y)"
-> rw "let x = y in x" == "(let ((x y)) x)"
-> rw "let {x = i;y = j} in x + y" == "(let ((x i) (y j)) (+ x y))"
+> rw "let x = y in x" == "(letrec ((x y)) x)"
+> rw "let {x = i;y = j} in x + y" == "(letrec ((x i) (y j)) (+ x y))"
 > rw "\\x -> x * x" == "(lambda (x) (* x x))"
 > rw "\\x y -> x * x + y * y" == "(lambda (x y) (+ (* x x) (* y y)))"
 > rw "[1,2,3]" == "(list 1 2 3)"

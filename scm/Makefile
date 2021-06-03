@@ -8,7 +8,7 @@ rsc3_lib=command.scm constant.scm derived.scm envelope.scm list.scm sc3.scm
 ugen_lib=ugen.scm ugen/rdu.scm hw.scm
 
 all: mk-rhs mk-rsc3
-	echo "hsc3-lisp/lisp"
+	echo "hsc3-lisp/scm"
 
 mk-rhs:
 	(cd $(rhs_dir) ; cat $(rhs_lib) > $(lisp_dir)/rhs.lisp)
