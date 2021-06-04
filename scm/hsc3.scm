@@ -61,10 +61,6 @@
 (define send (lambda (_ msg) (send* msg)))
 (define with-sc3 (lambda (f) (f nil)))
 
-; rand
-(define s:rand (lambda (l r) (unrand (Rand l r))))
-(define s:irand (lambda (l r) (unrand (IRand l (- r 1))))) ; i-rand is INCLUSIVE
-
 ; dot
 (define draw show-graph)
 

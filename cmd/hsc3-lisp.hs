@@ -189,6 +189,7 @@ main = do
   env <- Env.env_gen_toplevel (Map.unions [core_dict,ugen_dict]) :: IO (Env.Env (Cell UGen))
   let lib = ["stdlib.scm"
             ,"scheme.scm"
+            ,"rhs.prereq.scm"
             ,"rhs.scm" -- sw/rhs
             ,"rsc3.prereq.scm"
             ,"ugen.scm" -- sw/rsc3
