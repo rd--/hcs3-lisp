@@ -166,6 +166,9 @@
            (offset (Sub dstlo (Mul scale srclo))))
       (MulAdd in scale offset))))
 
+(define in-range
+  (lambda (i l r) (lin-lin i -1 1 l r)))
+
 (define mce2 (lambda (a b) (make-mce (list a b))))
 (define mce3 (lambda (a b c) (make-mce (list a b c))))
 (define mce4 (lambda (a b c d) (make-mce (list a b c d))))
@@ -200,7 +203,7 @@
      (map make-mce (transpose (map mce-channels (mce-channels u)))))))
 
 ; ugen|mce -> ugen
-(define mix (lambda (u) (foldl Add 0 (mce-channels u))))
+(define mix (lambda (u) (foldl1 Add (mce-channels u))))
 
 ; int -> (int -> ugen) -> ugen
 (define mix-fill (lambda (n f) (mix (mce-fill n f))))
@@ -295,6 +298,20 @@
     (map (lambda (i)
             (Unpack1FFT c nf i mp?))
 	 (enum-from-to from to))))
+
+; Pan a set of channels across the stereo field.
+; input, spread:1, level:1, center:0, levelComp:true
+; UGen -> UGen -> UGen -> UGen -> Bool -> UGen
+(define splay
+  (lambda (i s l c lc)
+    (let* ((n (max 2 (mce-degree i)))
+           (m (- n 1))
+           (p (map (lambda (x) (- (* (/ 2 m) x) 1)) (enum-from-to 0 m)))
+           (a (if lc (sqrt (/ 1 n)) 1)))
+      (mix (Pan2 i (MulAdd (make-mce p) s c) (Mul l a))))))
+
+; Select q or r by p, ie. if p == 1 then q else if p == 0 then r@.
+(define ugen-if (lambda (p q r) (Add (Mul p q) (Mul (Sub 1 p) r))))
 ;; ENVELOPE
 
 ; symbol|number -> number
@@ -445,6 +462,8 @@
 	 -1
 	 -1)))
 ; [a] -> int -> [a]
+;
+; (equal? (extend (list 1 2 3) 6) (list 1 2 3 1 2 3))
 (define extend
   (lambda (l n)
     (let ((z (length l)))

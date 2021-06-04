@@ -42,10 +42,10 @@ $
 
 There is a table for renaming hsc3 graphs to rsc3 graphs at `hsc3-lisp/lib/hs-name-tbl.text`.
 
-$ cat `which rsc3-to-hsc3.sh`
+$ cat `which r.hsc3-to-rsc3.sh`
 #!/bin/bash
 hs-to-sexp --name-rewrite-table=/home/rohan/sw/hsc3-lisp/lib/hs-name-tbl.text
-$ rsc3-to-hsc3.sh < ~/sw/hsc3/Help/Graph/jmcc-analog-bubbles.hs
+$ r.hsc3-to-rsc3.sh < ~/sw/hsc3/Help/Graph/jmcc-analog-bubbles.hs
 (letrec ((o (Add (Mul (LFSaw kr (mce2 8 7.23) 0) 3) 80))
          (f (Add (Mul (LFSaw kr 0.4 0) 24) o))
          (s (Mul (SinOsc ar (MIDICPS f) 0) 0.04)))

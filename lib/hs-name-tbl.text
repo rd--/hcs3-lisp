@@ -941,3 +941,11 @@ wrap2 Wrap2
 firstArg FirstArg
 randRange RandRange
 expRandRange ExpRandRange
+greater_than GT
+less_than LT
+mce make-mce
+True #t
+False #f
+.>>. ShiftRight
+floorE Floor
+modE Mod

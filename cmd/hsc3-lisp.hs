@@ -66,7 +66,9 @@ l_mk_ctl c = do
 l_mk_ugen :: Cell UGen -> LispVM UGen
 l_mk_ugen c = do
   let l = to_list c
-  [nm,rt,inp,inp_mce,outp,sp,k] <- if length l == 7 then return l else Monad.throwError ("mk-ugen: incorrect input: " ++ show c)
+  [nm,rt,inp,inp_mce,outp,sp] <- if length l == 6
+                                 then return l
+                                 else Monad.throwError ("mk-ugen: incorrect input: " ++ show c)
   inp_mce' <- case inp_mce of
                 Atom u -> return (mceChannels u)
                 Nil -> return []
@@ -75,10 +77,7 @@ l_mk_ugen c = do
            Atom u -> return (Special (ugen_to_int "special" u))
            Nil -> return (Special 0)
            _ -> Monad.throwError "mk-ugen: special?"
-  k' <- case k of
-          Atom u -> return (UId (ugen_to_int "uid" u))
-          Nil -> return NoId
-          _ -> Monad.throwError "mk-ugen: uid?"
+  uid <- fmap UId (liftIO generateUId)
   inp' <- fmap (++ inp_mce') (mapM atom_err (to_list inp))
   rt' <- case rt of
            Symbol sym -> return (fromJust (rate_parse (map toUpper sym)))
@@ -90,7 +89,7 @@ l_mk_ugen c = do
            String str -> return str
            _ -> Monad.throwError ("mk-ugen: name not string: " ++ show nm)
   let outp' = floor (constant_err outp)
-  return (Atom (ugen_optimise_const_operator (mk_plain rt' nm' inp' outp' sp' k')))
+  return (Atom (ugen_optimise_const_operator (mk_plain rt' nm' inp' outp' sp' uid)))
 
 l_is_number :: Cell UGen -> Cell UGen
 l_is_number c =
@@ -172,6 +171,7 @@ ugen_dict =
     ,("clone*",Proc l_clone_star)
     ,("make-mce",Proc (\c -> fmap (Atom . mce) (mapM atom_err (to_list c))))
     ,("mce-channels",Proc (\c -> fmap (from_list . map Atom . mceChannels) (atom_err c)))
+    ,("mce-degree",Proc (\c -> fmap (Atom . constant . mceDegree_err) (atom_err c)))
     ,("make-mrg*",Proc (\c -> fmap (Atom . mrg) (mapM atom_err (to_list c))))
     ,("show-graph",Proc (\c -> atom_err c >>= \u -> lift_io (Dot.draw (out 0 u))))
     ,("play-at*",Proc l_play_at_star)

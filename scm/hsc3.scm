@@ -26,7 +26,7 @@
 ;(define log Log)
 ;(define not Not)
 ;(define sin Sin)
-;(define sqrt Sqrt)
+(define sqrt Sqrt)
 ;(define tan Tan)
 ;(define gcd GCD)
 ;(define lcm LCM)
