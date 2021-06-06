@@ -190,6 +190,7 @@ hs_exp_sexp tbl s =
 > rw "[x,y .. z]" == "(enum-from-then-to x y z)"
 > rw "if x then y else z" == "(if x y z)"
 > rw "\\x -> case x of {0 -> a;1 -> b;_ -> c}" == "(lambda (x) (case x ((0) a) ((1) b) (else c)))"
+> rw "let (i,j,k) = (1,2,3) in (k,j,i)" == error
 -}
 hs_exp_to_lisp :: Name_Table -> String -> String
 hs_exp_to_lisp tbl = L.sexp_show . hs_exp_sexp tbl
