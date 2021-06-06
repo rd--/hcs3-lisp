@@ -80,6 +80,7 @@ pat_sexp tbl p =
     case p of
       E.PVar _ nm -> S.Atom (name_str tbl nm)
       E.PLit _ sgn lit -> literal_sexp (if sign_is_negative sgn then literal_negate lit else lit)
+      E.PWildCard _ -> S.Atom "_" -- allow singular wildcard
       _ -> error_x "pat_sexp" p
 
 alt_sexp :: Show l => Name_Table -> E.Alt l -> L.SExp
@@ -89,18 +90,22 @@ alt_sexp tbl alt =
     E.Alt _ lhs rhs Nothing -> S.List [S.List [pat_sexp tbl lhs],exp_sexp tbl (rhs_exp rhs)]
     _ -> error_x "alt: bindings?" alt
 
--- | Tuples map to lists but could be dotted lists or vectors.
+-- | Tuples map to vectors.
 exp_sexp :: Show l => Name_Table -> E.Exp l -> L.SExp
 exp_sexp tbl e =
     case e of
       E.App _ f x -> S.List (map (exp_sexp tbl) (unwind_app (f,x)))
       E.Case _ c a -> S.List (S.Atom "case" : exp_sexp tbl c : map (alt_sexp tbl) a)
       E.Con _ nm -> S.Atom (qname_str tbl nm)
-      E.EnumFromTo _ p q -> S.List (S.Atom "enum-from-to" : map (exp_sexp tbl) [p,q])
-      E.EnumFromThenTo _ p q r -> S.List (S.Atom "enum-from-then-to" : map (exp_sexp tbl) [p,q,r])
+      E.EnumFromTo _ p q -> S.List (S.Atom "enumFromTo" : map (exp_sexp tbl) [p,q])
+      E.EnumFromThenTo _ p q r -> S.List (S.Atom "enumFromThenTo" : map (exp_sexp tbl) [p,q,r])
+      E.ExpTypeSig _ e' _ -> exp_sexp tbl e' -- discard type annotation
       E.If _ p q r -> S.List (S.Atom "if" : map (exp_sexp tbl) [p,q,r])
       E.InfixApp _ lhs qop rhs -> S.List [S.Atom (qop_str tbl qop),exp_sexp tbl lhs,exp_sexp tbl rhs]
       E.Lambda _ p c -> S.List [S.Atom "lambda",S.List (map (pat_sexp tbl) p),exp_sexp tbl c]
+      E.LeftSection _ p q ->
+          let nm = S.Atom "_leftSectionArg"
+          in S.List [S.Atom "lambda",S.List [nm],S.List [S.Atom (qop_str tbl q),exp_sexp tbl p,nm]]
       E.Let _ b e' -> S.List [S.Atom "letrec",S.List (map (decl_sexp tbl) (binds_decl (Just b))),exp_sexp tbl e']
       E.List _ l -> S.List (S.Atom "list" : map (exp_sexp tbl) l)
       E.Lit _ l -> literal_sexp l
@@ -109,9 +114,11 @@ exp_sexp tbl e =
             E.Lit _ l -> literal_sexp (literal_negate l)
             _ -> S.List [S.Atom "negate",exp_sexp tbl n]
       E.Paren _ e' -> exp_sexp tbl e'
-      E.Tuple _ _ l -> S.List (S.Atom "list" : map (exp_sexp tbl) l)
+      E.RightSection _ p q ->
+          let nm = S.Atom "_rightSectionArg"
+          in S.List [S.Atom "lambda",S.List [nm],S.List [S.Atom (qop_str tbl p),nm,exp_sexp tbl q]]
+      E.Tuple _ _ l -> S.List (S.Atom "vector" : map (exp_sexp tbl) l)
       E.Var _ nm -> S.Atom (qname_str tbl nm)
-      E.ExpTypeSig _ e' _ -> exp_sexp tbl e' -- discard type annotation
       _ -> error_x "exp_sexp: unimplemented expression type" e
 
 binds_decl :: Show l => Maybe (E.Binds l) -> [E.Decl l]
@@ -185,12 +192,14 @@ hs_exp_sexp tbl s =
 > rw "\\x -> x * x" == "(lambda (x) (* x x))"
 > rw "\\x y -> x * x + y * y" == "(lambda (x y) (+ (* x x) (* y y)))"
 > rw "[1,2,3]" == "(list 1 2 3)"
-> rw "(1,2.0,'3',\"4\")" == "(list 1 2.0 #\\3 \"4\")"
+> rw "(1,2.0,'3',\"4\")" == "(vector 1 2.0 #\\3 \"4\")"
 > rw "[x .. y]" == "(enum-from-to x y)"
 > rw "[x,y .. z]" == "(enum-from-then-to x y z)"
 > rw "if x then y else z" == "(if x y z)"
 > rw "\\x -> case x of {0 -> a;1 -> b;_ -> c}" == "(lambda (x) (case x ((0) a) ((1) b) (else c)))"
-> rw "let (i,j,k) = (1,2,3) in (k,j,i)" == error
+> rw "(+ 1)" == "(lambda (_rightSectionArg) (+ _rightSectionArg 1))"
+> rw "(1 +)" == "(lambda (_leftSectionArg) (+ 1 _leftSectionArg))"
+> rw "let (i,j,k) = (1,2,3) in (k,j,i)" == undefined
 -}
 hs_exp_to_lisp :: Name_Table -> String -> String
 hs_exp_to_lisp tbl = L.sexp_show . hs_exp_sexp tbl
@@ -233,7 +242,7 @@ hs_module_sexp tbl s =
 > rw "l = [1,1.0,\"str\",'c']"
 > rw "sq = \\x -> x * x"
 > rw "sum_sq = \\x y -> x * x + y * y"
-> rw "l = 1 : []"
+> rw "l = 1 : []" == "(define l (cons 1 (list)))\n"
 > rw "main = putStrLn \"text\""
 -}
 hs_to_lisp :: Name_Table -> String -> String

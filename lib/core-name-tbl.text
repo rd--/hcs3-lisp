@@ -1,2 +1,15 @@
 True #t
 False #f
+&& and
+|| or
+null? null
+: cons
+head car
+tail cdr
+. compose
+== equal?
+++ append
+Nothing #f
+Just id
+isJust id
+fromJust id
