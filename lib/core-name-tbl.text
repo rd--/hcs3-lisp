@@ -2,10 +2,12 @@ True #t
 False #f
 && and
 || or
-null? null
+null null?
 : cons
+pair pair?
 head car
 tail cdr
+!! list-ref
 . compose
 == equal?
 ++ append
@@ -13,3 +15,6 @@ Nothing #f
 Just id
 isJust id
 fromJust id
+vectorRef vector-ref
+even even?
+odd odd?
