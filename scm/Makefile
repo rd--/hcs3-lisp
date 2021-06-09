@@ -1,9 +1,9 @@
-rhs_dir=$(HOME)/sw/rhs/src
+rhs_dir=$(HOME)/sw/rhs/
 rsc3_dir=$(HOME)/sw/rsc3/src
 rsc3_lang_dir=$(HOME)/sw/rsc3-lang/src
 lisp_dir=$(HOME)/sw/hsc3-lisp/scm
 
-rhs_lib=control/monad.scm data/bool.scm data/ord.scm data/function.scm data/list.scm data/tree.scm data/tree.scm prelude.scm
+rhs_lib=hs/control/monad.scm hs/data/bool.scm hs/data/ord.scm hs/data/function.scm hs/data/list.scm hs/data/tree.scm hs/prelude.scm
 rsc3_lib=command.scm constant.scm derived.scm envelope.scm list.scm sc3.scm
 ugen_lib=db/ugen-core.scm db/ugen-ext.scm hw.scm
 

@@ -170,13 +170,13 @@
              (else (let ((names (map car bindings))
                          (values (map cadr bindings))
                          (bindings* (map (λ x (list x (quote undefined))) names))
-                         (initialisers (zip-with (lambda (p q) (list (quote set!) p q)) names values)))
+                         (initialisers (zipWith (lambda (p q) (list (quote set!) p q)) names values)))
                      (list (quote let)
                            bindings*
                            (cons (quote begin) (append initialisers (list code)))))))))))
 
 ; (expand letrec-rw-code)
-(define letrec-rw (λ exp ((λ bindings ((λ code ((λ rem (if (pair? rem) (error "letrec: not unary?") (if (null? bindings) code ((λ names ((λ values ((λ bindings* ((λ initialisers (cons (quote let) (cons bindings* (cons (cons (quote begin) (append initialisers (cons code nil))) nil)))) (zip-with (λ p (λ q (cons (quote set!) (cons p (cons q nil))))) names values))) (map (λ x (cons x (cons (quote undefined) nil))) names))) (map cadr bindings))) (map car bindings))))) (cddr exp))) (cadr exp))) (car exp))))
+(define letrec-rw (λ exp ((λ bindings ((λ code ((λ rem (if (pair? rem) (error "letrec: not unary?") (if (null? bindings) code ((λ names ((λ values ((λ bindings* ((λ initialisers (cons (quote let) (cons bindings* (cons (cons (quote begin) (append initialisers (cons code nil))) nil)))) (zipWith (λ p (λ q (cons (quote set!) (cons p (cons q nil))))) names values))) (map (λ x (cons x (cons (quote undefined) nil))) names))) (map cadr bindings))) (map car bindings))))) (cddr exp))) (cadr exp))) (car exp))))
 
 (define letrec (macro letrec-rw))
 

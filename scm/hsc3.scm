@@ -20,19 +20,19 @@
 
 ; scheme_rename_def
 ;(define abs Abs)
-;(define cos Cos)
+(define cos Cos)
 ;(define exp Exp)
 ;(define floor Floor)
 ;(define log Log)
 ;(define not Not)
-;(define sin Sin)
+(define sin Sin)
 (define sqrt Sqrt)
 ;(define tan Tan)
 ;(define gcd GCD)
 ;(define lcm LCM)
 ;(define max Max)
 ;(define min Min)
-;(define mod Mod)
+(define mod Mod)
 ;(define round Round)
 
 ; operator_sym_def
@@ -55,7 +55,7 @@
 ;(define gt GT)
 
 (define play-at (lambda (fd u nid act grp) (play-at* (list fd u nid act grp))))
-(define audition (lambda (u) (play-at nil u -1 add-to-head 1)))
+(define audition (lambda (u) (play-at nil u -1 addToHead 1)))
 (define reset reset*)
 (define async (lambda (_ msg) (async* msg)))
 (define send (lambda (_ msg) (send* msg)))
