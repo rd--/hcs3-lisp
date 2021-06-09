@@ -210,7 +210,7 @@ Nonetheless, the following [rsc3](http://rohandrape.net/?t=rsc3) graphs are work
 -->
 
 There is also an haskell to lisp translator (October, 2014) that re-writes a
-[subset](http://rohandrape.net/?t=hsc3-lisp&e=md/hs-to-sexp.md) of haskell as lisp.
+[subset](http://rohandrape.net/?t=hsc3-lisp&e=md/sexp.md) of haskell as lisp.
 
 ## LISP
 

@@ -24,3 +24,5 @@ even even?
 odd odd?
 head car
 tail cdr
+set set!
+>> begin

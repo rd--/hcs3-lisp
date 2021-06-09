@@ -88,7 +88,13 @@ alt_sexp tbl alt =
   case alt of
     E.Alt _ (E.PWildCard _) rhs Nothing -> S.List [S.Atom "else",exp_sexp tbl (rhs_exp rhs)]
     E.Alt _ lhs rhs Nothing -> S.List [S.List [pat_sexp tbl lhs],exp_sexp tbl (rhs_exp rhs)]
-    _ -> error_x "alt: bindings?" alt
+    _ -> error_x "alt_sexp: bindings?" alt
+
+stmt_sexp :: Show l => Name_Table -> E.Stmt l -> L.SExp
+stmt_sexp tbl stmt =
+  case stmt of
+    E.Qualifier _ e -> exp_sexp tbl e
+    _ -> error_x "stmt_sexp: not exp?" stmt
 
 -- | Tuples map to vectors.
 exp_sexp :: Show l => Name_Table -> E.Exp l -> L.SExp
@@ -97,6 +103,7 @@ exp_sexp tbl e =
       E.App _ f x -> S.List (map (exp_sexp tbl) (unwind_app (f,x)))
       E.Case _ c a -> S.List (S.Atom "case" : exp_sexp tbl c : map (alt_sexp tbl) a)
       E.Con _ nm -> S.Atom (qname_str tbl nm)
+      E.Do _ st -> S.List (S.Atom "begin" : map (stmt_sexp tbl) st)
       E.EnumFromTo _ p q -> S.List (S.Atom "enumFromTo" : map (exp_sexp tbl) [p,q])
       E.EnumFromThenTo _ p q r -> S.List (S.Atom "enumFromThenTo" : map (exp_sexp tbl) [p,q,r])
       E.ExpTypeSig _ e' _ -> exp_sexp tbl e' -- discard type annotation
@@ -106,7 +113,9 @@ exp_sexp tbl e =
       E.LeftSection _ p q ->
           let nm = S.Atom "_leftSectionArg"
           in S.List [S.Atom "lambda",S.List [nm],S.List [S.Atom (qop_str tbl q),exp_sexp tbl p,nm]]
-      E.Let _ b e' -> S.List [S.Atom "let*",S.List (map (decl_sexp tbl) (binds_decl (Just b))),exp_sexp tbl e']
+      E.Let _ (E.BDecls _ d) e' -> S.List [S.Atom (if length d == 1 then "let" else "let*")
+                                          ,S.List (map (decl_sexp tbl) d)
+                                          ,exp_sexp tbl e']
       E.List _ l -> if null l
                     then S.List [S.Atom "quote",S.Atom "()"]
                     else S.List (S.Atom "list" : map (exp_sexp tbl) l)
@@ -189,19 +198,22 @@ hs_exp_sexp tbl s =
 > rw "f x" == "(f x)"
 > rw "f x y" == "(f x y)"
 > rw "x + y" == "(+ x y)"
-> rw "let x = y in x" == "(let* ((x y)) x)"
+> rw "let x = y in x" == "(let ((x y)) x)"
 > rw "let {x = i;y = j} in x + y" == "(let* ((x i) (y j)) (+ x y))"
 > rw "\\x -> x * x" == "(lambda (x) (* x x))"
 > rw "\\x y -> x * x + y * y" == "(lambda (x y) (+ (* x x) (* y y)))"
 > rw "[]" == "(quote ())"
 > rw "[1,2,3]" == "(list 1 2 3)"
 > rw "(1,2.0,'3',\"4\")" == "(vector 1 2.0 #\\3 \"4\")"
-> rw "[x .. y]" == "(enum-from-to x y)"
-> rw "[x,y .. z]" == "(enum-from-then-to x y z)"
+> rw "[x .. y]" == "(enumFromTo x y)"
+> rw "[x,y .. z]" == "(enumFromThenTo x y z)"
 > rw "if x then y else z" == "(if x y z)"
-> rw "\\x -> case x of {0 -> a;1 -> b;_ -> c}" == "(lambda (x) (case x ((0) a) ((1) b) (else c)))"
+> rw "\\x -> case x of {0 -> 5;1 -> 4;_ -> 3}" == "(lambda (x) (case x ((0) 5) ((1) 4) (else 3)))"
 > rw "(+ 1)" == "(lambda (_rightSectionArg) (+ _rightSectionArg 1))"
 > rw "(1 +)" == "(lambda (_leftSectionArg) (+ 1 _leftSectionArg))"
+> rw "do {display 0;display (quote x)}" == "(begin (display 0) (display (quote x)))"
+> rw "let x = 5 in do {display x;set x (quote five);display x}"
+> rw "display 5 >> display (quote five)"
 > rw "let (i,j,k) = (1,2,3) in (k,j,i)" == undefined
 -}
 hs_exp_to_lisp :: Name_Table -> String -> String

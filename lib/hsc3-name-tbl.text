@@ -1,3 +1,7 @@
+True #t
+False #f
+set set!
+>> begin
 AR ar
 KR kr
 IR ir
@@ -944,8 +948,6 @@ expRandRange ExpRandRange
 greater_than GT
 less_than LT
 mce make-mce
-True #t
-False #f
 .>>. ShiftRight
 floorE Floor
 modE Mod
