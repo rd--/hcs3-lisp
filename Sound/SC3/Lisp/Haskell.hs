@@ -106,8 +106,10 @@ exp_sexp tbl e =
       E.LeftSection _ p q ->
           let nm = S.Atom "_leftSectionArg"
           in S.List [S.Atom "lambda",S.List [nm],S.List [S.Atom (qop_str tbl q),exp_sexp tbl p,nm]]
-      E.Let _ b e' -> S.List [S.Atom "letrec",S.List (map (decl_sexp tbl) (binds_decl (Just b))),exp_sexp tbl e']
-      E.List _ l -> S.List (S.Atom "list" : map (exp_sexp tbl) l)
+      E.Let _ b e' -> S.List [S.Atom "let*",S.List (map (decl_sexp tbl) (binds_decl (Just b))),exp_sexp tbl e']
+      E.List _ l -> if null l
+                    then S.List [S.Atom "quote",S.Atom "()"]
+                    else S.List (S.Atom "list" : map (exp_sexp tbl) l)
       E.Lit _ l -> literal_sexp l
       E.NegApp _ n ->
           case n of
@@ -187,10 +189,11 @@ hs_exp_sexp tbl s =
 > rw "f x" == "(f x)"
 > rw "f x y" == "(f x y)"
 > rw "x + y" == "(+ x y)"
-> rw "let x = y in x" == "(letrec ((x y)) x)"
-> rw "let {x = i;y = j} in x + y" == "(letrec ((x i) (y j)) (+ x y))"
+> rw "let x = y in x" == "(let* ((x y)) x)"
+> rw "let {x = i;y = j} in x + y" == "(let* ((x i) (y j)) (+ x y))"
 > rw "\\x -> x * x" == "(lambda (x) (* x x))"
 > rw "\\x y -> x * x + y * y" == "(lambda (x y) (+ (* x x) (* y y)))"
+> rw "[]" == "(quote ())"
 > rw "[1,2,3]" == "(list 1 2 3)"
 > rw "(1,2.0,'3',\"4\")" == "(vector 1 2.0 #\\3 \"4\")"
 > rw "[x .. y]" == "(enum-from-to x y)"
