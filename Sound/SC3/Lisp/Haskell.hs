@@ -33,6 +33,7 @@ qname_str tbl q =
     case q of
       E.UnQual _ nm -> name_str tbl nm
       E.Special _ (E.Cons _) -> "cons"
+      E.Special _ (E.UnitCon _) -> "unit"
       _ -> error_x "qname_str" q
 
 qop_str :: Show l => Name_Table -> E.QOp l -> String
@@ -96,11 +97,19 @@ stmt_sexp tbl stmt =
     E.Qualifier _ e -> exp_sexp tbl e
     _ -> error_x "stmt_sexp: not exp?" stmt
 
+exp_is_unit :: E.Exp l -> Bool
+exp_is_unit e =
+  case e of
+    E.Con _ (E.Special _ (E.UnitCon _)) -> True
+    _ -> False
+
 -- | Tuples map to vectors.
 exp_sexp :: Show l => Name_Table -> E.Exp l -> L.SExp
 exp_sexp tbl e =
     case e of
-      E.App _ f x -> S.List (map (exp_sexp tbl) (unwind_app (f,x)))
+      E.App _ f x -> if exp_is_unit x
+                     then S.List [exp_sexp tbl f]
+                     else S.List (map (exp_sexp tbl) (unwind_app (f,x)))
       E.Case _ c a -> S.List (S.Atom "case" : exp_sexp tbl c : map (alt_sexp tbl) a)
       E.Con _ nm -> S.Atom (qname_str tbl nm)
       E.Do _ st -> S.List (S.Atom "begin" : map (stmt_sexp tbl) st)
@@ -195,6 +204,8 @@ hs_exp_sexp tbl s =
 {- | Haskell expression to s-expression.
 
 > let rw = hs_exp_to_lisp []
+> rw "()" == "unit"
+> rw "f ()" == "(f)"
 > rw "f x" == "(f x)"
 > rw "f x y" == "(f x y)"
 > rw "x + y" == "(+ x y)"

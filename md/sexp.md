@@ -5,6 +5,7 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
 - comments, `import` statements, type signatures and type annotations are discarded
 - function application `f x` is written `(f x)`
 - function application `f x y` is written `(f x y)` rather than `((f x) y)`
+- function application `f ()` is written `(f)`
 - infix operations `x + y` are written `(+ x y)`
 - local bindings `let x = 1 in x` are written `(let ((x y)) x)`
 - local bindings `let {x = i;y = j} in x + y` are written `(let* ((x i) (y j)) (+ x y))`

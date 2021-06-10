@@ -947,7 +947,7 @@ randRange RandRange
 expRandRange ExpRandRange
 greater_than GT
 less_than LT
-mce make-mce
+mce asMce
 .>>. ShiftRight
 floorE Floor
 modE Mod
