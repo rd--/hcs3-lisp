@@ -79,6 +79,7 @@ sign_is_negative sgn =
 pat_sexp :: Show l => Name_Table -> E.Pat l -> L.SExp
 pat_sexp tbl p =
     case p of
+      E.PApp _ (E.Special _ (E.UnitCon _)) [] -> S.List []
       E.PVar _ nm -> S.Atom (name_str tbl nm)
       E.PLit _ sgn lit -> literal_sexp (if sign_is_negative sgn then literal_negate lit else lit)
       E.PWildCard _ -> S.Atom "_" -- allow singular wildcard
@@ -118,7 +119,11 @@ exp_sexp tbl e =
       E.ExpTypeSig _ e' _ -> exp_sexp tbl e' -- discard type annotation
       E.If _ p q r -> S.List (S.Atom "if" : map (exp_sexp tbl) [p,q,r])
       E.InfixApp _ lhs qop rhs -> S.List [S.Atom (qop_str tbl qop),exp_sexp tbl lhs,exp_sexp tbl rhs]
-      E.Lambda _ p c -> S.List [S.Atom "lambda",S.List (map (pat_sexp tbl) p),exp_sexp tbl c]
+      E.Lambda _ p c ->
+        let arg = case p of
+                    [E.PApp _ (E.Special _ (E.UnitCon _)) []] -> S.List []
+                    _ -> S.List (map (pat_sexp tbl) p)
+        in S.List [S.Atom "lambda",arg,exp_sexp tbl c]
       E.LeftSection _ p q ->
           let nm = S.Atom "_leftSectionArg"
           in S.List [S.Atom "lambda",S.List [nm],S.List [S.Atom (qop_str tbl q),exp_sexp tbl p,nm]]
@@ -159,7 +164,9 @@ match_sexp tbl m =
     case m of
       E.Match _ nm param rhs Nothing ->
           let nm' = S.Atom (name_str tbl nm)
-              param' = map (pat_sexp tbl) param
+              param' = case param of
+                         [E.PApp _ (E.Special _ (E.UnitCon _)) []] -> []
+                         _ -> map (pat_sexp tbl) param
               rhs' = exp_sexp tbl (rhs_exp rhs)
           in (nm',S.List [S.Atom "lambda",S.List param',rhs'])
       _ -> error_x "match_sexp" m
@@ -211,6 +218,7 @@ hs_exp_sexp tbl s =
 > rw "x + y" == "(+ x y)"
 > rw "let x = y in x" == "(let ((x y)) x)"
 > rw "let {x = i;y = j} in x + y" == "(let* ((x i) (y j)) (+ x y))"
+> rw "\\() -> x ()" == "(lambda () (x))"
 > rw "\\x -> x * x" == "(lambda (x) (* x x))"
 > rw "\\x y -> x * x + y * y" == "(lambda (x y) (+ (* x x) (* y y)))"
 > rw "[]" == "(quote ())"
@@ -225,6 +233,8 @@ hs_exp_sexp tbl s =
 > rw "do {display 0;display (quote x)}" == "(begin (display 0) (display (quote x)))"
 > rw "let x = 5 in do {display x;set x (quote five);display x}"
 > rw "display 5 >> display (quote five)"
+> rw "let f x = x * 2 in f 3" == "(let ((f (lambda (x) (* x 2)))) (f 3))"
+> rw "let f () = act () in f ()" == "(let ((f (lambda () (act)))) (f))"
 > rw "let (i,j,k) = (1,2,3) in (k,j,i)" == undefined
 -}
 hs_exp_to_lisp :: Name_Table -> String -> String

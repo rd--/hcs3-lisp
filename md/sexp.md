@@ -9,6 +9,7 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
 - infix operations `x + y` are written `(+ x y)`
 - local bindings `let x = 1 in x` are written `(let ((x y)) x)`
 - local bindings `let {x = i;y = j} in x + y` are written `(let* ((x i) (y j)) (+ x y))`
+- functions `\() -> f ()` are written `(lambda () (f))`
 - functions `\x -> x * x` are written `(lambda (x) (* x x))`
 - functions `\x y -> x * x + y * y` are written `(lambda (x y) (+ (* x x) (* y y)))`
 - lists `[1,2,3]` are written `(list 1 2 3)`
