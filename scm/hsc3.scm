@@ -7,7 +7,7 @@
 (define clone (lambda (n f) (make-mce (replicate-m n f))))
 
 ; mrg
-(define make-mrg (lambda (p q) (make-mrg* (list p q)))) ; make-mrg* is primitive
+(define make-mrg (lambda (p q) (Mrg (list p q)))) ; Mrg is primitive
 
 ; [ugen] -> mrg
 (define mrg-n

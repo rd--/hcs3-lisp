@@ -10,3 +10,5 @@
 (define head car)
 (define tail cdr)
 
+
+(define div /)

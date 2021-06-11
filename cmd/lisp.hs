@@ -63,6 +63,12 @@ l_mk_ctl c = do
           _ -> Monad.throwError ("mk-ctl: def: " ++ show df)
   return (Atom (control rt' nm' df'))
 
+l_make_mce :: Cell UGen -> Env.EnvMonad IO t UGen
+l_make_mce c = fmap mce (mapM atom_err (to_list c))
+
+l_as_ugen_input :: Cell UGen -> Env.EnvMonad IO t UGen
+l_as_ugen_input c = if is_list c then l_make_mce c else atom_err c
+
 l_mk_ugen :: Cell UGen -> LispVM UGen
 l_mk_ugen c = do
   let l = to_list c
@@ -78,7 +84,7 @@ l_mk_ugen c = do
            Nil -> return (Special 0)
            _ -> Monad.throwError "mk-ugen: special?"
   uid <- fmap UId (liftIO generateUId)
-  inp' <- fmap (++ inp_mce') (mapM atom_err (to_list inp))
+  inp' <- fmap (++ inp_mce') (mapM l_as_ugen_input (to_list inp))
   rt' <- case rt of
            Symbol sym -> return (fromJust (rate_parse (map toUpper sym)))
            Cons _ _ -> do
@@ -169,10 +175,10 @@ ugen_dict =
     ,("mk-ctl",Proc l_mk_ctl)
     ,("mk-ugen",Proc l_mk_ugen)
     ,("clone*",Proc l_clone_star)
-    ,("make-mce",Proc (\c -> fmap (Atom . mce) (mapM atom_err (to_list c))))
+    ,("make-mce",Proc (fmap Atom . l_make_mce))
     ,("mceChannels",Proc (\c -> fmap (from_list . map Atom . mceChannels) (atom_err c)))
     ,("mceDegree",Proc (\c -> fmap (Atom . constant . mceDegree_err) (atom_err c)))
-    ,("make-mrg*",Proc (\c -> fmap (Atom . mrg) (mapM atom_err (to_list c))))
+    ,("Mrg",Proc (\c -> fmap (Atom . mrg) (mapM atom_err (to_list c))))
     ,("show-graph",Proc (\c -> atom_err c >>= \u -> lift_io (Dot.draw u)))
     ,("play-at*",Proc l_play_at_star)
     ,("reset*",Proc (\_ -> lift_io (withSC3 reset)))
