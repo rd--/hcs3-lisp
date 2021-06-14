@@ -24,7 +24,9 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
 - module bindings `x = y` are written `(define x y)`
 - module bindings `f x = x * x` are written `(define f (lambda (x) (* x x)))`
 - the module binding `main = x` is written `x`
-- a lookup table is consulted and can rewrite `True` as `#t` and `:` as `cons` &etc.
+- a lookup table is consulted and can rewrite `True` as `#t`, `:` as `cons`, `>>` as `begin` &etc.
+
+[HS](?t=hsc3-lisp&e=Sound/SC3/Lisp/Haskell.hs)
 
 # Rationale
 
