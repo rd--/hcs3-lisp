@@ -26,8 +26,6 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
 - the module binding `main = x` is written `x`
 - a lookup table is consulted and can rewrite `True` as `#t`, `:` as `cons`, `>>` as `begin` &etc.
 
-[HS](?t=hsc3-lisp&e=Sound/SC3/Lisp/Haskell.hs)
-
 # Rationale
 
 The immediate reason for this re-writer is to translate
@@ -67,3 +65,7 @@ translate as:
 ~~~~
 
 and work in `hsc3-lisp`, which is `post-ML`, but not in `scheme`.
+
+* * *
+
+[HS](?t=hsc3-lisp&e=Sound/SC3/Lisp/Haskell.hs)
