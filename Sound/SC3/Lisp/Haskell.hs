@@ -236,6 +236,7 @@ hs_exp_sexp tbl s =
 > rw "let f x = x * 2 in f 3" == "(let ((f (lambda (x) (* x 2)))) (f 3))"
 > rw "let f () = act () in f ()" == "(let ((f (lambda () (act)))) (f))"
 > rw "let (i,j,k) = (1,2,3) in (k,j,i)" == undefined
+> rw "[(x,y) | x <- [1,2,3], y <- \"abc\"]" == undefined
 -}
 hs_exp_to_lisp :: Name_Table -> String -> String
 hs_exp_to_lisp tbl = L.sexp_show . hs_exp_sexp tbl
