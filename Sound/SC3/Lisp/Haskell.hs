@@ -95,6 +95,7 @@ alt_sexp tbl alt =
 stmt_sexp :: Show l => Name_Table -> E.Stmt l -> L.SExp
 stmt_sexp tbl stmt =
   case stmt of
+    E.Generator _ p e -> S.List [S.Atom "set!",pat_sexp tbl p,exp_sexp tbl e]
     E.Qualifier _ e -> exp_sexp tbl e
     _ -> error_x "stmt_sexp: not exp?" stmt
 
@@ -231,7 +232,7 @@ hs_exp_sexp tbl s =
 > rw "(+ 1)" == "(lambda (_rightSectionArg) (+ _rightSectionArg 1))"
 > rw "(1 +)" == "(lambda (_leftSectionArg) (+ 1 _leftSectionArg))"
 > rw "do {display 0;display (quote x)}" == "(begin (display 0) (display (quote x)))"
-> rw "let x = 5 in do {display x;set x (quote five);display x}"
+> rw "let x = 5 in do {x <- quote five;display x}" == "(let ((x 5)) (begin (set! x (quote five)) (display x)))"
 > rw "display 5 >> display (quote five)"
 > rw "let f x = x * 2 in f 3" == "(let ((f (lambda (x) (* x 2)))) (f 3))"
 > rw "let f () = act () in f ()" == "(let ((f (lambda () (act)))) (f))"

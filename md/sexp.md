@@ -21,6 +21,7 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
 - right sections `(+ 1)` are written `(lambda (_lhs) (+ _lhs 1))`
 - left sections `(1 +)` are written `(lambda (_rhs) (+ 1 _rhs))`
 - do expressions `do {display 0; exit 0}` are written `(begin (display 0) (exit 0))`
+- do expressions `do {x <- 0;display x}` are written `(begin (set! x 0) (display x)))`
 - module bindings `x = y` are written `(define x y)`
 - module bindings `f x = x * x` are written `(define f (lambda (x) (* x x)))`
 - the module binding `main = x` is written `x`
