@@ -43,6 +43,21 @@ library
                    Sound.SC3.Lisp.Parse.Ethier,
                    Sound.SC3.Lisp.Type
 
+executable hsc3-lisp
+  build-depends:   base >= 4.8 && < 5,
+                   containers,
+                   hosc == 0.20.*,
+                   hsc3 == 0.20.*,
+                   hsc3-dot == 0.20.*,
+                   hsc3-lisp == 0.20.*,
+                   hsc3-rw == 0.20.*,
+                   mtl,
+                   safe
+  hs-source-dirs:  cmd
+  main-is:         lisp.hs
+  ghc-options:     -Wall -fno-warn-orphans -fwarn-tabs
+  default-language:Haskell2010
+
 Source-Repository  head
   Type:            git
   Location:        https://gitlab.com/rd--/hsc3-lisp

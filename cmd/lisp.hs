@@ -9,7 +9,7 @@ import qualified Control.Monad.Except as Monad {- mtl -}
 
 import qualified Data.Map as Map {- containers -}
 
-import Sound.OSC {- hsc3 -}
+import Sound.OSC {- hosc -}
 import Sound.SC3 {- hsc3 -}
 import Sound.SC3.UGen.Plain {- hsc3 -}
 import Sound.SC3.UGen.PP {- hsc3 -}
