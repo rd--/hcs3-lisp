@@ -27,7 +27,7 @@ There is an OSX (10.9.3) binary
 or to build type:
 
 ~~~~
-(cd ~/sw/hsc3-lisp ; cabal v1-install ; cd cmd ; prefix=~/opt make install)
+cabal install
 ~~~~
 
 An environment variable locates the hsc3-lisp library files:
