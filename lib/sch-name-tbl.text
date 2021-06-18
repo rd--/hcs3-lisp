@@ -2,6 +2,8 @@ True #t
 False #f
 set set!
 >> begin
+++ append
+. compose
 AR ar
 KR kr
 IR ir
