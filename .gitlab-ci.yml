@@ -1,18 +1,6 @@
 stages:
   - build
 
-build:9:
-  image: haskell:9
-  stage: build
-  script:
-    - cabal update
-    - cabal install --installdir public --install-method copy
-  rules:
-    - when: manual
-  artifacts:
-    paths:
-      - public/hsc3-lisp
-
 build:8:
   image: haskell:8
   stage: build
