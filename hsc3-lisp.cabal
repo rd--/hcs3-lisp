@@ -60,6 +60,15 @@ executable hsc3-lisp
   ghc-options:     -Wall -fno-warn-orphans -fwarn-tabs
   default-language:Haskell2010
 
+executable hsc3-sexp
+  build-depends:   base >= 4.8 && < 5,
+                   hmt-base == 0.20.*,
+                   hsc3-lisp == 0.20.*
+  hs-source-dirs:  cmd
+  main-is:         sexp.hs
+  ghc-options:     -Wall -fno-warn-orphans -fwarn-tabs
+  default-language:Haskell2010
+
 Source-Repository  head
   Type:            git
   Location:        https://gitlab.com/rd--/hsc3-lisp

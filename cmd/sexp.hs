@@ -1,6 +1,6 @@
 import Control.Monad {- base -}
 
-import qualified Music.Theory.Opt as Opt {- hmt -}
+import qualified Music.Theory.Opt as Opt {- hmt-base -}
 
 import qualified Sound.SC3.Lisp.Haskell as Lisp {- hsc3-lisp -}
 
