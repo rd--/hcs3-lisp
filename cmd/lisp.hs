@@ -106,7 +106,7 @@ l_is_number c =
 l_is_mce :: Cell UGen -> Cell UGen
 l_is_mce c =
     case c of
-      Atom u -> if isMCE u then l_true else l_false
+      Atom u -> if isMce u then l_true else l_false
       _ -> l_false
 
 l_is_procedure :: Cell UGen -> Cell UGen
@@ -134,7 +134,7 @@ l_play_at_star c =
          let nid' = ugen_to_int "play-at: nid" nid
              act' = ugen_to_int "play-at: act" act
              grp' = ugen_to_int "play-at: grp" grp
-         in lift_io (withSC3 (play_at (nid',toEnum act',grp',[]) u)) >>
+         in lift_io (withSC3 (playAt (nid',toEnum act',grp',[]) u)) >>
             return Nil
      _ -> Monad.throwError ("play-at*: " ++ show c)
 
