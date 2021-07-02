@@ -40,6 +40,9 @@ maybe_to_err msg = maybe (throwError msg) return
 atom_err :: Lisp_Ty r => Cell r -> EnvMonad IO t r
 atom_err c = maybe_to_err ("not atom: " ++ show c) (atom c)
 
+atom_note :: Lisp_Ty r => String -> Cell r -> EnvMonad IO t r
+atom_note msg c = maybe_to_err (concat ["not atom: ", msg, ": ", show c]) (atom c)
+
 from_list :: [Cell a] -> Cell a
 from_list = foldr Cons Nil
 

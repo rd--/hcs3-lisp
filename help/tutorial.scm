@@ -387,18 +387,18 @@ set! ; error
 ; Time
 ; ----
 
-(begin (print 'before) (thread-sleep 1) (print 'after))
+(begin (print 'before) (threadSleep 1) (print 'after))
 
 (utcr) ; <real>
 
 (let ((t (utcr)))
   (begin
     (print 'before)
-    (pause-thread-until (+ t 1))
+    (pauseThreadUntil (+ t 1))
     (print 'after)))
 
-(define random-sine (Mul (SinOsc ar (Rand 220 440) 9) 0.01))
-(dt-rescheduler (lambda (t) (begin (audition (Out 0 random-sine)) 1)) (utcr))
+(define randomSine (Mul (SinOsc ar (Rand 220 440) 9) 0.01))
+(dt-rescheduler (lambda (t) (begin (audition (Out 0 randomSine)) 1)) (utcr))
 
 ; IO
 ; --

@@ -54,12 +54,12 @@
 ;(define lt LT)
 ;(define gt GT)
 
-(define play-at (lambda (fd u nid act grp) (play-at* (list fd u nid act grp))))
-(define audition (lambda (u) (play-at nil u -1 addToHead 1)))
+(define playAt (lambda (fd u nid act grp) (play-at* (list fd u nid act grp))))
+(define audition (lambda (u) (playAt nil u -1 addToHead 1)))
 (define reset reset*)
 (define async (lambda (_ msg) (async* msg)))
 (define send (lambda (_ msg) (send* msg)))
-(define with-sc3 (lambda (f) (f nil)))
+(define withSC3 (lambda (f) (f nil)))
 
 ; dot
 (define draw show-graph)

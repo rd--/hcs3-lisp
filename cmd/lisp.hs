@@ -64,10 +64,10 @@ l_mk_ctl c = do
   return (Atom (control rt' nm' df'))
 
 l_make_mce :: Cell UGen -> Env.EnvMonad IO t UGen
-l_make_mce c = fmap mce (mapM atom_err (to_list c))
+l_make_mce c = fmap mce (mapM (atom_note "l_make_mce") (to_list c))
 
 l_as_ugen_input :: Cell UGen -> Env.EnvMonad IO t UGen
-l_as_ugen_input c = if is_list c then l_make_mce c else atom_err c
+l_as_ugen_input c = if is_list c then l_make_mce c else atom_note "l_as_ugen_input" c
 
 l_mk_ugen :: Cell UGen -> LispVM UGen
 l_mk_ugen c = do
@@ -89,7 +89,7 @@ l_mk_ugen c = do
            Symbol sym -> return (fromJust (rate_parse (map toUpper sym)))
            Cons _ _ -> do
              let f = rateOf . Safe.atNote ("mk-ugen: rate: " ++ show c) inp' . ugen_to_int "rate"
-             fmap maximum (mapM (fmap f . atom_err) (to_list rt))
+             fmap maximum (mapM (fmap f . atom_note "mk-ugen: rate") (to_list rt))
            _ -> Monad.throwError ("mk-ugen: rate: " ++ show rt)
   nm' <- case nm of
            String str -> return str
@@ -140,7 +140,7 @@ l_play_at_star c =
 
 l_thread_sleep :: Cell UGen -> LispVM UGen
 l_thread_sleep c = do
-    u <- atom_err c
+    u <- atom_note "l_thread_sleep" c
     liftIO (pauseThread (ugen_to_double "pause" u))
     return Nil
 
@@ -176,18 +176,18 @@ ugen_dict =
     ,("mk-ugen",Proc l_mk_ugen)
     ,("clone*",Proc l_clone_star)
     ,("make-mce",Proc (fmap Atom . l_make_mce))
-    ,("mceChannels",Proc (\c -> fmap (from_list . map Atom . mceChannels) (atom_err c)))
-    ,("mceDegree",Proc (\c -> fmap (Atom . constant . mceDegree_err) (atom_err c)))
-    ,("Mrg",Proc (\c -> fmap (Atom . mrg) (mapM atom_err (to_list c))))
-    ,("show-graph",Proc (\c -> atom_err c >>= \u -> lift_io (Dot.draw u)))
+    ,("mceChannels",Proc (\c -> fmap (from_list . map Atom . mceChannels) (atom_note "mceChannels" c)))
+    ,("mceDegree",Proc (\c -> fmap (Atom . constant . mceDegree_err) (atom_note "mceDegree" c)))
+    ,("Mrg",Proc (\c -> fmap (Atom . mrg) (mapM (atom_note "Mrg") (to_list c))))
+    ,("show-graph",Proc (\c -> atom_note "show-graph" c >>= \u -> lift_io (Dot.draw u)))
     ,("play-at*",Proc l_play_at_star)
     ,("reset*",Proc (\_ -> lift_io (withSC3 reset)))
-    ,("thread-sleep",Proc l_thread_sleep)
+    ,("threadSleep",Proc l_thread_sleep)
     ,("utcr",Proc (\_ -> liftIO time >>= return . Atom . constant))
-    ,("display-server-status",Proc (\_ -> lift_io (withSC3 serverStatus >>= mapM_ putStrLn)))
+    ,("displayServerStatus",Proc (\_ -> lift_io (withSC3 serverStatus >>= mapM_ putStrLn)))
     ,("async*",Proc l_async_star)
     ,("send*",Proc l_send_star)
-    ,("unrand",Proc (\c -> atom_err c >>= \u -> return (Atom (ugen_optimise_ir_rand u))))]
+    ,("unrand",Proc (\c -> atom_note "urand" c >>= \u -> return (Atom (ugen_optimise_ir_rand u))))]
 
 main :: IO ()
 main = do
