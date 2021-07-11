@@ -57,6 +57,7 @@ l_equal lhs = Fun (\rhs -> if lhs == rhs then l_true else l_false)
 
 -- * EVAL / APPLY
 
+-- | Currently the *trace-level* is hard-coded.  This should be read from the environment.
 trace :: Show t => Trace_Level -> String -> t -> EnvMonad IO a ()
 trace (Trace_Level lvl) msg val = when (lvl < 3) (liftIO (putStrLn ("trace: " ++ msg ++ ": " ++ show val)))
 
