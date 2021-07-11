@@ -23,36 +23,36 @@ import Sound.SC3.Lisp.Env {- hsc3-lisp -}
 import Sound.SC3.Lisp.Type {- hsc3-lisp -}
 import qualified Sound.SC3.Lisp.Parse.Ethier as Parse {- hsc3-lisp -}
 
--- * CELL
+-- * Expr
 
-atom :: Cell a -> Maybe a
+atom :: Expr a -> Maybe a
 atom c =
     case c of
       Atom a -> Just a
       _ -> Nothing
 
-type CellVM t r = EnvMonad IO (Cell t) r
-type LispVM t = CellVM t (Cell t)
+type ExprVM t r = EnvMonad IO (Expr t) r
+type LispVM t = ExprVM t (Expr t)
 
 maybe_to_err :: String -> Maybe r -> EnvMonad IO t r
 maybe_to_err msg = maybe (throwError msg) return
 
-atom_err :: Lisp_Ty r => Cell r -> EnvMonad IO t r
+atom_err :: Lisp_Ty r => Expr r -> EnvMonad IO t r
 atom_err c = maybe_to_err ("not atom: " ++ show c) (atom c)
 
-atom_note :: Lisp_Ty r => String -> Cell r -> EnvMonad IO t r
+atom_note :: Lisp_Ty r => String -> Expr r -> EnvMonad IO t r
 atom_note msg c = maybe_to_err (concat ["not atom: ", msg, ": ", show c]) (atom c)
 
-from_list :: [Cell a] -> Cell a
+from_list :: [Expr a] -> Expr a
 from_list = foldr Cons Nil
 
-l_false :: Lisp_Ty a => Cell a
+l_false :: Lisp_Ty a => Expr a
 l_false = Atom (ty_from_bool False)
 
-l_true :: Lisp_Ty a => Cell a
+l_true :: Lisp_Ty a => Expr a
 l_true = Atom (ty_from_bool True)
 
-l_equal :: Lisp_Ty a => Cell a -> Cell a
+l_equal :: Lisp_Ty a => Expr a -> Expr a
 l_equal lhs = Fun (\rhs -> if lhs == rhs then l_true else l_false)
 
 -- * EVAL / APPLY
@@ -68,7 +68,7 @@ trace (Trace_Level lvl) msg val = when (lvl < 3) (liftIO (putStrLn ("trace: " ++
    4. restoring the saved environment (c_env);
    5. returning the saved result
 -}
-apply_lambda :: Lisp_Ty t => Env (Cell t) -> String -> Cell t -> Cell t -> LispVM t
+apply_lambda :: Lisp_Ty t => Env (Expr t) -> String -> Expr t -> Expr t -> LispVM t
 apply_lambda l_env nm code arg = do
   c_env <- get
   r <- env_lookup_m nm l_env
@@ -79,7 +79,7 @@ apply_lambda l_env nm code arg = do
   return res
 
 -- | Functions are one argument, but allow (+ 1 2) for ((+ 1) 2).
-apply :: Lisp_Ty a => Cell a -> Cell a -> Cell a -> LispVM a
+apply :: Lisp_Ty a => Expr a -> Expr a -> Expr a -> LispVM a
 apply lhs arg var_arg = do
   let msg = from_list [Symbol "lhs:",lhs,Symbol "rhs:",arg,Symbol "rem:",var_arg]
   r <- case lhs of
@@ -92,7 +92,7 @@ apply lhs arg var_arg = do
     Cons e l' -> apply r e l'
     _ -> throwError ("apply: invalid var-arg: " ++ show msg)
 
-l_apply :: Lisp_Ty a => Cell a -> LispVM a
+l_apply :: Lisp_Ty a => Expr a -> LispVM a
 l_apply c = do
   let Cons lhs rhs = c
   (p,l) <- case rhs of
@@ -104,19 +104,19 @@ l_apply c = do
     Macro _ -> throwError ("apply: macro? " ++ show c)
     _ -> apply f p l
 
-l_quote :: Cell a -> Cell a
+l_quote :: Expr a -> Expr a
 l_quote c = Cons (Symbol "quote") (Cons c Nil)
 
-l_lambda :: String -> Cell a -> LispVM a
+l_lambda :: String -> Expr a -> LispVM a
 l_lambda nm code = get >>= \env -> return (Lambda env nm code)
 
-l_set :: Lisp_Ty a => String -> Cell a -> LispVM a
+l_set :: Lisp_Ty a => String -> Expr a -> LispVM a
 l_set nm def = get >>= \env -> eval def >>= \def' -> liftIO (env_set env nm def') >> return Nil
 
-l_if :: Lisp_Ty a => Cell a -> Cell a -> Cell a -> LispVM a
+l_if :: Lisp_Ty a => Expr a -> Expr a -> Expr a -> LispVM a
 l_if p t f = eval p >>= \p' -> if p' == l_false then eval f else eval t
 
-eval :: Lisp_Ty a => Cell a -> LispVM a
+eval :: Lisp_Ty a => Expr a -> LispVM a
 eval c =
     case c of
       String _ -> return c
@@ -136,7 +136,7 @@ eval c =
       Cons _ _ -> l_apply c
       _ -> throwError ("eval: illegal form: " ++ show c)
 
-l_mapM :: Lisp_Ty a => (Cell a -> LispVM a) -> Cell a -> LispVM a
+l_mapM :: Lisp_Ty a => (Expr a -> LispVM a) -> Expr a -> LispVM a
 l_mapM f c =
     case c of
       Nil -> return Nil
@@ -145,7 +145,7 @@ l_mapM f c =
 
 -- | If /c/ is a Macro call expand it, and then expand the result.
 -- Do not expand quoted forms.
-expand :: Lisp_Ty a => Cell a -> LispVM a
+expand :: Lisp_Ty a => Expr a -> LispVM a
 expand c = do
   case c of
     Cons lhs rhs ->
@@ -165,14 +165,14 @@ expand c = do
 
 -- * LOAD
 
-eval_str :: Lisp_Ty t => Trace_Level -> String -> CellVM t [Cell t]
+eval_str :: Lisp_Ty t => Trace_Level -> String -> ExprVM t [Expr t]
 eval_str lvl str = do
   trace lvl "eval_str" str
   l <- Parse.parse_sexp_vm str
   trace lvl "eval_str" l
-  mapM (\e -> Parse.sexp_to_cell e >>= expand >>= eval) l
+  mapM (\e -> Parse.sexp_to_exp e >>= expand >>= eval) l
 
-load :: Lisp_Ty t => Cell t -> CellVM t ()
+load :: Lisp_Ty t => Expr t -> ExprVM t ()
 load c = do
   case c of
     String nm -> do
@@ -181,7 +181,7 @@ load c = do
                liftIO (putStrLn nm >> readFile nm) >>= eval_str (Trace_Level 5) >> return ()
     _ -> throwError ("load: " ++ show c)
 
-load_files :: Lisp_Ty t => [String] -> CellVM t ()
+load_files :: Lisp_Ty t => [String] -> ExprVM t ()
 load_files nm = do
   r <- liftIO (lookupEnv "HSC3_LISP_DIR")
   case r of
@@ -190,34 +190,34 @@ load_files nm = do
 
 -- * CORE
 
-l_write_char :: Lisp_Ty a => Cell a -> LispVM a
+l_write_char :: Lisp_Ty a => Expr a -> LispVM a
 l_write_char c = atom_err c >>= \a -> liftIO (putChar (toEnum (ty_to_int a)) >> return Nil)
 
-l_string_to_symbol :: Lisp_Ty a => Cell a -> Cell a
+l_string_to_symbol :: Lisp_Ty a => Expr a -> Expr a
 l_string_to_symbol c =
     case c of
       String s -> Symbol s
       _ -> Error ("string->symbol: " ++ show c)
 
-l_string_append :: Lisp_Ty a => Cell a -> Cell a -> Cell a
+l_string_append :: Lisp_Ty a => Expr a -> Expr a -> Expr a
 l_string_append p q =
     case (p,q) of
       (String r,String s) -> String (r ++ s)
       _ -> Error ("string-append: " ++ show (p,q))
 
-l_write_string :: Lisp_Ty a => Cell a -> LispVM a
+l_write_string :: Lisp_Ty a => Expr a -> LispVM a
 l_write_string c =
     case c of
       String s -> liftIO (putStr s) >> return Nil
       _ -> throwError ("write-string: " ++ show c)
 
-l_env_print :: Lisp_Ty a => Cell a -> LispVM a
+l_env_print :: Lisp_Ty a => Expr a -> LispVM a
 l_env_print x = do
   e <- get
   liftIO (env_print e)
   return x
 
-core_dict :: Lisp_Ty a => Dict (Cell a)
+core_dict :: Lisp_Ty a => Dict (Expr a)
 core_dict =
     Map.fromList
     [("#t",l_true)
@@ -253,7 +253,7 @@ get_sexp s h = do
   let s' = s ++ (l ++ "\n")
   if r then get_sexp s' h else return s'
 
-repl_cont :: Lisp_Ty a => Env (Cell a) -> IO ()
+repl_cont :: Lisp_Ty a => Env (Expr a) -> IO ()
 repl_cont env = do
   str <- get_sexp "" stdin
   (r,env') <- runStateT (runExceptT (eval_str (Trace_Level 3) str)) env
@@ -261,7 +261,7 @@ repl_cont env = do
     Left msg -> putStrLn ("error: " ++ msg) >> repl_cont env
     Right res -> mapM_ (\res' -> putStrLn ("result: " ++ show res')) res >> repl_cont env'
 
-repl_init :: Lisp_Ty t => Env (Cell t) -> CellVM t () -> IO ()
+repl_init :: Lisp_Ty t => Env (Expr t) -> ExprVM t () -> IO ()
 repl_init env initialise = do
   (r,env') <- runStateT (runExceptT initialise) env
   case r of

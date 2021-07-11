@@ -25,8 +25,8 @@ parse_sexp = A.parseOnly (A.many1' L.lisp) . T.encodeUtf8 . T.pack
 parse_sexp_vm :: String -> VM t [L.Lisp]
 parse_sexp_vm = either throwError return . parse_sexp
 
-sexp_to_cell :: Lisp_Ty a => L.Lisp -> VM a (Cell a)
-sexp_to_cell sexp =
+sexp_to_exp :: Lisp_Ty a => L.Lisp -> VM a (Exp a)
+sexp_to_exp sexp =
   case sexp of
     L.Number (A.I n) -> return (Atom (fromIntegral n))
     L.Number (A.D n) -> return (Atom (realToFrac n))
@@ -36,5 +36,5 @@ sexp_to_cell sexp =
                     r -> return (Symbol r)
     L.String s -> return (String (T.unpack s))
     L.List [] -> return Nil
-    L.List (e : l) -> sexp_to_cell e >>= \e' -> fmap (Cons e') (sexp_to_cell (L.List l))
-    _ -> throwError ("sexp-to-cell: " ++ show sexp)
+    L.List (e : l) -> sexp_to_exp e >>= \e' -> fmap (Cons e') (sexp_to_exp (L.List l))
+    _ -> throwError ("sexp-to-exp: " ++ show sexp)

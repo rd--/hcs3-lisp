@@ -1,3 +1,4 @@
+-- | Lisp types
 module Sound.SC3.Lisp.Type where
 
 import Data.Maybe {- base -}
@@ -6,68 +7,68 @@ import Sound.SC3.Lisp.Env {- hsc3-lisp -}
 
 -- * Types
 
-data Trace_Level = Trace_Level Int
+newtype Trace_Level = Trace_Level Int
 
 class (Eq a,Ord a,Num a,Fractional a) => Lisp_Ty a where
     ty_show :: a -> String -- ^ String representation of /a/, pretty printer.
     ty_to_int :: a -> Int -- ^ Coercion, ie. for Char.
     ty_from_bool :: Bool -> a -- ^ Boolean value represented in /a/, by convention @1@ and @0@.
 
-data Cell a = Symbol String | String String
+data Expr a = Symbol String | String String
             | Atom a
-            | Nil | Cons (Cell a) (Cell a)
-            | Fun (Cell a -> Cell a)
-            | Proc (Cell a -> EnvMonad IO (Cell a) (Cell a))
-            | Lambda (Env (Cell a)) String (Cell a)
-            | Macro (Cell a)
+            | Nil | Cons (Expr a) (Expr a)
+            | Fun (Expr a -> Expr a)
+            | Proc (Expr a -> EnvMonad IO (Expr a) (Expr a))
+            | Lambda (Env (Expr a)) String (Expr a)
+            | Macro (Expr a)
             | Error String
 
-cell_eq :: Eq a => Cell a -> Cell a -> Bool
-cell_eq lhs rhs =
+exp_eq :: Eq a => Expr a -> Expr a -> Bool
+exp_eq lhs rhs =
     case (lhs,rhs) of
       (Atom p,Atom q) -> p == q
       (String p,String q) -> p == q
       (Symbol p,Symbol q) -> p == q
       (Nil,Nil) -> True
       (Cons p p',Cons q q') -> p == q && p' == q'
-      _ -> False -- error "EQ"
+      _ -> False -- error "Eq"
 
-quoted_symbol :: String -> Cell a
+quoted_symbol :: String -> Expr a
 quoted_symbol x = (Cons (Symbol "quote") (Cons (Symbol x) Nil))
 
-instance Eq a => Eq (Cell a) where (==) = cell_eq
+instance Eq a => Eq (Expr a) where (==) = exp_eq
 
 -- * Instances
 
-is_list :: Eq a => Cell a -> Bool
+is_list :: Eq a => Expr a -> Bool
 is_list c =
     case c of
       Cons _ c' -> c' == Nil || is_list c'
       _ -> False
 
-to_list_m :: Lisp_Ty a => Cell a -> Maybe [Cell a]
+to_list_m :: Lisp_Ty a => Expr a -> Maybe [Expr a]
 to_list_m l =
     case l of
       Nil -> Just []
       Cons e l' -> fmap (e :) (to_list_m l')
       _ -> Nothing
 
-to_list :: Lisp_Ty a => Cell a -> [Cell a]
+to_list :: Lisp_Ty a => Expr a -> [Expr a]
 to_list = fromMaybe [Error "NOT LIST?"] . to_list_m
 
-list_pp :: Lisp_Ty a => Cell a -> String
+list_pp :: Lisp_Ty a => Expr a -> String
 list_pp c = "(" ++ unwords (map show (to_list c)) ++ ")"
 
-instance Lisp_Ty a => Show (Cell a) where
+instance Lisp_Ty a => Show (Expr a) where
     show c =
         case c of
           Atom a -> ty_show a
           Symbol s -> s
           String s -> show s
-          Nil -> "nil"
+          Nil -> "Nil"
           Cons p q -> if is_list c then list_pp c else concat ["(cons ",show p," ",show q,")"]
-          Fun _ -> "FUN"
-          Proc _ -> "PROC"
+          Fun _ -> "Fun"
+          Proc _ -> "Proc"
           Lambda _ nm code -> concat ["(λ ",nm," ",show code,")"] -- PRIMITIVE λ
-          Macro m -> "MACRO: " ++ show m
-          Error msg -> "ERROR: " ++ msg
+          Macro m -> "Macro: " ++ show m
+          Error msg -> "Error: " ++ msg

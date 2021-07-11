@@ -35,7 +35,7 @@ instance Lisp_Ty UGen where
 lift_io :: IO () -> LispVM t
 lift_io f = liftIO f >> return Nil
 
-constant_err :: Cell UGen -> Double
+constant_err :: Expr UGen -> Double
 constant_err c =
     case fmap constant_opt (atom c) of
       Just (Just n) -> n
@@ -47,7 +47,7 @@ ugen_to_double c u =
         f = fromMaybe err . u_constant
     in f u
 
-l_mk_ctl :: Cell UGen -> LispVM UGen
+l_mk_ctl :: Expr UGen -> LispVM UGen
 l_mk_ctl c = do
   let l = to_list c
   [rt,nm,df] <- if length l == 3 then return l else Monad.throwError ("mk-ctl: incorrect input: " ++ show c)
@@ -62,13 +62,13 @@ l_mk_ctl c = do
           _ -> Monad.throwError ("mk-ctl: def: " ++ show df)
   return (Atom (control rt' nm' df'))
 
-l_make_mce :: Cell UGen -> Env.EnvMonad IO t UGen
+l_make_mce :: Expr UGen -> Env.EnvMonad IO t UGen
 l_make_mce c = fmap mce (mapM (atom_note "l_make_mce") (to_list c))
 
-l_as_ugen_input :: Cell UGen -> Env.EnvMonad IO t UGen
+l_as_ugen_input :: Expr UGen -> Env.EnvMonad IO t UGen
 l_as_ugen_input c = if is_list c then l_make_mce c else atom_note "l_as_ugen_input" c
 
-l_mk_ugen :: Cell UGen -> LispVM UGen
+l_mk_ugen :: Expr UGen -> LispVM UGen
 l_mk_ugen c = do
   let l = to_list c
   [nm,rt,inp,inp_mce,outp,sp] <- if length l == 6
@@ -96,19 +96,19 @@ l_mk_ugen c = do
   let outp' = floor (constant_err outp)
   return (Atom (ugen_optimise_const_operator (mk_plain rt' nm' inp' outp' sp' uid)))
 
-l_is_number :: Cell UGen -> Cell UGen
+l_is_number :: Expr UGen -> Expr UGen
 l_is_number c =
     case c of
       Atom u -> if isConstant u then l_true else l_false
       _ -> l_false
 
-l_is_mce :: Cell UGen -> Cell UGen
+l_is_mce :: Expr UGen -> Expr UGen
 l_is_mce c =
     case c of
       Atom u -> if isMce u then l_true else l_false
       _ -> l_false
 
-l_is_procedure :: Cell UGen -> Cell UGen
+l_is_procedure :: Expr UGen -> Expr UGen
 l_is_procedure c =
     case c of
       Fun _ -> l_true
@@ -117,7 +117,7 @@ l_is_procedure c =
       Macro _ -> l_true
       _ -> l_false
 
-l_clone_star :: Cell UGen -> LispVM UGen
+l_clone_star :: Expr UGen -> LispVM UGen
 l_clone_star c =
     case to_list c of
       [Atom k,Atom n,Atom u] ->
@@ -126,7 +126,7 @@ l_clone_star c =
          in return (Atom (Protect.uclone (const False) k' n' u))
       _ -> Monad.throwError ("clone*: " ++ show c)
 
-l_play_at_star :: Cell UGen -> LispVM UGen
+l_play_at_star :: Expr UGen -> LispVM UGen
 l_play_at_star c =
     case to_list c of
      [_,Atom u,Atom nid,Atom act,Atom grp] ->
@@ -137,33 +137,33 @@ l_play_at_star c =
             return Nil
      _ -> Monad.throwError ("play-at*: " ++ show c)
 
-l_thread_sleep :: Cell UGen -> LispVM UGen
+l_thread_sleep :: Expr UGen -> LispVM UGen
 l_thread_sleep c = do
     u <- atom_note "l_thread_sleep" c
     liftIO (pauseThread (ugen_to_double "pause" u))
     return Nil
 
-cell_to_datum :: Cell UGen -> CellVM t Datum
-cell_to_datum c =
+expr_to_datum :: Expr UGen -> ExprVM t Datum
+expr_to_datum c =
     case c of
       Symbol str -> return (string str)
       String str -> return (string str)
       Atom (UGen (CConstant (Constant n))) -> return (float n)
-      _ -> Monad.throwError ("cell-to-datum: " ++ show c)
+      _ -> Monad.throwError ("expr-to-datum: " ++ show c)
 
-cell_to_message :: Cell UGen -> CellVM t Message
-cell_to_message c =
+expr_to_message :: Expr UGen -> ExprVM t Message
+expr_to_message c =
     case to_list_m c of
-      Just (String addr : l) -> mapM cell_to_datum l >>= \l' -> return (Message addr l')
-      _ -> Monad.throwError ("cell-to-message: " ++ show c)
+      Just (String addr : l) -> mapM expr_to_datum l >>= \l' -> return (Message addr l')
+      _ -> Monad.throwError ("expr-to-message: " ++ show c)
 
-l_async_star :: Cell UGen -> LispVM t
-l_async_star c = cell_to_message c >>= \c' -> lift_io (withSC3 (void (async c')))
+l_async_star :: Expr UGen -> LispVM t
+l_async_star c = expr_to_message c >>= \c' -> lift_io (withSC3 (void (async c')))
 
-l_send_star :: Cell UGen -> LispVM t
-l_send_star c = cell_to_message c >>= \c' -> lift_io (withSC3 (void (sendMessage c')))
+l_send_star :: Expr UGen -> LispVM t
+l_send_star c = expr_to_message c >>= \c' -> lift_io (withSC3 (void (sendMessage c')))
 
-ugen_dict :: Env.Dict (Cell UGen)
+ugen_dict :: Env.Dict (Expr UGen)
 ugen_dict =
     Map.fromList
     [("number?",Fun l_is_number)
@@ -191,7 +191,7 @@ ugen_dict =
 main :: IO ()
 main = do
   putStrLn "hsc3-lisp"
-  env <- Env.env_gen_toplevel (Map.unions [core_dict,ugen_dict]) :: IO (Env.Env (Cell UGen))
+  env <- Env.env_gen_toplevel (Map.unions [core_dict,ugen_dict]) :: IO (Env.Env (Expr UGen))
   let lib = ["stdlib.scm"
             ,"scheme.scm"
             ,"rhs.prereq.scm"

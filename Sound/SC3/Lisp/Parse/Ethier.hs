@@ -22,11 +22,11 @@ txt <- readFile fn
 S.readExprList (printf "(show-graph %s)" txt)
 -}
 
-parse_sexp_vm :: String -> L.EnvMonad IO (L.Cell a) [SExp]
+parse_sexp_vm :: String -> L.EnvMonad IO (L.Expr a) [SExp]
 parse_sexp_vm = either (E.throwError . show) return . S.readExprList
 
-sexp_to_cell :: L.Lisp_Ty a => SExp -> L.EnvMonad IO (L.Cell a) (L.Cell a)
-sexp_to_cell sexp =
+sexp_to_exp :: L.Lisp_Ty a => SExp -> L.EnvMonad IO (L.Expr a) (L.Expr a)
+sexp_to_exp sexp =
     case sexp of
       S.Number n -> return (L.Atom (fromIntegral n))
       S.Float n -> return (L.Atom (realToFrac n))
@@ -35,8 +35,8 @@ sexp_to_cell sexp =
       S.String s -> return (L.String s)
       S.Bool b -> return (L.Atom (L.ty_from_bool b))
       S.List [] -> return L.Nil
-      S.List (e : l) -> sexp_to_cell e >>= \e' -> fmap (L.Cons e') (sexp_to_cell (S.List l))
-      _ -> E.throwError ("SExp-TO-CELL: " ++ show sexp)
+      S.List (e : l) -> sexp_to_exp e >>= \e' -> fmap (L.Cons e') (sexp_to_exp (S.List l))
+      _ -> E.throwError ("sexp-to-exp: " ++ show sexp)
 
 {- | The husk-scheme printer uses "show" for Floats,
      prints 'Char' directly,
