@@ -12,7 +12,6 @@ import qualified Data.Map as Map {- containers -}
 import Sound.OSC {- hosc -}
 import Sound.SC3 {- hsc3 -}
 import Sound.SC3.UGen.Plain {- hsc3 -}
-import Sound.SC3.UGen.PP {- hsc3 -}
 
 import qualified Sound.SC3.UGen.Protect as Protect {- hsc3-rw -}
 
@@ -149,7 +148,7 @@ cell_to_datum c =
     case c of
       Symbol str -> return (string str)
       String str -> return (string str)
-      Atom (Constant_U (Constant n)) -> return (float n)
+      Atom (UGen (CConstant (Constant n))) -> return (float n)
       _ -> Monad.throwError ("cell-to-datum: " ++ show c)
 
 cell_to_message :: Cell UGen -> CellVM t Message
