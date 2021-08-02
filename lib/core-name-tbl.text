@@ -5,7 +5,7 @@ False #f
 null null?
 : cons
 pair pair?
-!! list-ref
+!! listRef
 . compose
 == equal?
 GT 'gt
