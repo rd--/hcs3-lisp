@@ -62,9 +62,9 @@
 
 ; Predicates are:
 
-(pair? c) ; #t
-(list? c) ; #f
-(null? c) ; #f
+(pair? (cons 1 2)) ; #t
+(list? (cons 1 2)) ; #f
+(null? (cons 1 2)) ; #f
 (null? nil) ; #t
 (null? '()) ; #t
 
