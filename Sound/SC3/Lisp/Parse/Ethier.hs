@@ -22,10 +22,10 @@ txt <- readFile fn
 S.readExprList (printf "(show-graph %s)" txt)
 -}
 
-parse_sexp_vm :: String -> L.EnvMonad IO (L.Expr a) [SExp]
+parse_sexp_vm :: String -> L.EnvMonad () IO (L.Expr a) [SExp]
 parse_sexp_vm = either (E.throwError . show) return . S.readExprList
 
-sexp_to_exp :: L.Lisp_Ty a => SExp -> L.EnvMonad IO (L.Expr a) (L.Expr a)
+sexp_to_exp :: L.Lisp_Ty a => SExp -> L.EnvMonad () IO (L.Expr a) (L.Expr a)
 sexp_to_exp sexp =
     case sexp of
       S.Number n -> return (L.Atom (fromIntegral n))

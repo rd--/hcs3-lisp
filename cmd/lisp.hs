@@ -62,10 +62,10 @@ l_mk_ctl c = do
           _ -> Monad.throwError ("mk-ctl: def: " ++ show df)
   return (Atom (control rt' nm' df'))
 
-l_make_mce :: Expr UGen -> Env.EnvMonad IO t UGen
+l_make_mce :: Expr UGen -> Env.EnvMonad () IO t UGen
 l_make_mce c = fmap mce (mapM (atom_note "l_make_mce") (to_list c))
 
-l_as_ugen_input :: Expr UGen -> Env.EnvMonad IO t UGen
+l_as_ugen_input :: Expr UGen -> Env.EnvMonad () IO t UGen
 l_as_ugen_input c = if is_list c then l_make_mce c else atom_note "l_as_ugen_input" c
 
 l_mk_ugen :: Expr UGen -> LispVM UGen
@@ -191,7 +191,7 @@ ugen_dict =
 main :: IO ()
 main = do
   putStrLn "hsc3-lisp"
-  env <- Env.env_gen_toplevel (Map.unions [core_dict,ugen_dict]) :: IO (Env.Env (Expr UGen))
+  env <- Env.env_gen_toplevel (Map.unions [core_dict,ugen_dict]) :: IO (Env.Env () (Expr UGen))
   let lib = ["stdlib.scm"
             ,"scheme.scm"
             ,"rhs.prereq.scm"

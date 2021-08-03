@@ -18,8 +18,8 @@ data Expr a = Symbol String | String String
             | Atom a
             | Nil | Cons (Expr a) (Expr a)
             | Fun (Expr a -> Expr a)
-            | Proc (Expr a -> EnvMonad IO (Expr a) (Expr a))
-            | Lambda (Env (Expr a)) String (Expr a)
+            | Proc (Expr a -> EnvMonad () IO (Expr a) (Expr a))
+            | Lambda (Env () (Expr a)) String (Expr a)
             | Macro (Expr a)
             | Error String
 
