@@ -21,6 +21,13 @@ data Env k v
   = Frame (IORef (Dict k v)) (Env k v)
   | Toplevel (IORef (Dict k v))
 
+-- | Fetch Toplevel of Env.
+envToplevel :: Env k v -> Env k v
+envToplevel e =
+  case e of
+    Frame _ e' -> envToplevel e'
+    Toplevel _ -> e
+
 -- | State monad wrapped in Exception monad.
 type EnvMonad m k v r = Except.ExceptT String (State.StateT (Env k v) m) r
 
@@ -84,6 +91,10 @@ envLookup k e = do
     Nothing -> Except.throwError ("envLookup" ++ show k)
     Just c -> return c
 
+-- | Run 'envLookup' at 'envToplevel'
+envLookupToplevel :: (MonadIO m, Ord k, Show k) => k -> Env k v -> EnvMonad m k v v
+envLookupToplevel k e = envLookup k (envToplevel e)
+
 -- | Extend Env by adding a frame.
 envAddFrame :: MonadIO m => Dict k v -> Env k v -> m (Env k v)
 envAddFrame d e = do
@@ -116,6 +127,10 @@ envSet e nm c =
       do d <- liftIO (readIORef f)
          if Map.member nm d then liftIO (writeIORef f (Map.insert nm c d)) else envSet e' nm c
     Toplevel d -> liftIO (modifyIORef d (Map.insert nm c))
+
+-- | Run 'envSet' and 'envToplevel'.
+envSetToplevel :: (MonadIO m, Ord k) => Env k v -> k -> v -> m ()
+envSetToplevel e nm c = envSet (envToplevel e) nm c
 
 -- | Lookup value or error, apply f, set value to result, return result.
 envAlter :: (MonadIO m, Ord k, Show k) => Env k v -> k -> (v -> v) -> EnvMonad m k v v
