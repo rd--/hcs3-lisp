@@ -47,13 +47,13 @@ envPrint e =
       Frame f e' -> readIORef f >>= print >> envPrint e'
       Toplevel d -> readIORef d >>= print
 
--- | New empty environment.
-envEmpty :: IO (Env k v)
-envEmpty = fmap Toplevel (newIORef Map.empty)
-
 -- | New environment from 'Dict'.
-envNewFrom :: Dict k v -> IO (Env k v)
-envNewFrom = fmap Toplevel . newIORef
+envNewFrom :: MonadIO m => Dict k v -> m (Env k v)
+envNewFrom d = fmap Toplevel (liftIO (newIORef d))
+
+-- | New empty environment.
+envEmpty :: MonadIO m => m (Env k v)
+envEmpty = envNewFrom Map.empty
 
 -- | Lookup value in environment, maybe variant.
 envLookupMaybe :: (MonadIO m, Ord k) => k -> Env k v -> m (Maybe v)
