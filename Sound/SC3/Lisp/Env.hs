@@ -1,6 +1,7 @@
 -- | Environment
 module Sound.SC3.Lisp.Env where
 
+import Control.Monad.IO.Class {- base -}
 import Data.IORef {- base -}
 import Data.Maybe {- base -}
 
@@ -24,11 +25,11 @@ data Env k v
 type EnvMonad m k v r = Except.ExceptT String (State.StateT (Env k v) m) r
 
 -- | 'newIORef' of 'readIORef'
-copyIORef :: IORef a -> IO (IORef a)
-copyIORef r = readIORef r >>= newIORef
+copyIORef :: MonadIO m => IORef a -> m (IORef a)
+copyIORef r = liftIO (readIORef r >>= newIORef)
 
 -- | Copy environment.
-envCopy :: Env k v -> IO (Env k v)
+envCopy :: MonadIO m => Env k v -> m (Env k v)
 envCopy e =
   case e of
     Frame d e' ->
@@ -55,68 +56,79 @@ envNewFrom :: Dict k v -> IO (Env k v)
 envNewFrom = fmap Toplevel . newIORef
 
 -- | Lookup value in environment, maybe variant.
-envLookupMaybe :: (State.MonadIO m,Ord k) => k -> Env k v -> m (Maybe v)
+envLookupMaybe :: (MonadIO m, Ord k) => k -> Env k v -> m (Maybe v)
 envLookupMaybe w e =
   case e of
     Frame f e' ->
-      do d <- State.liftIO (readIORef f)
+      do d <- liftIO (readIORef f)
          case Map.lookup w d of
            Just r -> return (Just r)
            Nothing -> envLookupMaybe w e'
     Toplevel d ->
-      do d' <- State.liftIO (readIORef d)
+      do d' <- liftIO (readIORef d)
          case Map.lookup w d' of
            Just r -> return (Just r)
            Nothing -> return Nothing
 
 -- | Lookup with default.
-envLookupWithDefault :: (State.MonadIO m,Ord k) => k -> Env k v -> v -> EnvMonad m k v v
+envLookupWithDefault :: (MonadIO m, Ord k) => k -> Env k v -> v -> m v
 envLookupWithDefault k e d = do
   r <- envLookupMaybe k e
   return (fromMaybe d r)
 
 -- | Lookup value in environment, error variant.
-envLookup :: (State.MonadIO m, Ord k, Show k) => k -> Env k v -> EnvMonad m k v v
+envLookup :: (MonadIO m, Ord k, Show k) => k -> Env k v -> EnvMonad m k v v
 envLookup k e = do
   r <- envLookupMaybe k e
   case r of
     Nothing -> Except.throwError ("envLookup" ++ show k)
     Just c -> return c
 
--- | Extend environment by adding a frame given as an association list.
-envAddFrame :: Ord k => [(k,v)] -> Env k v -> IO (Env k v)
+-- | Extend Env by adding a frame.
+envAddFrame :: MonadIO m => Dict k v -> Env k v -> m (Env k v)
 envAddFrame d e = do
-  f <- newIORef (Map.fromList d)
+  f <- liftIO (newIORef d)
   return (Frame f e)
 
+-- | Extend environment by adding a frame given as an association list.
+envAddFrameFromList :: (MonadIO m,Ord k) => [(k,v)] -> Env k v -> m (Env k v)
+envAddFrameFromList d e = envAddFrame (Map.fromList d) e
+
+-- | Delete current frame if one exists.
+envDeleteFrameMaybe :: Env k v -> Maybe (Env k v)
+envDeleteFrameMaybe e =
+  case e of
+    Frame _ e' -> Just e'
+    Toplevel _ -> Nothing
+
 -- | Delete current frame from environment, error if at toplevel.
-envDeleteFrame :: State.MonadIO m => Env k v -> EnvMonad m k v (Env k v)
+envDeleteFrame :: MonadIO m => Env k v -> EnvMonad m k v (Env k v)
 envDeleteFrame e =
   case e of
     Frame _ e' -> return e'
     Toplevel _ -> Except.throwError "envDeleteFrame: at toplevel?"
 
 -- | Set value in environment.  If no entry exists for Name create an entry at the top level.
-envSet :: Ord k => Env k v -> k -> v -> IO ()
+envSet :: (MonadIO m, Ord k) => Env k v -> k -> v -> m ()
 envSet e nm c =
   case e of
     Frame f e' ->
-      do d <- State.liftIO (readIORef f)
-         if Map.member nm d then writeIORef f (Map.insert nm c d) else envSet e' nm c
-    Toplevel d -> modifyIORef d (Map.insert nm c)
+      do d <- liftIO (readIORef f)
+         if Map.member nm d then liftIO (writeIORef f (Map.insert nm c d)) else envSet e' nm c
+    Toplevel d -> liftIO (modifyIORef d (Map.insert nm c))
 
 -- | Lookup value or error, apply f, set value to result, return result.
-envAlter :: (State.MonadIO m, Ord k, Show k) => Env k v -> k -> (v -> v) -> EnvMonad m k v v
+envAlter :: (MonadIO m, Ord k, Show k) => Env k v -> k -> (v -> v) -> EnvMonad m k v v
 envAlter e nm f = do
   v <- envLookup nm e
   let r = f v
-  State.liftIO (envSet e nm r)
+  liftIO (envSet e nm r)
   return r
 
 -- | Lookup value or default, apply f, set value to result, return result.
-envAlterWithDefault :: (State.MonadIO m, Ord k) => Env k v -> k -> v -> (v -> v) -> EnvMonad m k v v
+envAlterWithDefault :: (MonadIO m, Ord k) => Env k v -> k -> v -> (v -> v) -> m v
 envAlterWithDefault e nm t f = do
   v <- envLookupWithDefault nm e t
   let r = f v
-  State.liftIO (envSet e nm r)
+  liftIO (envSet e nm r)
   return r

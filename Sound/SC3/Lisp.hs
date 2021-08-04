@@ -73,7 +73,7 @@ apply_lambda l_env nm code arg = do
   c_env <- get
   r <- envLookupMaybe nm l_env
   when (isJust r) (trace (Trace_Level 3) "envAddFrame: shadowing" nm)
-  put =<< liftIO (envAddFrame [(nm,arg)] l_env)
+  put =<< liftIO (envAddFrameFromList [(nm,arg)] l_env)
   res <- eval code
   put c_env
   return res
