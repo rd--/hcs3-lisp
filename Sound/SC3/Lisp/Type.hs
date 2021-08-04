@@ -14,12 +14,13 @@ class (Eq a,Ord a,Num a,Fractional a) => Lisp_Ty a where
     ty_to_int :: a -> Int -- ^ Coercion, ie. for Char.
     ty_from_bool :: Bool -> a -- ^ Boolean value represented in /a/, by convention @1@ and @0@.
 
-data Expr a = Symbol String | String String
+data Expr a = Symbol String
+            | String String
             | Atom a
             | Nil | Cons (Expr a) (Expr a)
             | Fun (Expr a -> Expr a)
-            | Proc (Expr a -> EnvMonad () IO (Expr a) (Expr a))
-            | Lambda (Env () (Expr a)) String (Expr a)
+            | Proc (Expr a -> EnvMonad IO String (Expr a) (Expr a))
+            | Lambda (Env String (Expr a)) String (Expr a)
             | Macro (Expr a)
             | Error String
 

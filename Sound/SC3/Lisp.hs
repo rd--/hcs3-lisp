@@ -31,16 +31,16 @@ atom c =
       Atom a -> Just a
       _ -> Nothing
 
-type ExprVM t r = EnvMonad () IO (Expr t) r
+type ExprVM t r = EnvMonad IO String (Expr t) r
 type LispVM t = ExprVM t (Expr t)
 
-maybe_to_err :: String -> Maybe r -> EnvMonad () IO t r
+maybe_to_err :: String -> Maybe r -> EnvMonad IO String t r
 maybe_to_err msg = maybe (throwError msg) return
 
-atom_err :: Lisp_Ty r => Expr r -> EnvMonad () IO t r
+atom_err :: Lisp_Ty r => Expr r -> EnvMonad IO String t r
 atom_err c = maybe_to_err ("not atom: " ++ show c) (atom c)
 
-atom_note :: Lisp_Ty r => String -> Expr r -> EnvMonad () IO t r
+atom_note :: Lisp_Ty r => String -> Expr r -> EnvMonad IO String t r
 atom_note msg c = maybe_to_err (concat ["not atom: ", msg, ": ", show c]) (atom c)
 
 from_list :: [Expr a] -> Expr a
@@ -58,7 +58,7 @@ l_equal lhs = Fun (\rhs -> if lhs == rhs then l_true else l_false)
 -- * EVAL / APPLY
 
 -- | Currently the *trace-level* is hard-coded.  This should be read from the environment.
-trace :: Show t => Trace_Level -> String -> t -> EnvMonad () IO a ()
+trace :: Show t => Trace_Level -> String -> t -> EnvMonad IO String a ()
 trace (Trace_Level lvl) msg val = when (lvl < 3) (liftIO (putStrLn ("trace: " ++ msg ++ ": " ++ show val)))
 
 {- | Apply works by:
@@ -68,12 +68,12 @@ trace (Trace_Level lvl) msg val = when (lvl < 3) (liftIO (putStrLn ("trace: " ++
    4. restoring the saved environment (c_env);
    5. returning the saved result
 -}
-apply_lambda :: Lisp_Ty t => Env () (Expr t) -> String -> Expr t -> Expr t -> LispVM t
+apply_lambda :: Lisp_Ty t => Env String (Expr t) -> String -> Expr t -> Expr t -> LispVM t
 apply_lambda l_env nm code arg = do
   c_env <- get
-  r <- env_lookup_m nm l_env
-  when (isJust r) (trace (Trace_Level 3) "env_add_frame: shadowing" nm)
-  put =<< liftIO (env_add_frame () [(nm,arg)] l_env)
+  r <- envLookupMaybe nm l_env
+  when (isJust r) (trace (Trace_Level 3) "envAddFrame: shadowing" nm)
+  put =<< liftIO (envAddFrame [(nm,arg)] l_env)
   res <- eval code
   put c_env
   return res
@@ -111,7 +111,7 @@ l_lambda :: String -> Expr a -> LispVM a
 l_lambda nm code = get >>= \env -> return (Lambda env nm code)
 
 l_set :: Lisp_Ty a => String -> Expr a -> LispVM a
-l_set nm def = get >>= \env -> eval def >>= \def' -> liftIO (env_set env nm def') >> return Nil
+l_set nm def = get >>= \env -> eval def >>= \def' -> liftIO (envSet env nm def') >> return Nil
 
 l_if :: Lisp_Ty a => Expr a -> Expr a -> Expr a -> LispVM a
 l_if p t f = eval p >>= \p' -> if p' == l_false then eval f else eval t
@@ -122,7 +122,7 @@ eval c =
       String _ -> return c
       Atom _ -> return c
       Nil -> return c
-      Symbol nm -> get >>= \env -> env_lookup nm env
+      Symbol nm -> get >>= \env -> envLookup nm env
       Cons (Symbol "set!") (Cons (Symbol nm) (Cons def Nil)) -> l_set nm def
       Cons (Symbol "if") (Cons p (Cons t (Cons f Nil))) -> l_if p t f
       Cons (Symbol "quote") (Cons code Nil) -> return code
@@ -130,7 +130,7 @@ eval c =
       Cons (Symbol "macro") (Cons code Nil) -> fmap Macro (eval code)
       Cons (Symbol "fork") (Cons code Nil) -> do
              e <- get
-             let f = env_copy e >>= runStateT (runExceptT (eval code)) >> return ()
+             let f = envCopy e >>= runStateT (runExceptT (eval code)) >> return ()
              _ <- liftIO (forkIO f)
              return Nil
       Cons _ _ -> l_apply c
@@ -153,7 +153,7 @@ expand c = do
           Symbol "quote" -> return c
           Symbol sym ->
               do env <- get
-                 lhs' <- env_lookup_m sym env
+                 lhs' <- envLookupMaybe sym env
                  case lhs' of
                    Just (Macro f) ->
                        do rhs' <- l_mapM expand rhs
@@ -214,10 +214,10 @@ l_write_string c =
 l_env_print :: Lisp_Ty a => Expr a -> LispVM a
 l_env_print x = do
   e <- get
-  liftIO (env_print e)
+  liftIO (envPrint e)
   return x
 
-core_dict :: Lisp_Ty a => Dict (Expr a)
+core_dict :: Lisp_Ty a => Dict String (Expr a)
 core_dict =
     Map.fromList
     [("#t",l_true)
@@ -253,7 +253,7 @@ get_sexp s h = do
   let s' = s ++ (l ++ "\n")
   if r then get_sexp s' h else return s'
 
-repl_cont :: Lisp_Ty a => Env () (Expr a) -> IO ()
+repl_cont :: Lisp_Ty a => Env String (Expr a) -> IO ()
 repl_cont env = do
   str <- get_sexp "" stdin
   (r,env') <- runStateT (runExceptT (eval_str (Trace_Level 3) str)) env
@@ -261,7 +261,7 @@ repl_cont env = do
     Left msg -> putStrLn ("error: " ++ msg) >> repl_cont env
     Right res -> mapM_ (\res' -> putStrLn ("result: " ++ show res')) res >> repl_cont env'
 
-repl_init :: Lisp_Ty t => Env () (Expr t) -> ExprVM t () -> IO ()
+repl_init :: Lisp_Ty t => Env String (Expr t) -> ExprVM t () -> IO ()
 repl_init env initialise = do
   (r,env') <- runStateT (runExceptT initialise) env
   case r of
