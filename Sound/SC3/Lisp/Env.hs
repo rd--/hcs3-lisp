@@ -1,3 +1,5 @@
+{-# Language FlexibleContexts #-}
+
 -- | Environment
 module Sound.SC3.Lisp.Env where
 
@@ -84,7 +86,7 @@ envLookupWithDefault k e d = do
   return (fromMaybe d r)
 
 -- | Lookup value in environment, error variant.
-envLookup :: (MonadIO m, Ord k, Show k) => k -> Env k v -> EnvMonad m k v v
+envLookup :: (MonadIO m, Except.MonadError String m, Ord k, Show k) => k -> Env k v -> m v
 envLookup k e = do
   r <- envLookupMaybe k e
   case r of
@@ -92,7 +94,7 @@ envLookup k e = do
     Just c -> return c
 
 -- | Run 'envLookup' at 'envToplevel'
-envLookupToplevel :: (MonadIO m, Ord k, Show k) => k -> Env k v -> EnvMonad m k v v
+envLookupToplevel :: (MonadIO m, Except.MonadError String m, Ord k, Show k) => k -> Env k v -> m v
 envLookupToplevel k e = envLookup k (envToplevel e)
 
 -- | Extend Env by adding a frame.
@@ -113,7 +115,7 @@ envDeleteFrameMaybe e =
     Toplevel _ -> Nothing
 
 -- | Delete current frame from environment, error if at toplevel.
-envDeleteFrame :: MonadIO m => Env k v -> EnvMonad m k v (Env k v)
+envDeleteFrame :: (MonadIO m, Except.MonadError String m) => Env k v -> m (Env k v)
 envDeleteFrame e =
   case e of
     Frame _ e' -> return e'
@@ -133,7 +135,7 @@ envSetToplevel :: (MonadIO m, Ord k) => Env k v -> k -> v -> m ()
 envSetToplevel e nm c = envSet (envToplevel e) nm c
 
 -- | Lookup value or error, apply f, set value to result, return result.
-envAlter :: (MonadIO m, Ord k, Show k) => Env k v -> k -> (v -> v) -> EnvMonad m k v v
+envAlter :: (MonadIO m, Except.MonadError String m, Ord k, Show k) => Env k v -> k -> (v -> v) -> m v
 envAlter e nm f = do
   v <- envLookup nm e
   let r = f v
