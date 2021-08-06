@@ -22,6 +22,7 @@ type Dict k v = Map.Map k v
 data Env k v
   = Frame (IORef (Dict k v)) (Env k v)
   | Toplevel (IORef (Dict k v))
+  deriving (Eq)
 
 -- | Fetch Toplevel of Env.
 envToplevel :: Env k v -> Env k v
