@@ -14,6 +14,13 @@ import qualified Data.Map as Map {- containers -}
 -- | Dictionary.
 type Dict k v = Map.Map k v
 
+-- | Lookup key in dict and error if not present.
+dictLookupError :: (Ord k, Except.MonadError String m, Show k) => Dict k v -> k -> m v
+dictLookupError dict key =
+  case Map.lookup key dict of
+    Just result -> return result
+    Nothing -> Except.throwError ("dictLookupError: " ++ show key)
+
 {- | Enviroment, either a Frame or a Toplevel.
      k is the key type, v is the value type.
      The implementation uses IORef cells for each Dict.
@@ -150,3 +157,10 @@ envAlterWithDefault e nm t f = do
   let r = f v
   liftIO (envSet e nm r)
   return r
+
+-- | Get the current Frame.  It is an error if there is no Frame, ie. if e is a Toplevel.
+envCurrentFrame :: (MonadIO m, Except.MonadError String m, Ord k) => Env k v -> m (Dict k v)
+envCurrentFrame e =
+  case e of
+    Frame d _ -> liftIO (readIORef d)
+    _ -> Except.throwError "envCurrentFrame: at Toplevel"
