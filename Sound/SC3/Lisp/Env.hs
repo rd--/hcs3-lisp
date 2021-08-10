@@ -94,12 +94,16 @@ envLookupWithDefault k e d = do
   return (fromMaybe d r)
 
 -- | Lookup value in environment, error variant.
-envLookup :: (MonadIO m, Except.MonadError String m, Ord k, Show k) => k -> Env k v -> m v
-envLookup k e = do
+envLookupError :: (MonadIO m, Except.MonadError String m, Ord k) => String -> k -> Env k v -> m v
+envLookupError msg k e = do
   r <- envLookupMaybe k e
   case r of
-    Nothing -> Except.throwError ("envLookup" ++ show k)
+    Nothing -> Except.throwError msg
     Just c -> return c
+
+-- | Lookup value in environment, error variant.
+envLookup :: (MonadIO m, Except.MonadError String m, Ord k, Show k) => k -> Env k v -> m v
+envLookup k = envLookupError ("envLookup: no key: " ++ show k) k
 
 -- | Run 'envLookup' at 'envToplevel'
 envLookupToplevel :: (MonadIO m, Except.MonadError String m, Ord k, Show k) => k -> Env k v -> m v
