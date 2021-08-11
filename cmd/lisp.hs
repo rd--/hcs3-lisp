@@ -7,8 +7,6 @@ import qualified Safe {- safe -}
 
 import qualified Control.Monad.Except as Monad {- mtl -}
 
-import qualified Data.Map as Map {- containers -}
-
 import Sound.OSC {- hosc -}
 import Sound.SC3 {- hsc3 -}
 import Sound.SC3.UGen.Plain {- hsc3 -}
@@ -163,9 +161,9 @@ l_async_star c = expr_to_message c >>= \c' -> lift_io (withSC3 (void (async c'))
 l_send_star :: Expr UGen -> LispVM t
 l_send_star c = expr_to_message c >>= \c' -> lift_io (withSC3 (void (sendMessage c')))
 
-ugen_dict :: Env.Dict String (Expr UGen)
+ugen_dict :: MonadIO m => m (Env.Dict String (Expr UGen))
 ugen_dict =
-    Map.fromList
+    Env.dictFromList
     [("number?",Fun l_is_number)
     ,("mce?",Fun l_is_mce)
     ,("string?",Fun (\c -> case c of {String _ -> l_true; _ -> l_false}))
@@ -191,7 +189,7 @@ ugen_dict =
 main :: IO ()
 main = do
   putStrLn "hsc3-lisp"
-  env <- Env.envNewFrom (Map.unions [core_dict,ugen_dict]) :: IO (Env.Env String (Expr UGen))
+  env <- sequence [core_dict,ugen_dict] >>= Env.envNewFromList :: IO (Env.Env String (Expr UGen))
   let lib = ["stdlib.scm"
             ,"scheme.scm"
             ,"rhs.prereq.scm"

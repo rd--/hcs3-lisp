@@ -17,8 +17,6 @@ import System.Exit {- base -}
 import System.FilePath {- filepath -}
 import System.IO {- base -}
 
-import qualified Data.Map as Map {- containers -}
-
 import Sound.SC3.Lisp.Env {- hsc3-lisp -}
 import Sound.SC3.Lisp.Type {- hsc3-lisp -}
 import qualified Sound.SC3.Lisp.Parse.Ethier as Parse {- hsc3-lisp -}
@@ -217,9 +215,9 @@ l_env_print x = do
   liftIO (envPrint e)
   return x
 
-core_dict :: Lisp_Ty a => Dict String (Expr a)
+core_dict :: (MonadIO m,Lisp_Ty a) => m (Dict String (Expr a))
 core_dict =
-    Map.fromList
+    dictFromList
     [("#t",l_true)
     ,("#f",l_false)
     ,("car",Fun (\c -> case c of {Cons lhs _ -> lhs; _ -> Error ("car: " ++ show c)}))

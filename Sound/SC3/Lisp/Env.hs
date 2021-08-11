@@ -11,37 +11,84 @@ import qualified Control.Monad.State as State {- mtl -}
 import qualified Control.Monad.Except as Except {- mtl -}
 import qualified Data.Map as Map {- containers -}
 
--- | Dictionary.
-type Dict k v = Map.Map k v
+-- * Ref
 
--- | Lookup key in dict and error if not present.
-dictLookupError :: (Ord k, Except.MonadError String m, Show k) => Dict k v -> k -> m v
-dictLookupError dict key =
-  case Map.lookup key dict of
-    Just result -> return result
-    Nothing -> Except.throwError ("dictLookupError: " ++ show key)
+-- | Reference, liftIO of newIORef
+toRef :: MonadIO m => t -> m (IORef t)
+toRef = liftIO . newIORef
 
--- | Dictionary in reference.  The implementation uses IORef cells.
-type DictRef k v = IORef (Dict k v)
-
--- | De-reference
+-- | De-reference, liftIO of readIORef
 deRef :: MonadIO m => IORef t -> m t
 deRef = liftIO . readIORef
+
+-- | Mutate reference, liftIO of modifyIORef
+rwRef :: MonadIO m => IORef t -> (t -> t) -> m ()
+rwRef r = liftIO . modifyIORef r
+
+-- * Dict
+
+-- | Map with reference values.
+type Dict k v = Map.Map k (IORef v)
+
+dictMerge :: Ord k => Dict k v -> Dict k v -> Dict k v
+dictMerge = Map.union
+
+dictMergeList :: Ord k => [Dict k v] -> Dict k v
+dictMergeList = Map.unions
+
+dictLookup :: (MonadIO m, Ord k) => Dict k v -> k -> m (Maybe v)
+dictLookup dict key =
+  case Map.lookup key dict of
+    Just result -> fmap Just (deRef result)
+    Nothing -> return Nothing
+
+dictLookupError :: (MonadIO m, Except.MonadError String m, Ord k, Show k) => Dict k v -> k -> m v
+dictLookupError dict key =
+  case Map.lookup key dict of
+    Just result -> deRef result
+    Nothing -> Except.throwError ("dictLookupError: " ++ show key)
+
+dictAssign :: (MonadIO m, Ord k) => Dict k v -> k -> v -> m Bool
+dictAssign dict key value =
+  case Map.lookup key dict of
+    Just result -> rwRef result (const value) >> return True
+    Nothing -> return False
+
+dictFromList :: (MonadIO m, Ord k) => [(k,v)] -> m (Dict k v)
+dictFromList l = do
+  let (k,v) = unzip l
+  r <- mapM toRef v
+  return (Map.fromList (zip k r))
+
+dictToList :: MonadIO m => Dict k v -> m [(k,v)]
+dictToList d = do
+  let (k,r) = unzip (Map.toList d)
+  v <- mapM deRef r
+  return (zip k v)
+
+dictPrint :: (Show k, Show v) => Dict k v -> IO ()
+dictPrint d = dictToList d >>= print
+
+-- * DictRef
+
+-- | Dictionary in reference.
+type DictRef k v = IORef (Dict k v)
 
 dictRefKeys :: MonadIO m => DictRef k v -> m [k]
 dictRefKeys = fmap Map.keys . deRef
 
--- | Lookup key in DictRef
-dictRefLookup :: (MonadIO m, Ord k) => k -> DictRef k v -> m (Maybe v)
-dictRefLookup w = fmap (Map.lookup w) . deRef
+dictRefLookup :: (MonadIO m, Ord k) => DictRef k v -> k -> m (Maybe v)
+dictRefLookup r w = deRef r >>= \d -> dictLookup d w
 
--- | Assign value to existing key in DictRef
-dictRefAssign :: (MonadIO m, Ord k) => k -> v -> DictRef k v -> m (Maybe v)
-dictRefAssign key value dictRef = do
-  dict <- deRef dictRef
-  if Map.member key dict
-  then liftIO (writeIORef dictRef (Map.insert key value dict)) >> return (Just value)
-  else return Nothing
+dictRefInsert :: (MonadIO m, Ord k) => DictRef k v -> k -> v -> m ()
+dictRefInsert dictRef key value = do
+  valueRef <- toRef value
+  rwRef dictRef (Map.insert key valueRef)
+
+dictRefAssign :: (MonadIO m, Ord k) => DictRef k v -> k -> v -> m Bool
+dictRefAssign r key value = deRef r >>= \d -> dictAssign d key value
+
+-- * Env
 
 {- | Enviroment, a dictionary reference with an optional pointer to a parent environment.
      k is the key type, v is the value type.
@@ -73,12 +120,15 @@ envCopy (Env r p) = do
 -- | Print environment.
 envPrint :: (Show k, Show v) => Env k v -> IO ()
 envPrint (Env r p) = do
-  readIORef r >>= print
+  deRef r >>= dictPrint
   maybe (return ()) envPrint p
 
 -- | New environment from 'Dict'.
 envNewFrom :: MonadIO m => Dict k v -> m (Env k v)
-envNewFrom d = liftIO (newIORef d) >>= \r -> return (Env r Nothing)
+envNewFrom d = toRef d >>= \r -> return (Env r Nothing)
+
+envNewFromList :: (MonadIO m, Ord k) => [Dict k v] -> m (Env k v)
+envNewFromList l = envNewFrom (dictMergeList l)
 
 -- | New empty environment.
 envEmpty :: MonadIO m => m (Env k v)
@@ -86,12 +136,12 @@ envEmpty = envNewFrom Map.empty
 
 -- | Lookup value only in current frame (do not recurse into parent environment).
 envLookupCurrentFrameMaybe :: (MonadIO m, Ord k) => k -> Env k v -> m (Maybe v)
-envLookupCurrentFrameMaybe w (Env r _) = dictRefLookup w r
+envLookupCurrentFrameMaybe w (Env r _) = dictRefLookup r w
 
 -- | Lookup value in environment, maybe variant.
 envLookupMaybe :: (MonadIO m, Ord k) => k -> Env k v -> m (Maybe v)
 envLookupMaybe w (Env r p) = do
-  x <- dictRefLookup w r
+  x <- dictRefLookup r w
   case (x,p) of
     (Nothing,Just e) -> envLookupMaybe w e
     _ -> return x
@@ -124,7 +174,7 @@ envAddFrame d e = liftIO (newIORef d) >>= \r -> return (Env r (Just e))
 
 -- | Extend environment by adding a frame given as an association list.
 envAddFrameFromList :: (MonadIO m,Ord k) => [(k,v)] -> Env k v -> m (Env k v)
-envAddFrameFromList d e = envAddFrame (Map.fromList d) e
+envAddFrameFromList l e = dictFromList l >>= \d -> envAddFrame d e
 
 -- | Delete current frame if one exists.
 envDeleteFrameMaybe :: Env k v -> Maybe (Env k v)
@@ -141,12 +191,10 @@ envDeleteFrame (Env _ p) = maybe (Except.throwError "envDeleteFrame") return p
 envSet :: (MonadIO m, Ord k) => Env k v -> k -> v -> m v
 envSet (Env r p) key value =
   case p of
-    Nothing -> liftIO (modifyIORef r (Map.insert key value)) >> return value
+    Nothing -> dictRefInsert r key value >> return value
     Just e -> do
-      v <- dictRefAssign key value r
-      case v of
-        Nothing -> envSet e key value
-        Just _ -> return value
+      exists <- dictRefAssign r key value
+      if exists then return value else envSet e key value
 
 -- | Run 'envSet' at 'envToplevel'.
 envSetToplevel :: (MonadIO m, Ord k) => Env k v -> k -> v -> m v
