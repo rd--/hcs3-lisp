@@ -21,71 +21,80 @@ dictLookupError dict key =
     Just result -> return result
     Nothing -> Except.throwError ("dictLookupError: " ++ show key)
 
-{- | Enviroment, either a Frame or a Toplevel.
+-- | Dictionary in reference.  The implementation uses IORef cells.
+type DictRef k v = IORef (Dict k v)
+
+-- | De-reference
+deRef :: MonadIO m => IORef t -> m t
+deRef = liftIO . readIORef
+
+dictRefKeys :: MonadIO m => DictRef k v -> m [k]
+dictRefKeys = fmap Map.keys . deRef
+
+-- | Lookup key in DictRef
+dictRefLookup :: (MonadIO m, Ord k) => k -> DictRef k v -> m (Maybe v)
+dictRefLookup w = fmap (Map.lookup w) . deRef
+
+-- | Assign value to existing key in DictRef
+dictRefAssign :: (MonadIO m, Ord k) => k -> v -> DictRef k v -> m (Maybe v)
+dictRefAssign key value dictRef = do
+  dict <- deRef dictRef
+  if Map.member key dict
+  then liftIO (writeIORef dictRef (Map.insert key value dict)) >> return (Just value)
+  else return Nothing
+
+{- | Enviroment, a dictionary reference with an optional pointer to a parent environment.
      k is the key type, v is the value type.
-     The implementation uses IORef cells for each Dict.
-     Set mutates the reference for the frame the variable is located at.
+     Assign mutates the reference for the frame the variable is located at.
 -}
-data Env k v
-  = Frame (IORef (Dict k v)) (Env k v)
-  | Toplevel (IORef (Dict k v))
-  deriving (Eq)
+data Env k v = Env (DictRef k v) (Maybe (Env k v)) deriving (Eq)
+
+-- | List of all keys at Env as descending frames
+envKeys :: MonadIO m => Env k v -> m [[k]]
+envKeys (Env r p) = dictRefKeys r >>= \dk -> maybe (return []) envKeys p >>= \pk -> return (dk : pk)
 
 -- | Fetch Toplevel of Env.
 envToplevel :: Env k v -> Env k v
 envToplevel e =
   case e of
-    Frame _ e' -> envToplevel e'
-    Toplevel _ -> e
+    Env _ Nothing -> e
+    Env _ (Just p) -> envToplevel p
 
 -- | State monad wrapped in Exception monad.
 type EnvMonad m k v r = Except.ExceptT String (State.StateT (Env k v) m) r
 
--- | 'newIORef' of 'readIORef'
-copyIORef :: MonadIO m => IORef a -> m (IORef a)
-copyIORef r = liftIO (readIORef r >>= newIORef)
-
 -- | Copy environment.
 envCopy :: MonadIO m => Env k v -> m (Env k v)
-envCopy e =
-  case e of
-    Frame d e' ->
-      do d' <- copyIORef d
-         e'' <- envCopy e'
-         return (Frame d' e'')
-    Toplevel d ->
-      do d' <- copyIORef d
-         return (Toplevel d')
+envCopy (Env r p) = do
+  r' <- liftIO (readIORef r >>= newIORef)
+  p' <- maybe (return Nothing) (fmap Just . envCopy) p
+  return (Env r' p')
 
 -- | Print environment.
 envPrint :: (Show k, Show v) => Env k v -> IO ()
-envPrint e =
-    case e of
-      Frame f e' -> readIORef f >>= print >> envPrint e'
-      Toplevel d -> readIORef d >>= print
+envPrint (Env r p) = do
+  readIORef r >>= print
+  maybe (return ()) envPrint p
 
 -- | New environment from 'Dict'.
 envNewFrom :: MonadIO m => Dict k v -> m (Env k v)
-envNewFrom d = fmap Toplevel (liftIO (newIORef d))
+envNewFrom d = liftIO (newIORef d) >>= \r -> return (Env r Nothing)
 
 -- | New empty environment.
 envEmpty :: MonadIO m => m (Env k v)
 envEmpty = envNewFrom Map.empty
 
+-- | Lookup value only in current frame (do not recurse into parent environment).
+envLookupCurrentFrameMaybe :: (MonadIO m, Ord k) => k -> Env k v -> m (Maybe v)
+envLookupCurrentFrameMaybe w (Env r _) = dictRefLookup w r
+
 -- | Lookup value in environment, maybe variant.
 envLookupMaybe :: (MonadIO m, Ord k) => k -> Env k v -> m (Maybe v)
-envLookupMaybe w e =
-  case e of
-    Frame f e' ->
-      do d <- liftIO (readIORef f)
-         case Map.lookup w d of
-           Just r -> return (Just r)
-           Nothing -> envLookupMaybe w e'
-    Toplevel d ->
-      do d' <- liftIO (readIORef d)
-         case Map.lookup w d' of
-           Just r -> return (Just r)
-           Nothing -> return Nothing
+envLookupMaybe w (Env r p) = do
+  x <- dictRefLookup w r
+  case (x,p) of
+    (Nothing,Just e) -> envLookupMaybe w e
+    _ -> return x
 
 -- | Lookup with default.
 envLookupWithDefault :: (MonadIO m, Ord k) => k -> Env k v -> v -> m v
@@ -111,9 +120,7 @@ envLookupToplevel k e = envLookup k (envToplevel e)
 
 -- | Extend Env by adding a frame.
 envAddFrame :: MonadIO m => Dict k v -> Env k v -> m (Env k v)
-envAddFrame d e = do
-  f <- liftIO (newIORef d)
-  return (Frame f e)
+envAddFrame d e = liftIO (newIORef d) >>= \r -> return (Env r (Just e))
 
 -- | Extend environment by adding a frame given as an association list.
 envAddFrameFromList :: (MonadIO m,Ord k) => [(k,v)] -> Env k v -> m (Env k v)
@@ -121,29 +128,28 @@ envAddFrameFromList d e = envAddFrame (Map.fromList d) e
 
 -- | Delete current frame if one exists.
 envDeleteFrameMaybe :: Env k v -> Maybe (Env k v)
-envDeleteFrameMaybe e =
-  case e of
-    Frame _ e' -> Just e'
-    Toplevel _ -> Nothing
+envDeleteFrameMaybe (Env _ p) = p
 
 -- | Delete current frame from environment, error if at toplevel.
 envDeleteFrame :: (MonadIO m, Except.MonadError String m) => Env k v -> m (Env k v)
-envDeleteFrame e =
-  case e of
-    Frame _ e' -> return e'
-    Toplevel _ -> Except.throwError "envDeleteFrame: at toplevel?"
+envDeleteFrame (Env _ p) = maybe (Except.throwError "envDeleteFrame") return p
 
--- | Set value in environment.  If no entry exists for Name create an entry at the top level.
-envSet :: (MonadIO m, Ord k) => Env k v -> k -> v -> m ()
-envSet e nm c =
-  case e of
-    Frame f e' ->
-      do d <- liftIO (readIORef f)
-         if Map.member nm d then liftIO (writeIORef f (Map.insert nm c d)) else envSet e' nm c
-    Toplevel d -> liftIO (modifyIORef d (Map.insert nm c))
+{- | Set value in environment.
+     If no entry exists create an entry at the top level.
+     Return value set.
+-}
+envSet :: (MonadIO m, Ord k) => Env k v -> k -> v -> m v
+envSet (Env r p) key value =
+  case p of
+    Nothing -> liftIO (modifyIORef r (Map.insert key value)) >> return value
+    Just e -> do
+      v <- dictRefAssign key value r
+      case v of
+        Nothing -> envSet e key value
+        Just _ -> return value
 
--- | Run 'envSet' and 'envToplevel'.
-envSetToplevel :: (MonadIO m, Ord k) => Env k v -> k -> v -> m ()
+-- | Run 'envSet' at 'envToplevel'.
+envSetToplevel :: (MonadIO m, Ord k) => Env k v -> k -> v -> m v
 envSetToplevel e nm c = envSet (envToplevel e) nm c
 
 -- | Lookup value or error, apply f, set value to result, return result.
@@ -152,7 +158,6 @@ envAlter e nm f = do
   v <- envLookup nm e
   let r = f v
   liftIO (envSet e nm r)
-  return r
 
 -- | Lookup value or default, apply f, set value to result, return result.
 envAlterWithDefault :: (MonadIO m, Ord k) => Env k v -> k -> v -> (v -> v) -> m v
@@ -160,11 +165,3 @@ envAlterWithDefault e nm t f = do
   v <- envLookupWithDefault nm e t
   let r = f v
   liftIO (envSet e nm r)
-  return r
-
--- | Get the current Frame.  It is an error if there is no Frame, ie. if e is a Toplevel.
-envCurrentFrame :: (MonadIO m, Except.MonadError String m, Ord k) => Env k v -> m (Dict k v)
-envCurrentFrame e =
-  case e of
-    Frame d _ -> liftIO (readIORef d)
-    _ -> Except.throwError "envCurrentFrame: at Toplevel"
