@@ -36,6 +36,9 @@ dictMerge = Map.union
 dictMergeList :: Ord k => [Dict k v] -> Dict k v
 dictMergeList = Map.unions
 
+dictHasKey :: Ord k => Dict k v -> k -> Bool
+dictHasKey = flip Map.member
+
 dictLookup :: (MonadIO m, Ord k) => Dict k v -> k -> m (Maybe v)
 dictLookup dict key =
   case Map.lookup key dict of
@@ -48,11 +51,14 @@ dictLookupError dict key =
     Just result -> deRef result
     Nothing -> Except.throwError ("dictLookupError: " ++ show key)
 
-dictAssign :: (MonadIO m, Ord k) => Dict k v -> k -> v -> m Bool
-dictAssign dict key value =
+dictAssignMaybe :: (MonadIO m, Ord k) => Dict k v -> k -> v -> m (Maybe v)
+dictAssignMaybe dict key value =
   case Map.lookup key dict of
-    Just result -> rwRef result (const value) >> return True
-    Nothing -> return False
+    Just result -> rwRef result (const value) >> return (Just value)
+    Nothing -> return Nothing
+
+dictAssign :: (MonadIO m, Ord k) => Dict k v -> k -> v -> m Bool
+dictAssign d k = fmap isJust . dictAssignMaybe d k
 
 dictFromList :: (MonadIO m, Ord k) => [(k,v)] -> m (Dict k v)
 dictFromList l = do
@@ -74,6 +80,9 @@ dictPrint d = dictToList d >>= print
 -- | Dictionary in reference.
 type DictRef k v = IORef (Dict k v)
 
+dictRefEmpty :: MonadIO m => m (DictRef k v)
+dictRefEmpty = toRef Map.empty
+
 dictRefKeys :: MonadIO m => DictRef k v -> m [k]
 dictRefKeys = fmap Map.keys . deRef
 
@@ -87,6 +96,9 @@ dictRefInsert dictRef key value = do
 
 dictRefAssign :: (MonadIO m, Ord k) => DictRef k v -> k -> v -> m Bool
 dictRefAssign r key value = deRef r >>= \d -> dictAssign d key value
+
+dictRefFromList :: (MonadIO m, Ord k) => [(k,v)] -> m (DictRef k v)
+dictRefFromList l = dictFromList l >>= \d -> toRef d
 
 -- * Env
 
