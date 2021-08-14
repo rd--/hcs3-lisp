@@ -25,6 +25,10 @@ deRef = liftIO . readIORef
 rwRef :: MonadIO m => IORef t -> (t -> t) -> m ()
 rwRef r = liftIO . modifyIORef r
 
+-- | Copy reference (ie. create a new reference containing the value from the reference argument)
+copyRef :: MonadIO m => IORef t -> m (IORef t)
+copyRef r = liftIO (readIORef r >>= newIORef)
+
 -- * Dict
 
 -- | Map with reference values.
@@ -72,6 +76,9 @@ dictToList d = do
   v <- mapM deRef r
   return (zip k v)
 
+dictCopy :: (MonadIO m, Ord k) => Dict k v -> m (Dict k v)
+dictCopy d = dictToList d >>= dictFromList
+
 dictPrint :: (Show k, Show v) => Dict k v -> IO ()
 dictPrint d = dictToList d >>= print
 
@@ -100,6 +107,9 @@ dictRefAssign r key value = deRef r >>= \d -> dictAssign d key value
 dictRefFromList :: (MonadIO m, Ord k) => [(k,v)] -> m (DictRef k v)
 dictRefFromList l = dictFromList l >>= \d -> toRef d
 
+dictRefCopy :: (MonadIO m, Ord k) => DictRef k v -> m (DictRef k v)
+dictRefCopy r = deRef r >>= \d -> dictCopy d >>= toRef
+
 -- * Env
 
 {- | Enviroment, a dictionary reference with an optional pointer to a parent environment.
@@ -123,9 +133,9 @@ envToplevel e =
 type EnvMonad m k v r = Except.ExceptT String (State.StateT (Env k v) m) r
 
 -- | Copy environment.
-envCopy :: MonadIO m => Env k v -> m (Env k v)
+envCopy :: (MonadIO m, Ord k) => Env k v -> m (Env k v)
 envCopy (Env r p) = do
-  r' <- liftIO (readIORef r >>= newIORef)
+  r' <- dictRefCopy r
   p' <- maybe (return Nothing) (fmap Just . envCopy) p
   return (Env r' p')
 
