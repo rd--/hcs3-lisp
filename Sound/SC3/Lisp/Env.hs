@@ -21,9 +21,13 @@ toRef = liftIO . newIORef
 deRef :: MonadIO m => IORef t -> m t
 deRef = liftIO . readIORef
 
--- | Mutate reference, liftIO of modifyIORef
+-- | Write to reference, liftIO or writeIORef
+setRef :: MonadIO m => IORef a -> a -> m ()
+setRef r = liftIO . writeIORef r
+
+-- | Mutate reference, liftIO of modifyIORef'
 rwRef :: MonadIO m => IORef t -> (t -> t) -> m ()
-rwRef r = liftIO . modifyIORef r
+rwRef r = liftIO . modifyIORef' r
 
 -- | Copy reference (ie. create a new reference containing the value from the reference argument)
 copyRef :: MonadIO m => IORef t -> m (IORef t)
@@ -64,6 +68,12 @@ dictAssignMaybe dict key value =
 dictAssign :: (MonadIO m, Ord k) => Dict k v -> k -> v -> m Bool
 dictAssign d k = fmap isJust . dictAssignMaybe d k
 
+dictAssignList :: (MonadIO m, Ord k) => Dict k v -> [(k,v)] -> m ()
+dictAssignList d = mapM_ (\(k,v) -> dictAssign d k v)
+
+dictAssignMany :: (MonadIO m, Ord k) => Dict k v -> [k] -> v -> m ()
+dictAssignMany d keys value = mapM_ (\k -> dictAssign d k value) keys
+
 dictFromList :: (MonadIO m, Ord k) => [(k,v)] -> m (Dict k v)
 dictFromList l = do
   let (k,v) = unzip l
@@ -101,8 +111,17 @@ dictRefInsert dictRef key value = do
   valueRef <- toRef value
   rwRef dictRef (Map.insert key valueRef)
 
+dictRefAssignMaybe :: (MonadIO m, Ord k) => DictRef k v -> k -> v -> m (Maybe v)
+dictRefAssignMaybe r key value = deRef r >>= \d -> dictAssignMaybe d key value
+
 dictRefAssign :: (MonadIO m, Ord k) => DictRef k v -> k -> v -> m Bool
 dictRefAssign r key value = deRef r >>= \d -> dictAssign d key value
+
+dictRefAssignMany :: (MonadIO m, Ord k) => DictRef k v -> [k] -> v -> m ()
+dictRefAssignMany r keys value = deRef r >>= \d -> dictAssignMany d keys value
+
+dictRefAssignList :: (MonadIO m, Ord k) => DictRef k v -> [(k,v)] -> m ()
+dictRefAssignList r keysvalues = deRef r >>= \d -> dictAssignList d keysvalues
 
 dictRefFromList :: (MonadIO m, Ord k) => [(k,v)] -> m (DictRef k v)
 dictRefFromList l = dictFromList l >>= \d -> toRef d
