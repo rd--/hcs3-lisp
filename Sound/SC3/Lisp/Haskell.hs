@@ -268,7 +268,7 @@ hs_module_sexp tbl s =
 
 > let rw = hs_to_lisp []
 > rw "import Sound.SC3" == ""
-> rw "o = let f = midiCPS (mce [65.0,65.1]) in sinOsc AR f 0"
+> rw "o = let f = midiCps (mce [65.0,65.1]) in sinOsc AR f 0"
 > rw "a = dbAmp (-24)"
 > rw "main = audition (out 0 (o * a))"
 > rw "x = (1,2,3)"
