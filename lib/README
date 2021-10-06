@@ -2,3 +2,9 @@
    names where either the left hand side is problematic in R6RS scheme or the right hand side is problematic in haskell
 
 2. sch-name-tbl.text ; table for translating the .sch files at sw/rsc3 and sw/rsc3-arf
+
+Notes:
+
+Predicate names that exist at Haskell without an `is` prefix have that name, i.e. null, even &etc.
+
+Otherwise an `is` prefix is preferred, i.e. isPair, isList &etc.

@@ -5,7 +5,7 @@
 True #t
 False #f
 null null?
-pair pair?
+isPair pair?
 == equal?
 GT 'gt
 LT 'lt
