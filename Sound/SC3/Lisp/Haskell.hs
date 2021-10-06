@@ -158,6 +158,7 @@ pat_var_str :: Show l => Name_Table -> E.Pat l -> String
 pat_var_str tbl p =
     case p of
       E.PVar _ nm -> name_str tbl nm
+      E.PApp _ _ _ -> error_x "pat_var_str: PApp not PVar" p
       _ -> error_x "pat_var_str" p
 
 match_sexp :: Show l => Name_Table -> E.Match l -> (L.SExp,L.SExp)

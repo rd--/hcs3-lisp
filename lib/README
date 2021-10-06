@@ -1,0 +1,4 @@
+1. core-name-tbl.text ; table for translating the .sch files at sw/rhs ;
+   names where either the left hand side is problematic in R6RS scheme or the right hand side is problematic in haskell
+
+2. sch-name-tbl.text ; table for translating the .sch files at sw/rsc3 and sw/rsc3-arf
