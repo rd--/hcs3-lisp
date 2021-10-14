@@ -146,7 +146,7 @@ expr_to_datum c =
     case c of
       Symbol str -> return (string str)
       String str -> return (string str)
-      Atom (UGen (CConstant (Constant n))) -> return (float n)
+      Atom (UGen (CConstant (Constant n _))) -> return (float n)
       _ -> Monad.throwError ("expr-to-datum: " ++ show c)
 
 expr_to_message :: Expr UGen -> ExprVM t Message
