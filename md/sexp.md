@@ -7,7 +7,7 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
 - function application `f x y` is written `(f x y)` rather than `((f x) y)`
 - function application `f ()` is written `(f)`
 - infix operations `x + y` are written `(+ x y)`
-- local bindings `let x = 1 in x` are written `(let ((x y)) x)`
+- local bindings `let x = i in x` are written `(let ((x i)) x)`
 - local bindings `let {x = i;y = j} in x + y` are written `(let* ((x i) (y j)) (+ x y))`
 - functions `\() -> f ()` are written `(lambda () (f))`
 - functions `\x -> x * x` are written `(lambda (x) (* x x))`
@@ -26,6 +26,10 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
 - module bindings `f x = x * x` are written `(define f (lambda (x) (* x x)))`
 - the module binding `main = x` is written `x`
 - a lookup table is consulted and can rewrite `True` as `#t`, `:` as `cons`, `>>` as `begin` &etc.
+
+# Extensions
+
+- `let (i,j,k) = rhs in (k,j,i)` could be rewritten as `(let* ((i (vector-ref 0 rhs)) ...) ...)`
 
 # Rationale
 

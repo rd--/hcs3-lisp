@@ -83,6 +83,7 @@ pat_sexp tbl p =
       E.PVar _ nm -> S.Atom (name_str tbl nm)
       E.PLit _ sgn lit -> literal_sexp (if sign_is_negative sgn then literal_negate lit else lit)
       E.PWildCard _ -> S.Atom "_" -- allow singular wildcard
+      E.PTuple _ _ _var -> error "pat_sexp: tuple let bindings not implemented"
       _ -> error_x "pat_sexp" p
 
 alt_sexp :: Show l => Name_Table -> E.Alt l -> L.SExp
