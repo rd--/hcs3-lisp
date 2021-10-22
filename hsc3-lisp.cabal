@@ -43,6 +43,7 @@ library
                    Sound.SC3.Lisp.Haskell,
                    Sound.SC3.Lisp.OSC,
                    Sound.SC3.Lisp.Parse.Ethier,
+                   Sound.SC3.Lisp.Sch,
                    Sound.SC3.Lisp.Type
 
 executable hsc3-lisp

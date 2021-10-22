@@ -12,12 +12,12 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
 - functions `\() -> f ()` are written `(lambda () (f))`
 - functions `\x -> x * x` are written `(lambda (x) (* x x))`
 - functions `\x y -> x * x + y * y` are written `(lambda (x y) (+ (* x x) (* y y)))`
-- lists `[1,2,3]` are written `(list 1 2 3)`
-- products `(1,2.0,'3',"4")` are written `(vector 1 2.0 \#3 "4")`
+- lists `[1, 2, 3]` are written `(list 1 2 3)`
+- products `(1, 2.0,' 3', "4")` are written `(vector 1 2.0 \#3 "4")`
 - ranges `[x .. y]` are written `(enumFromTo x y)`
-- series `[x,y .. z]` are written `(enumFromThenTo x y z)`
+- series `[x, y .. z]` are written `(enumFromThenTo x y z)`
 - conditionals `if x then y else z` are written `(if x y z)`
-- cases `\x -> case x of {0 -> a;_ -> b}` are written `(lambda (x) (case x ((0) a) (else b)))`
+- cases `\x -> case x of {0 -> a; _ -> b}` are written `(lambda (x) (case x ((0) a) (else b)))`
 - right sections `(+ 1)` are written `(lambda (_lhs) (+ _lhs 1))`
 - left sections `(1 +)` are written `(lambda (_rhs) (+ 1 _rhs))`
 - do expressions `do {display 0; exit 0}` are written `(begin (display 0) (exit 0))`
@@ -29,6 +29,7 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
 
 # Extensions
 
+- `let [i,j,k] = rhs in (k,j,i)` could be rewritten as `(let* ((i (list-ref 0 rhs)) ...) ...)`
 - `let (i,j,k) = rhs in (k,j,i)` could be rewritten as `(let* ((i (vector-ref 0 rhs)) ...) ...)`
 
 # Rationale
