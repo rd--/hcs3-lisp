@@ -10,6 +10,7 @@ import qualified Language.Scheme.Types as S {- husk-scheme -}
 import qualified Sound.SC3.Lisp.Parse.Ethier as L {- hsc3-lisp -}
 import qualified Sound.SC3.Lisp.Sch as Sch {- hsc3-lisp -}
 
+-- | Format error string.
 error_x :: Show a => String -> a -> t
 error_x nm x = error (nm ++ ": " ++ show x)
 
@@ -29,6 +30,7 @@ name_str tbl nm =
       E.Symbol _ s -> name_rewrite_table tbl s
       E.Ident _ s -> name_rewrite_table tbl s
 
+-- | Unqualified QName to String, cons and unit are special cases.
 qname_str :: Show l => Name_Table -> E.QName l -> String
 qname_str tbl q =
     case q of
@@ -37,18 +39,21 @@ qname_str tbl q =
       E.Special _ (E.UnitCon _) -> "unit"
       _ -> error_x "qname_str" q
 
+-- | Unqualified QOp to String.
 qop_str :: Show l => Name_Table -> E.QOp l -> String
 qop_str tbl q =
     case q of
       E.QVarOp _ nm -> qname_str tbl nm
       E.QConOp _ nm -> qname_str tbl nm
 
+-- | Rhs to Exp, only unguarded values are allowed.
 rhs_exp :: Show l => E.Rhs l -> E.Exp l
 rhs_exp r =
     case r of
       E.UnGuardedRhs _ e -> e
-      _ -> error_x "rhs_exp" r
+      _ -> error_x "rhs_exp: not unguarded" r
 
+-- | Literal to Exp.
 literal_sch :: Show l => E.Literal l -> Sch.Exp
 literal_sch l =
   case l of
@@ -56,14 +61,15 @@ literal_sch l =
     E.String _ s _ -> Sch.String s
     E.Int _ i _ -> Sch.Integer i
     E.Frac _ r _ -> Sch.Double (fromRational r)
-    _ -> error_x "literal" l
+    _ -> error_x "literal: unboxed literals not allowed" l
 
+-- | Negate Literal.
 literal_negate :: Show l => E.Literal l -> E.Literal l
 literal_negate lit =
     case lit of
       E.Int l i _ -> E.Int l (- i) "..."
       E.Frac l r _ -> E.Frac l (- r) "..."
-      _ -> error_x "literal_negate" lit
+      _ -> error_x "literal_negate: not a numeric literal" lit
 
 -- | Translate (((f x) y) z) as (f x y z)
 unwind_app :: (E.Exp l,E.Exp l) -> [E.Exp l]
@@ -72,12 +78,14 @@ unwind_app (lhs,rhs) =
       E.App _ p q -> unwind_app (p,q) ++ [rhs]
       _ -> [lhs,rhs]
 
+-- | Is Sign negative.
 sign_is_negative :: E.Sign l -> Bool
 sign_is_negative sgn =
   case sgn of
     E.Signless _ -> False
     E.Negative _ -> True
 
+-- | A pattern, to be matched against a value.
 pat_sch :: Show l => Name_Table -> E.Pat l -> Sch.Exp
 pat_sch tbl p =
   case p of
@@ -89,14 +97,23 @@ pat_sch tbl p =
     E.PList _ _var -> error "pat: list let bindings not implemented"
     _ -> error_x "pat" p
 
--- | An alternative in a case expression.
+-- | Get Var name from Pat else error.
+pat_var_str :: Show l => Name_Table -> E.Pat l -> String
+pat_var_str tbl p =
+    case p of
+      E.PVar _ nm -> name_str tbl nm
+      E.PApp _ _ _ -> error_x "pat_var_str: PApp not PVar" p
+      _ -> error_x "pat_var_str" p
+
+-- | An alternative, in a case expression.
 alt_sch :: Show l => Name_Table -> E.Alt l -> (Sch.Exp,Sch.Exp)
 alt_sch tbl alt =
   case alt of
     E.Alt _ (E.PWildCard _) rhs Nothing -> (Sch.Symbol "else",exp_sch tbl (rhs_exp rhs))
-    E.Alt _ lhs rhs Nothing -> (Sch.List [pat_sch tbl lhs],exp_sch tbl (rhs_exp rhs))
+    E.Alt _ lhs rhs Nothing -> (pat_sch tbl lhs,exp_sch tbl (rhs_exp rhs))
     _ -> error_x "alt: bindings?" alt
 
+-- | A statement.
 stmt_sch :: Show l => Name_Table -> E.Stmt l -> Sch.Exp
 stmt_sch tbl stmt =
   case stmt of
@@ -104,17 +121,19 @@ stmt_sch tbl stmt =
     E.Qualifier _ e -> exp_sch tbl e
     _ -> error_x "stmt_sch: not exp?" stmt
 
-exp_is_unit :: E.Exp l -> Bool
-exp_is_unit e =
+-- | Is Exp the Unit constructor?
+exp_is_con_unit :: E.Exp l -> Bool
+exp_is_con_unit e =
   case e of
     E.Con _ (E.Special _ (E.UnitCon _)) -> True
     _ -> False
 
+-- | Haskell expression to Sch expression.
 exp_sch :: Show l => Name_Table -> E.Exp l -> Sch.Exp
 exp_sch tbl e =
   case e of
     E.App _ f x ->
-      if exp_is_unit x
+      if exp_is_con_unit x
       then Sch.App (exp_sch tbl f) []
       else case unwind_app (f,x) of
              fn:arg -> Sch.App (exp_sch tbl fn) (map (exp_sch tbl) arg)
@@ -151,19 +170,13 @@ exp_sch tbl e =
     E.Var _ nm -> Sch.Symbol (qname_str tbl nm)
     _ -> error_x "exp_sch: unimplemented expression type" e
 
+-- | Get Decl from a binding group inside a let or where clause.
 binds_decl :: Show l => Maybe (E.Binds l) -> [E.Decl l]
 binds_decl b =
     case b of
       Nothing -> []
       Just (E.BDecls _ d) -> d
-      Just (E.IPBinds _ _) -> error_x "binds_decl" b
-
-pat_var_str :: Show l => Name_Table -> E.Pat l -> String
-pat_var_str tbl p =
-    case p of
-      E.PVar _ nm -> name_str tbl nm
-      E.PApp _ _ _ -> error_x "pat_var_str: PApp not PVar" p
-      _ -> error_x "pat_var_str" p
+      Just (E.IPBinds _ _) -> error_x "binds_decl: implicit parameters?" b
 
 -- | Clause of a function binding.
 match_sch :: Show l => Name_Table -> E.Match l -> (Sch.Exp, Sch.Exp)
@@ -178,6 +191,7 @@ match_sch tbl m =
       in (nm',Sch.Lambda param' rhs')
     _ -> error_x "match: infix function definitons not allowed" m
 
+-- | Declaration as left and right hand side expressions.
 decl_sch :: Show l => Name_Table -> E.Decl l -> (Sch.Exp, Sch.Exp)
 decl_sch tbl d =
   case d of
@@ -188,6 +202,7 @@ decl_sch tbl d =
         _ -> error_x "decl" bnd
     _ -> error_x "decl" d
 
+-- | Module declaration, either as Define form or if main as Exp.
 mod_decl_sch :: Show l => Name_Table -> E.Decl l -> Maybe Sch.Exp
 mod_decl_sch tbl d =
   case d of
@@ -203,17 +218,43 @@ mod_decl_sch tbl d =
     E.TypeSig _ _ _ -> Nothing -- ignore type signatures
     _ -> error_x "mod_decl" d
 
+-- | List of Decl at Module.
 module_decl :: Show l => E.Module l -> [E.Decl l]
 module_decl m =
     case m of
       E.Module _ _ _ _ d -> d
-      _ -> error_x "mod_decl" m
+      _ -> error_x "mod_decl: not ordinary module" m
 
+-- | Parse Haskell expression as Exp, i.e. exp_sch of parseExp.
 hs_exp_sch :: Name_Table -> String -> Sch.Exp
 hs_exp_sch tbl s =
   case E.parseExp s of
     E.ParseOk e -> exp_sch tbl e
     err -> error_x "hs_exp" err
+
+{- | Parse Haskell declaration as Exp, i.e. mod_decl_sch of parseDecl.
+
+> let rw = L.sexp_show . hs_decl_sexp []
+> rw "x = y" == "(define x y)"
+> rw "f x = case x of {0 -> a;1 -> b;_ -> c}" == "(define f (lambda (x) (case x ((0) a) ((1) b) (else c))))"
+> rw "x = y" == "(define x y)"
+> rw "f x = x * x" == "(define f (lambda (x) (* x x)))"
+> rw "main = x" == "x"
+-}
+hs_decl_sch :: Name_Table -> String -> Sch.Exp
+hs_decl_sch tbl s =
+  case E.parseDecl s of
+    E.ParseOk d -> fromMaybe (error "hs_decl") (mod_decl_sch tbl d)
+    err -> error_x "hs_decl" err
+
+-- | Parse Haskell module as [Exp], i.e. map mod_decl_sch of parseModule.
+hs_module_sch :: Name_Table -> String -> [Sch.Exp]
+hs_module_sch tbl s =
+    case E.parseModule s of
+      E.ParseOk m -> mapMaybe (mod_decl_sch tbl) (module_decl m)
+      err -> error_x "hs_module" err
+
+-- * Strings
 
 {- | Haskell expression to s-expression.
 
@@ -249,32 +290,11 @@ hs_exp_sch tbl s =
 hs_exp_to_lisp :: Name_Table -> String -> String
 hs_exp_to_lisp tbl = L.sexp_show . hs_exp_sexp tbl
 
-{- | Rewrite Haskell declaration to s-expression
-
-> let rw = L.sexp_show . hs_decl_sexp []
-> rw "x = y" == "(define x y)"
-> rw "f x = case x of {0 -> a;1 -> b;_ -> c}" == "(define f (lambda (x) (case x ((0) a) ((1) b) (else c))))"
-> rw "x = y" == "(define x y)"
-> rw "f x = x * x" == "(define f (lambda (x) (* x x)))"
-> rw "main = x" == "x"
--}
-hs_decl_sch :: Name_Table -> String -> Sch.Exp
-hs_decl_sch tbl s =
-  case E.parseDecl s of
-    E.ParseOk d -> fromMaybe (error "hs_decl") (mod_decl_sch tbl d)
-    err -> error_x "hs_decl" err
-
-hs_module_sch :: Name_Table -> String -> [Sch.Exp]
-hs_module_sch tbl s =
-    case E.parseModule s of
-      E.ParseOk m -> mapMaybe (mod_decl_sch tbl) (module_decl m)
-      err -> error_x "hs_module" err
-
 {- | Translate haskell @module@ code into @LISP@.
 
 > let rw = hs_to_lisp []
 > rw "import Sound.SC3" == ""
-> rw "o = let f = midiCps (mce [65.0,65.1]) in sinOsc ar f 0" == "(define o (let ((f (midiCps (mce (65.0 65.1))))) (sinOsc ar f 0)))\n"
+> rw "o = let f = midiCps (mce [65.0,65.1]) in sinOsc ar f 0" == "(define o (let ((f (midiCps (mce (list 65.0 65.1))))) (sinOsc ar f 0)))\n"
 > rw "a = dbAmp (-24)" == "(define a (dbAmp -24))\n"
 > rw "main = audition (out 0 (o * a))" == "(audition (out 0 (* o a)))\n"
 > rw "x = (1,2,3)" == "(define x (vector 1 2 3))\n"
@@ -283,7 +303,7 @@ hs_module_sch tbl s =
 > rw "l = [0 .. 9]" == "(define l (enumFromTo 0 9))\n"
 > rw "l = [0, 2 .. 8]" == "(define l (enumFromThenTo 0 2 8))\n"
 > rw "n = 0.1 * 0.01 * 0.001" == "(define n (* (* 0.1 0.01) 0.001))\n"
-> rw "l = [1,1.0,\"str\",'c']" == "(define l (1 1.0 \"str\" #\\c))\n"
+> rw "l = [1,1.0,\"str\",'c']" == "(define l (list 1 1.0 \"str\" #\\c))\n"
 > rw "sq = \\x -> x * x" == "(define sq (lambda (x) (* x x)))\n"
 > rw "sum_sq = \\x y -> x * x + y * y" == "(define sum_sq (lambda (x y) (+ (* x x) (* y y))))\n"
 > rw "l = 1 : []" == "(define l (cons 1 (quote ())))\n"
@@ -291,6 +311,8 @@ hs_module_sch tbl s =
 -}
 hs_to_lisp :: Name_Table -> String -> String
 hs_to_lisp tbl = unlines . map L.sexp_show . hs_module_sexp tbl
+
+-- * IO
 
 -- | Load table given name re-writing rules, one per line.
 name_tbl_load :: FilePath -> IO Name_Table
@@ -315,8 +337,17 @@ hs_exp_to_lisp_io = hs_to_lisp_f_io hs_exp_to_lisp
 
 -- * Sch to SExp
 
-sch_unassoc :: [(Sch.Exp, Sch.Exp)] -> [L.SExp]
-sch_unassoc = map (\(lhs,rhs) -> S.List [sch_to_sexp lhs, sch_to_sexp rhs])
+sch_case_to_sexp :: Sch.Exp -> [(Sch.Exp, Sch.Exp)] -> L.SExp
+sch_case_to_sexp c a =
+  let rw_lhs lhs = if Sch.is_symbol lhs then sch_to_sexp lhs else S.List [sch_to_sexp lhs]
+      rw (lhs,rhs) = S.List [rw_lhs lhs, sch_to_sexp rhs]
+  in S.List (S.Atom "case" : sch_to_sexp c : map rw a)
+
+sch_let_to_sexp :: [(Sch.Exp, Sch.Exp)] -> Sch.Exp -> L.SExp
+sch_let_to_sexp d x =
+  S.List
+  [S.Atom (if length d == 1 then "let" else "let*")
+  ,S.List (map (\(lhs,rhs) -> S.List [sch_to_sexp lhs, sch_to_sexp rhs]) d), sch_to_sexp x]
 
 sch_to_sexp :: Sch.Exp -> L.SExp
 sch_to_sexp e =
@@ -327,13 +358,13 @@ sch_to_sexp e =
     Sch.Double d -> S.Float d
     Sch.Symbol s -> S.Atom s
     Sch.List l -> if null l then S.List [S.Atom "quote",S.Atom "()"] else S.List (S.Atom "list" : map sch_to_sexp l)
-    Sch.Case c a -> S.List (S.Atom "case" : sch_to_sexp c : sch_unassoc a)
+    Sch.Case c a -> sch_case_to_sexp c a
     Sch.Set lhs rhs -> S.List [S.Atom "set!", sch_to_sexp lhs, sch_to_sexp rhs]
     Sch.App f a -> S.List (sch_to_sexp f : map sch_to_sexp a)
     Sch.Begin x -> S.List (S.Atom "begin" : map sch_to_sexp x)
     Sch.If p q r -> S.List (S.Atom "if" : map sch_to_sexp [p,q,r])
     Sch.Lambda p x -> S.List [S.Atom "lambda", S.List (map sch_to_sexp p), sch_to_sexp x]
-    Sch.Let d x -> S.List [S.Atom (if length d == 1 then "let" else "let*"), S.List (sch_unassoc d), sch_to_sexp x]
+    Sch.Let d x -> sch_let_to_sexp d x
     Sch.Tuple t -> S.List (S.Atom "vector" : map sch_to_sexp t)
     Sch.Define lhs rhs -> S.List [S.Atom "define", sch_to_sexp lhs, sch_to_sexp rhs]
 
@@ -345,122 +376,3 @@ hs_decl_sexp tbl = sch_to_sexp . hs_decl_sch tbl
 
 hs_module_sexp :: Name_Table -> String -> [L.SExp]
 hs_module_sexp tbl = map sch_to_sexp . hs_module_sch tbl
-
-{-
--- | Tuples map to vectors.
-exp_sexp :: Show l => Name_Table -> E.Exp l -> L.SExp
-exp_sexp tbl e =
-    case e of
-      E.App _ f x -> if exp_is_unit x
-                     then S.List [exp_sexp tbl f]
-                     else S.List (map (exp_sexp tbl) (unwind_app (f,x)))
-      E.Case _ c a -> S.List (S.Atom "case" : exp_sexp tbl c : map (alt_sexp tbl) a)
-      E.Con _ nm -> S.Atom (qname_str tbl nm) -- ?
-      E.Do _ st -> S.List (S.Atom "begin" : map (stmt_sexp tbl) st)
-      E.EnumFromTo _ p q -> S.List (S.Atom "enumFromTo" : map (exp_sexp tbl) [p,q])
-      E.EnumFromThenTo _ p q r -> S.List (S.Atom "enumFromThenTo" : map (exp_sexp tbl) [p,q,r])
-      E.ExpTypeSig _ e' _ -> exp_sexp tbl e' -- discard type annotation
-      E.If _ p q r -> S.List (S.Atom "if" : map (exp_sexp tbl) [p,q,r])
-      E.InfixApp _ lhs qop rhs -> S.List [S.Atom (qop_str tbl qop),exp_sexp tbl lhs,exp_sexp tbl rhs]
-      E.Lambda _ p c ->
-        let arg = case p of
-                    [E.PApp _ (E.Special _ (E.UnitCon _)) []] -> S.List []
-                    _ -> S.List (map (pat_sexp tbl) p)
-        in S.List [S.Atom "lambda",arg,exp_sexp tbl c]
-      E.LeftSection _ p q ->
-          let nm = S.Atom "_leftSectionArg"
-          in S.List [S.Atom "lambda",S.List [nm],S.List [S.Atom (qop_str tbl q),exp_sexp tbl p,nm]]
-      E.Let _ (E.BDecls _ d) e' -> S.List [S.Atom (if length d == 1 then "let" else "let*")
-                                          ,S.List (map (decl_sexp tbl) d)
-                                          ,exp_sexp tbl e']
-      E.List _ l -> if null l
-                    then S.List [S.Atom "quote",S.Atom "()"]
-                    else S.List (S.Atom "list" : map (exp_sexp tbl) l)
-      E.Lit _ l -> literal_sexp l
-      E.NegApp _ n ->
-          case n of
-            E.Lit _ l -> literal_sexp (literal_negate l)
-            _ -> S.List [S.Atom "negate",exp_sexp tbl n]
-      E.Paren _ e' -> exp_sexp tbl e'
-      E.RightSection _ p q ->
-          let nm = S.Atom "_rightSectionArg"
-          in S.List [S.Atom "lambda",S.List [nm],S.List [S.Atom (qop_str tbl p),nm,exp_sexp tbl q]]
-      E.Tuple _ _ l -> S.List (S.Atom "vector" : map (exp_sexp tbl) l)
-      E.Var _ nm -> S.Atom (qname_str tbl nm)
-      _ -> error_x "exp_sexp: unimplemented expression type" e
-
--- | Top-level declaration.
-decl_sexp :: Show l => Name_Table -> E.Decl l -> L.SExp
-decl_sexp tbl d =
-    case d of
-      E.FunBind _ [m] -> let (nm,rhs) = match_sexp tbl m in S.List [nm,rhs]
-      E.PatBind _ lhs rhs bnd ->
-          case binds_decl bnd of
-            [] -> S.List [pat_sexp tbl lhs,exp_sexp tbl (rhs_exp rhs)]
-            _ -> error_x "decl_sexp" bnd
-      _ -> error_x "decl_sexp" d
-
--- | Clause of a function binding.
-match_sexp :: Show l => Name_Table -> E.Match l -> (L.SExp,L.SExp)
-match_sexp tbl m =
-    case m of
-      E.Match _ nm param rhs Nothing ->
-          let nm' = S.Atom (name_str tbl nm)
-              param' = case param of
-                         [E.PApp _ (E.Special _ (E.UnitCon _)) []] -> []
-                         _ -> map (pat_sexp tbl) param
-              rhs' = exp_sexp tbl (rhs_exp rhs)
-          in (nm',S.List [S.Atom "lambda",S.List param',rhs'])
-      _ -> error_x "match_sexp: infix function definitons not allowed" m
-
-mod_decl_sexp :: Show l => Name_Table -> E.Decl l -> Maybe L.SExp
-mod_decl_sexp tbl d =
-    case d of
-      E.FunBind _ [m] ->
-          let (nm,rhs) = match_sexp tbl m
-          in Just (S.List [S.Atom "define",nm,rhs])
-      E.PatBind _ lhs rhs bnd ->
-          case binds_decl bnd of
-            [] -> case pat_var_str tbl lhs of
-                    "main" -> Just (exp_sexp tbl (rhs_exp rhs))
-                    nm -> Just (S.List [S.Atom "define",S.Atom nm,exp_sexp tbl (rhs_exp rhs)])
-            _ -> error_x "mod_decl_sexp" bnd
-      E.TypeSig _ _ _ -> Nothing -- ignore type signatures
-      _ -> error_x "mod_decl_sexp" d
-
-literal_sexp :: Show l => E.Literal l -> L.SExp
-literal_sexp l =
-    case l of
-      E.Char _ c _ -> S.Char c
-      E.String _ s _ -> S.String s
-      E.Int _ i _ -> S.Number i
-      E.Frac _ r _ -> S.Float (fromRational r)
-      _ -> error_x "literal_sexp" l
-
-pat_sexp :: Show l => Name_Table -> E.Pat l -> L.SExp
-pat_sexp tbl p =
-    case p of
-      E.PApp _ (E.Special _ (E.UnitCon _)) [] -> S.List []
-      E.PVar _ nm -> S.Atom (name_str tbl nm)
-      E.PLit _ sgn lit -> literal_sexp (if sign_is_negative sgn then literal_negate lit else lit)
-      E.PWildCard _ -> S.Atom "_" -- allow singular wildcard
-      E.PTuple _ _ _var -> error "pat_sexp: tuple let bindings not implemented"
-      _ -> error_x "pat_sexp" p
-
--- | An alternative in a case expression.
-alt_sexp :: Show l => Name_Table -> E.Alt l -> L.SExp
-alt_sexp tbl alt =
-  case alt of
-    E.Alt _ (E.PWildCard _) rhs Nothing -> S.List [S.Atom "else",exp_sexp tbl (rhs_exp rhs)]
-    E.Alt _ lhs rhs Nothing -> S.List [S.List [pat_sexp tbl lhs],exp_sexp tbl (rhs_exp rhs)]
-    _ -> error_x "alt_sexp: bindings?" alt
-
-stmt_sexp :: Show l => Name_Table -> E.Stmt l -> L.SExp
-stmt_sexp tbl stmt =
-  case stmt of
-    E.Generator _ p e -> S.List [S.Atom "set!",pat_sexp tbl p,exp_sexp tbl e]
-    E.Qualifier _ e -> exp_sexp tbl e
-    _ -> error_x "stmt_sexp: not exp?" stmt
-
--}
-
