@@ -16,9 +16,9 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
   + `let (i,j) = p in (j,i)` is written
     `(let* ((_rhs p)) (i (vectorRef _rhs 0)) (j (vectorRef _rhs 1))) (vector j i))`
 - functions
-  + `\() -> f ()` are written `(lambda () (f))`
-  + `\x -> x * x` are written `(lambda (x) (* x x))`
-  + `\x y -> x * x + y * y` are written `(lambda (x y) (+ (* x x) (* y y)))`
+  + `\() -> f ()` is written `(lambda () (f))`
+  + `\x -> x * x` is written `(lambda (x) (* x x))`
+  + `\x y -> x * x + y * y` is written `(lambda (x y) (+ (* x x) (* y y)))`
   + `\(p, q) r -> p + q * r` is written
     `(lambda (_p1 _p2) (let* ((_rhs _p1) (p (vectorRef _rhs 0)) (q (vectorRef _rhs 1))) (let ((r _p2)) (+ p (* q r)))))`
 - lists `[1, 2, 3]` are written `(list 1 2 3)`
@@ -30,11 +30,11 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
 - right sections `(+ 1)` are written `(lambda (_lhs) (+ _lhs 1))`
 - left sections `(1 +)` are written `(lambda (_rhs) (+ 1 _rhs))`
 - do expressions
-  + `do {display 0; exit 0}` are written `(begin (display 0) (exit 0))`
-  + `do {x <- 0; display x}` are written `(begin (set! x 0) (display x)))`
+  + `do {display 0; exit 0}` is written `(begin (display 0) (exit 0))`
+  + `do {x <- 0; display x}` is written `(begin (set! x 0) (display x)))`
 - module bindings
-  + `x = y` are written `(define x y)`
-  + `f x = x * x` are written `(define f (lambda (x) (* x x)))`
+  + `x = y` is written `(define x y)`
+  + `f x = x * x` is written `(define f (lambda (x) (* x x)))`
   + `main = x` is written `x`
 - a lookup table is consulted and can rewrite `True` as `#t`, `:` as `cons`, `>>` as `begin` &etc.
 
