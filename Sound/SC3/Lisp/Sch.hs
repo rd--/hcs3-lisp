@@ -26,3 +26,7 @@ is_symbol e = case e of {Symbol _ -> True; _ -> False}
 -- | Is Exp a Lambda expression with no arguments.
 is_thunk :: Exp -> Bool
 is_thunk e = case e of {Lambda [] _ -> True; _ -> False}
+
+-- | Unpack symbol.
+exp_symbol :: Exp -> String
+exp_symbol e = case e of {Symbol x -> x; _ -> error "exp_symbol"}
