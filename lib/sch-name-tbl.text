@@ -1,6 +1,7 @@
 True #t
 False #f
 set set!
+vectorRef vector-ref
 >> begin
 ++ append
 . compose

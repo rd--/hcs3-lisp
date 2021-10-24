@@ -265,10 +265,11 @@ hs_module_sch tbl s =
 > rw "f x y" == "(f x y)"
 > rw "x + y" == "(+ x y)"
 > rw "let x = y in x" == "(let ((x y)) x)"
-> rw "let {x = i;y = j} in x + y" == "(let ((x i)) (let ((y j)) (+ x y)))"
+> rw "let {x = i;y = j} in x + y" == "(let* ((x i) (y j)) (+ x y))"
 > rw "\\() -> x ()" == "(lambda () (x))"
 > rw "\\x -> x * x" == "(lambda (x) (* x x))"
 > rw "\\x y -> x * x + y * y" == "(lambda (x y) (+ (* x x) (* y y)))"
+> rw "\\(p, q) r -> p + q * r" == "(lambda (_p1 _p2) (let* ((_letPatBind _p1) (p (vectorRef _letPatBind 0)) (q (vectorRef _letPatBind 1))) (let ((r _p2)) (+ p (* q r)))))"
 > rw "[]" == "(quote ())"
 > rw "[1,2,3]" == "(list 1 2 3)"
 > rw "(1,2.0,'3',\"4\")" == "(vector 1 2.0 #\\3 \"4\")"
@@ -283,6 +284,7 @@ hs_module_sch tbl s =
 > rw "display 5 >> display (quote five)" == "(>> (display 5) (display (quote five)))"
 > rw "let f x = x * 2 in f 3" == "(let ((f (lambda (x) (* x 2)))) (f 3))"
 > rw "let f () = act () in f ()" == "(let ((f (lambda () (act)))) (f))"
+> rw "let f (p, q) = p + q in f (2, 3)" == "(let ((f (lambda (_p1) (let* ((_letPatBind _p1) (p (vectorRef _letPatBind 0)) (q (vectorRef _letPatBind 1))) (+ p q))))) (f (vector 2 3)))"
 > rw "let (i,j) = (1,2) in (j,i)" == "(let* ((_letPatBind (vector 1 2)) (i (vectorRef _letPatBind 0)) (j (vectorRef _letPatBind 1))) (vector j i))"
 > rw "let [i,j] = [1,2] in (j,i)" == "(let* ((_letPatBind (list 1 2)) (i (listRef _letPatBind 0)) (j (listRef _letPatBind 1))) (vector j i))"
 > rw "[(x,y) | x <- [1,2,3], y <- \"abc\"]" == undefined
@@ -350,8 +352,20 @@ sch_let_pat_to_sexp ref lhs rhs =
       inner var ix = S.List [sch_to_sexp var, S.List [S.Atom ref, bnd, S.Number ix]]
   in S.List (outer : zipWith inner lhs [0..])
 
+-- | Special case where all bindings are simple (non-pattern).
 sch_let_to_sexp :: [(Sch.Exp, Sch.Exp)] -> Sch.Exp -> L.SExp
 sch_let_to_sexp d x =
+  if null d
+  then sch_to_sexp x
+  else if all (Sch.is_symbol . fst) d
+       then S.List
+            [S.Atom (if length d == 1 then "let" else "let*")
+            ,S.List (map (\(lhs,rhs) -> S.List [sch_to_sexp lhs, sch_to_sexp rhs]) d), sch_to_sexp x]
+       else sch_let_to_sexp_pat d x
+
+-- | Pattern bindings introduce nested let sequences, recur back to general case.
+sch_let_to_sexp_pat :: [(Sch.Exp, Sch.Exp)] -> Sch.Exp -> L.SExp
+sch_let_to_sexp_pat d x =
   case d of
     [] -> sch_to_sexp x
     (lhs,rhs):d' ->
@@ -360,6 +374,13 @@ sch_let_to_sexp d x =
         Sch.Tuple var -> S.List [S.Atom "let*", sch_let_pat_to_sexp "vectorRef" var rhs, sch_let_to_sexp d' x]
         Sch.List var -> S.List [S.Atom "let*", sch_let_pat_to_sexp "listRef" var rhs, sch_let_to_sexp d' x]
         _ -> error "sch_let_to_sexp"
+
+-- | Rewriter for case where Lambda parameters are not all symbols.
+sch_lambda_rw :: [Sch.Exp] -> Sch.Exp -> Sch.Exp
+sch_lambda_rw p x =
+  let k = length p
+      p' = map (\ix -> Sch.Symbol ("_p" ++ show ix)) [1 .. k]
+  in Sch.Lambda p' (Sch.Let (zip p p') x)
 
 sch_to_sexp :: Sch.Exp -> L.SExp
 sch_to_sexp e =
@@ -375,7 +396,10 @@ sch_to_sexp e =
     Sch.App f a -> S.List (sch_to_sexp f : map sch_to_sexp a)
     Sch.Begin x -> S.List (S.Atom "begin" : map sch_to_sexp x)
     Sch.If p q r -> S.List (S.Atom "if" : map sch_to_sexp [p,q,r])
-    Sch.Lambda p x -> S.List [S.Atom "lambda", S.List (map sch_to_sexp p), sch_to_sexp x]
+    Sch.Lambda p x ->
+      if all Sch.is_symbol p
+      then S.List [S.Atom "lambda", S.List (map sch_to_sexp p), sch_to_sexp x]
+      else sch_to_sexp (sch_lambda_rw p x)
     Sch.Let d x -> sch_let_to_sexp d x
     Sch.Tuple t -> S.List (S.Atom "vector" : map sch_to_sexp t)
     Sch.Define lhs rhs -> S.List [S.Atom "define", sch_to_sexp lhs, sch_to_sexp rhs]

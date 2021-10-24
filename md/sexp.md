@@ -3,18 +3,24 @@
 Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) notation.
 
 - comments, `import` statements, type signatures and type annotations are discarded
-- function application `f x` is written `(f x)`
-- function application `f x y` is written `(f x y)` rather than `((f x) y)`
-- function application `f ()` is written `(f)`
+- function application
+  + `f x` is written `(f x)`
+  + `f x y` is written `(f x y)` rather than `((f x) y)`
+  + `f ()` is written `(f)`
 - infix operations `x + y` are written `(+ x y)`
 - local bindings
-  + `let x = i in x` are written `(let ((x i)) x)`
-  + `let {x = i; y = j} in x + y` are written `(let ((x i)) (let ((y j)) (+ x y)))`
-  + `let [i,j] = p in (j,i)` are written `(let* ((_rhs p)) (i (listRef _rhs 0)) (j (listRef _rhs 1))) (vector j i))`
-  + `let (i,j) = p in (j,i)` are written `(let* ((_rhs p)) (i (vectorRef _rhs 0)) (j (vectorRef _rhs 1))) (vector j i))`
-- functions `\() -> f ()` are written `(lambda () (f))`
-- functions `\x -> x * x` are written `(lambda (x) (* x x))`
-- functions `\x y -> x * x + y * y` are written `(lambda (x y) (+ (* x x) (* y y)))`
+  + `let x = i in x` is written `(let ((x i)) x)`
+  + `let {x = i; y = j} in x + y` is written `(let* ((x i) (y j)) (+ x y))`
+  + `let [i,j] = p in (j,i)` is written \
+    `(let* ((_rhs p)) (i (listRef _rhs 0)) (j (listRef _rhs 1))) (vector j i))`
+  + `let (i,j) = p in (j,i)` is written
+    `(let* ((_rhs p)) (i (vectorRef _rhs 0)) (j (vectorRef _rhs 1))) (vector j i))`
+- functions
+  + `\() -> f ()` are written `(lambda () (f))`
+  + `\x -> x * x` are written `(lambda (x) (* x x))`
+  + `\x y -> x * x + y * y` are written `(lambda (x y) (+ (* x x) (* y y)))`
+  + `\(p, q) r -> p + q * r` is written
+    `(lambda (_p1 _p2) (let* ((_rhs _p1) (p (vectorRef _rhs 0)) (q (vectorRef _rhs 1))) (let ((r _p2)) (+ p (* q r)))))`
 - lists `[1, 2, 3]` are written `(list 1 2 3)`
 - products `(1, 2.0,' 3', "4")` are written `(vector 1 2.0 \#3 "4")`
 - ranges `[x .. y]` are written `(enumFromTo x y)`
@@ -23,15 +29,14 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
 - cases `\x -> case x of {0 -> a; _ -> b}` are written `(lambda (x) (case x ((0) a) (else b)))`
 - right sections `(+ 1)` are written `(lambda (_lhs) (+ _lhs 1))`
 - left sections `(1 +)` are written `(lambda (_rhs) (+ 1 _rhs))`
-- do expressions `do {display 0; exit 0}` are written `(begin (display 0) (exit 0))`
-- do expressions `do {x <- 0; display x}` are written `(begin (set! x 0) (display x)))`
-- module bindings `x = y` are written `(define x y)`
-- module bindings `f x = x * x` are written `(define f (lambda (x) (* x x)))`
-- the module binding `main = x` is written `x`
+- do expressions
+  + `do {display 0; exit 0}` are written `(begin (display 0) (exit 0))`
+  + `do {x <- 0; display x}` are written `(begin (set! x 0) (display x)))`
+- module bindings
+  + `x = y` are written `(define x y)`
+  + `f x = x * x` are written `(define f (lambda (x) (* x x)))`
+  + `main = x` is written `x`
 - a lookup table is consulted and can rewrite `True` as `#t`, `:` as `cons`, `>>` as `begin` &etc.
-
-# Extensions
-
 
 # Rationale
 
