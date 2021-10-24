@@ -93,8 +93,8 @@ pat_sch tbl p =
     E.PVar _ nm -> Sch.Symbol (name_str tbl nm)
     E.PLit _ sgn lit -> literal_sch (if sign_is_negative sgn then literal_negate lit else lit)
     E.PWildCard _ -> Sch.Symbol "_" -- allow singular wildcard
-    E.PTuple _ _ _var -> error "pat: tuple let bindings not implemented"
-    E.PList _ _var -> error "pat: list let bindings not implemented"
+    E.PTuple _ _ e -> Sch.Tuple (map (pat_sch tbl) e)
+    E.PList _ e -> Sch.List (map (pat_sch tbl) e)
     _ -> error_x "pat" p
 
 -- | Get Var name from Pat else error.
@@ -265,7 +265,7 @@ hs_module_sch tbl s =
 > rw "f x y" == "(f x y)"
 > rw "x + y" == "(+ x y)"
 > rw "let x = y in x" == "(let ((x y)) x)"
-> rw "let {x = i;y = j} in x + y" == "(let* ((x i) (y j)) (+ x y))"
+> rw "let {x = i;y = j} in x + y" == "(let ((x i)) (let ((y j)) (+ x y)))"
 > rw "\\() -> x ()" == "(lambda () (x))"
 > rw "\\x -> x * x" == "(lambda (x) (* x x))"
 > rw "\\x y -> x * x + y * y" == "(lambda (x y) (+ (* x x) (* y y)))"
@@ -283,8 +283,8 @@ hs_module_sch tbl s =
 > rw "display 5 >> display (quote five)" == "(>> (display 5) (display (quote five)))"
 > rw "let f x = x * 2 in f 3" == "(let ((f (lambda (x) (* x 2)))) (f 3))"
 > rw "let f () = act () in f ()" == "(let ((f (lambda () (act)))) (f))"
-> rw "let (i,j,k) = (1,2,3) in (k,j,i)" == undefined
-> rw "let [i,j,k] = [1,2,3] in (k,j,i)" == undefined
+> rw "let (i,j) = (1,2) in (j,i)" == "(let* ((_letPatBind (vector 1 2)) (i (vectorRef _letPatBind 0)) (j (vectorRef _letPatBind 1))) (vector j i))"
+> rw "let [i,j] = [1,2] in (j,i)" == "(let* ((_letPatBind (list 1 2)) (i (listRef _letPatBind 0)) (j (listRef _letPatBind 1))) (vector j i))"
 > rw "[(x,y) | x <- [1,2,3], y <- \"abc\"]" == undefined
 -}
 hs_exp_to_lisp :: Name_Table -> String -> String
@@ -343,11 +343,23 @@ sch_case_to_sexp c a =
       rw (lhs,rhs) = S.List [rw_lhs lhs, sch_to_sexp rhs]
   in S.List (S.Atom "case" : sch_to_sexp c : map rw a)
 
+sch_let_pat_to_sexp :: String -> [Sch.Exp] -> Sch.Exp -> S.LispVal
+sch_let_pat_to_sexp ref lhs rhs =
+  let bnd = S.Atom "_letPatBind"
+      outer = S.List [bnd, sch_to_sexp rhs]
+      inner var ix = S.List [sch_to_sexp var, S.List [S.Atom ref, bnd, S.Number ix]]
+  in S.List (outer : zipWith inner lhs [0..])
+
 sch_let_to_sexp :: [(Sch.Exp, Sch.Exp)] -> Sch.Exp -> L.SExp
 sch_let_to_sexp d x =
-  S.List
-  [S.Atom (if length d == 1 then "let" else "let*")
-  ,S.List (map (\(lhs,rhs) -> S.List [sch_to_sexp lhs, sch_to_sexp rhs]) d), sch_to_sexp x]
+  case d of
+    [] -> sch_to_sexp x
+    (lhs,rhs):d' ->
+      case lhs of
+        Sch.Symbol _ -> S.List [S.Atom "let", S.List [S.List [sch_to_sexp lhs, sch_to_sexp rhs]], sch_let_to_sexp d' x]
+        Sch.Tuple var -> S.List [S.Atom "let*", sch_let_pat_to_sexp "vectorRef" var rhs, sch_let_to_sexp d' x]
+        Sch.List var -> S.List [S.Atom "let*", sch_let_pat_to_sexp "listRef" var rhs, sch_let_to_sexp d' x]
+        _ -> error "sch_let_to_sexp"
 
 sch_to_sexp :: Sch.Exp -> L.SExp
 sch_to_sexp e =

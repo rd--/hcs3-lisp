@@ -7,8 +7,11 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
 - function application `f x y` is written `(f x y)` rather than `((f x) y)`
 - function application `f ()` is written `(f)`
 - infix operations `x + y` are written `(+ x y)`
-- local bindings `let x = i in x` are written `(let ((x i)) x)`
-- local bindings `let {x = i;y = j} in x + y` are written `(let* ((x i) (y j)) (+ x y))`
+- local bindings
+  + `let x = i in x` are written `(let ((x i)) x)`
+  + `let {x = i; y = j} in x + y` are written `(let ((x i)) (let ((y j)) (+ x y)))`
+  + `let [i,j] = p in (j,i)` are written `(let* ((_rhs p)) (i (listRef _rhs 0)) (j (listRef _rhs 1))) (vector j i))`
+  + `let (i,j) = p in (j,i)` are written `(let* ((_rhs p)) (i (vectorRef _rhs 0)) (j (vectorRef _rhs 1))) (vector j i))`
 - functions `\() -> f ()` are written `(lambda () (f))`
 - functions `\x -> x * x` are written `(lambda (x) (* x x))`
 - functions `\x y -> x * x + y * y` are written `(lambda (x y) (+ (* x x) (* y y)))`
@@ -21,7 +24,7 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
 - right sections `(+ 1)` are written `(lambda (_lhs) (+ _lhs 1))`
 - left sections `(1 +)` are written `(lambda (_rhs) (+ 1 _rhs))`
 - do expressions `do {display 0; exit 0}` are written `(begin (display 0) (exit 0))`
-- do expressions `do {x <- 0;display x}` are written `(begin (set! x 0) (display x)))`
+- do expressions `do {x <- 0; display x}` are written `(begin (set! x 0) (display x)))`
 - module bindings `x = y` are written `(define x y)`
 - module bindings `f x = x * x` are written `(define f (lambda (x) (* x x)))`
 - the module binding `main = x` is written `x`
@@ -29,8 +32,6 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
 
 # Extensions
 
-- `let [i,j,k] = rhs in (k,j,i)` could be rewritten as `(let* ((i (list-ref 0 rhs)) ...) ...)`
-- `let (i,j,k) = rhs in (k,j,i)` could be rewritten as `(let* ((i (vector-ref 0 rhs)) ...) ...)`
 
 # Rationale
 
