@@ -9,7 +9,6 @@ import qualified Data.ByteString as B {- bytestring -}
 import qualified Language.Scheme.Parser as S {- husk-scheme -}
 import qualified Language.Scheme.Types as S {- husk-scheme -}
 
-import qualified Sound.SC3.Lisp.Env as L {- hsc3-lisp -}
 import qualified Sound.SC3.Lisp.Type as L {- hsc3-lisp -}
 
 -- | S-expression

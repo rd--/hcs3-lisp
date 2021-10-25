@@ -3,17 +3,25 @@ module Sound.SC3.Lisp.Type where
 
 import Data.Maybe {- base -}
 
+import qualified Control.Monad.State as State {- mtl -}
+import qualified Control.Monad.Except as Except {- mtl -}
+
 import Sound.SC3.Lisp.Env {- hsc3-lisp -}
 
 -- * Types
 
 newtype Trace_Level = Trace_Level Int
 
+-- | Constraints on type parameters for Expr.
 class (Eq a,Ord a,Num a,Fractional a) => Lisp_Ty a where
     ty_show :: a -> String -- ^ String representation of /a/, pretty printer.
     ty_to_int :: a -> Int -- ^ Coercion, ie. for Char.
     ty_from_bool :: Bool -> a -- ^ Boolean value represented in /a/, by convention @1@ and @0@.
 
+-- | State monad wrapped in Exception monad.
+type EnvMonad m k v r = Except.ExceptT String (State.StateT (Env k v) m) r
+
+-- | Expression.
 data Expr a = Symbol String
             | String String
             | Atom a

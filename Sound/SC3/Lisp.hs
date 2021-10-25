@@ -1,4 +1,4 @@
-{-
+{- | Lisp interpreter.
 
 NOTE: the primitive lambda form is monadic, ie. λx → y
 
@@ -8,8 +8,8 @@ For parsers that allow unicode (ie. Ethier) the primitive lambda can be written 
 module Sound.SC3.Lisp where
 
 import Control.Concurrent {- base -}
-import Control.Monad.State {- mtl -}
-import Control.Monad.Except {- mtl -}
+import Control.Monad.State as State {- mtl -}
+import Control.Monad.Except as Except {- mtl -}
 import Data.Maybe {- base -}
 import System.Directory {- directory -}
 import System.Environment {- base -}

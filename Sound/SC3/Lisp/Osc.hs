@@ -1,5 +1,5 @@
--- | Translation between OSC packets and s-expressions (ie. packet_to_lisp and lisp_to_packet).
-module Sound.SC3.Lisp.OSC where
+-- | Translation between Open Sound Control packets and S-Expressions (ie. packet_to_lisp and lisp_to_packet).
+module Sound.SC3.Lisp.Osc where
 
 import Data.Word {- base -}
 

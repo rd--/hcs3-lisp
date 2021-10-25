@@ -7,7 +7,6 @@ import Control.Monad.IO.Class {- base -}
 import Data.IORef {- base -}
 import Data.Maybe {- base -}
 
-import qualified Control.Monad.State as State {- mtl -}
 import qualified Control.Monad.Except as Except {- mtl -}
 import qualified Data.Map as Map {- containers -}
 
@@ -147,9 +146,6 @@ envToplevel e =
   case e of
     Env _ Nothing -> e
     Env _ (Just p) -> envToplevel p
-
--- | State monad wrapped in Exception monad.
-type EnvMonad m k v r = Except.ExceptT String (State.StateT (Env k v) m) r
 
 -- | Copy environment.
 envCopy :: (MonadIO m, Ord k) => Env k v -> m (Env k v)

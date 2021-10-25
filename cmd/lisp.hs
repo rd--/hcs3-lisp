@@ -1,15 +1,16 @@
 import Control.Monad {- base -}
+import Control.Monad.IO.Class {- base -}
 import Data.Char {- base -}
 import Data.Maybe {- base -}
 import System.Environment {- base -}
 
 import qualified Safe {- safe -}
 
-import qualified Control.Monad.Except as Monad {- mtl -}
+import qualified Control.Monad.Except as Except {- mtl -}
 
-import Sound.OSC {- hosc -}
+import qualified Sound.OSC as Osc {- hosc -}
 import Sound.SC3 {- hsc3 -}
-import Sound.SC3.UGen.Plain {- hsc3 -}
+import qualified Sound.SC3.UGen.Plain as Plain {- hsc3 -}
 
 import qualified Sound.SC3.UGen.Protect as Protect {- hsc3-rw -}
 
@@ -48,22 +49,22 @@ ugen_to_double c u =
 l_mk_ctl :: Expr UGen -> LispVM UGen
 l_mk_ctl c = do
   let l = to_list c
-  [rt,nm,df] <- if length l == 3 then return l else Monad.throwError ("mk-ctl: incorrect input: " ++ show c)
+  [rt,nm,df] <- if length l == 3 then return l else Except.throwError ("mk-ctl: incorrect input: " ++ show c)
   rt' <- case rt of
            Symbol sym -> return (fromJust (rate_parse (map toUpper sym)))
-           _ -> Monad.throwError ("mk-ctl: rate: " ++ show rt)
+           _ -> Except.throwError ("mk-ctl: rate: " ++ show rt)
   nm' <- case nm of
            String str -> return str
-           _ -> Monad.throwError ("mk-ctl: name not string: " ++ show nm)
+           _ -> Except.throwError ("mk-ctl: name not string: " ++ show nm)
   df' <- case df of
           Atom u -> return (ugen_to_double "ctl-def" u)
-          _ -> Monad.throwError ("mk-ctl: def: " ++ show df)
+          _ -> Except.throwError ("mk-ctl: def: " ++ show df)
   return (Atom (control rt' nm' df'))
 
-l_make_mce :: Expr UGen -> Env.EnvMonad IO String t UGen
+l_make_mce :: Expr UGen -> EnvMonad IO String t UGen
 l_make_mce c = fmap mce (mapM (atom_note "l_make_mce") (to_list c))
 
-l_as_ugen_input :: Expr UGen -> Env.EnvMonad IO String t UGen
+l_as_ugen_input :: Expr UGen -> EnvMonad IO String t UGen
 l_as_ugen_input c = if is_list c then l_make_mce c else atom_note "l_as_ugen_input" c
 
 l_mk_ugen :: Expr UGen -> LispVM UGen
@@ -71,15 +72,15 @@ l_mk_ugen c = do
   let l = to_list c
   [nm,rt,inp,inp_mce,outp,sp] <- if length l == 6
                                  then return l
-                                 else Monad.throwError ("mk-ugen: incorrect input: " ++ show c)
+                                 else Except.throwError ("mk-ugen: incorrect input: " ++ show c)
   inp_mce' <- case inp_mce of
                 Atom u -> return (mceChannels u)
                 Nil -> return []
-                _ -> Monad.throwError ("mk-ugen: mce-input: " ++ show inp_mce)
+                _ -> Except.throwError ("mk-ugen: mce-input: " ++ show inp_mce)
   sp' <- case sp of
            Atom u -> return (Special (ugen_to_int "special" u))
            Nil -> return (Special 0)
-           _ -> Monad.throwError "mk-ugen: special?"
+           _ -> Except.throwError "mk-ugen: special?"
   uid <- fmap UId (liftIO generateUId)
   inp' <- fmap (++ inp_mce') (mapM l_as_ugen_input (to_list inp))
   rt' <- case rt of
@@ -87,12 +88,12 @@ l_mk_ugen c = do
            Cons _ _ -> do
              let f = rateOf . Safe.atNote ("mk-ugen: rate: " ++ show c) inp' . ugen_to_int "rate"
              fmap maximum (mapM (fmap f . atom_note "mk-ugen: rate") (to_list rt))
-           _ -> Monad.throwError ("mk-ugen: rate: " ++ show rt)
+           _ -> Except.throwError ("mk-ugen: rate: " ++ show rt)
   nm' <- case nm of
            String str -> return str
-           _ -> Monad.throwError ("mk-ugen: name not string: " ++ show nm)
+           _ -> Except.throwError ("mk-ugen: name not string: " ++ show nm)
   let outp' = floor (constant_err outp)
-  return (Atom (ugen_optimise_const_operator (mk_plain rt' nm' inp' outp' sp' uid)))
+  return (Atom (ugen_optimise_const_operator (Plain.mk_plain rt' nm' inp' outp' sp' uid)))
 
 l_is_number :: Expr UGen -> Expr UGen
 l_is_number c =
@@ -122,7 +123,7 @@ l_clone_star c =
          let k' = ugen_to_int "clone-k" k
              n' = ugen_to_int "clone-n" n
          in return (Atom (Protect.uclone (const False) k' n' u))
-      _ -> Monad.throwError ("clone*: " ++ show c)
+      _ -> Except.throwError ("clone*: " ++ show c)
 
 l_play_at_star :: Expr UGen -> LispVM UGen
 l_play_at_star c =
@@ -133,33 +134,33 @@ l_play_at_star c =
              grp' = ugen_to_int "play-at: grp" grp
          in lift_io (withSC3 (playAt (nid',toEnum act',grp',[]) u)) >>
             return Nil
-     _ -> Monad.throwError ("play-at*: " ++ show c)
+     _ -> Except.throwError ("play-at*: " ++ show c)
 
 l_thread_sleep :: Expr UGen -> LispVM UGen
 l_thread_sleep c = do
     u <- atom_note "l_thread_sleep" c
-    liftIO (pauseThread (ugen_to_double "pause" u))
+    liftIO (Osc.pauseThread (ugen_to_double "pause" u))
     return Nil
 
-expr_to_datum :: Expr UGen -> ExprVM t Datum
+expr_to_datum :: Expr UGen -> ExprVM t Osc.Datum
 expr_to_datum c =
     case c of
-      Symbol str -> return (string str)
-      String str -> return (string str)
-      Atom (UGen (CConstant (Constant n _))) -> return (float n)
-      _ -> Monad.throwError ("expr-to-datum: " ++ show c)
+      Symbol str -> return (Osc.string str)
+      String str -> return (Osc.string str)
+      Atom (UGen (CConstant (Constant n _))) -> return (Osc.float n)
+      _ -> Except.throwError ("expr-to-datum: " ++ show c)
 
-expr_to_message :: Expr UGen -> ExprVM t Message
+expr_to_message :: Expr UGen -> ExprVM t Osc.Message
 expr_to_message c =
     case to_list_m c of
-      Just (String addr : l) -> mapM expr_to_datum l >>= \l' -> return (Message addr l')
-      _ -> Monad.throwError ("expr-to-message: " ++ show c)
+      Just (String addr : l) -> mapM expr_to_datum l >>= \l' -> return (Osc.Message addr l')
+      _ -> Except.throwError ("expr-to-message: " ++ show c)
 
 l_async_star :: Expr UGen -> LispVM t
 l_async_star c = expr_to_message c >>= \c' -> lift_io (withSC3 (void (async c')))
 
 l_send_star :: Expr UGen -> LispVM t
-l_send_star c = expr_to_message c >>= \c' -> lift_io (withSC3 (void (sendMessage c')))
+l_send_star c = expr_to_message c >>= \c' -> lift_io (withSC3 (void (Osc.sendMessage c')))
 
 ugen_dict :: MonadIO m => m (Env.Dict String (Expr UGen))
 ugen_dict =
@@ -180,7 +181,7 @@ ugen_dict =
     ,("play-at*",Proc l_play_at_star)
     ,("reset*",Proc (\_ -> lift_io (withSC3 reset)))
     ,("threadSleep",Proc l_thread_sleep)
-    ,("utcr",Proc (\_ -> liftIO time >>= return . Atom . constant))
+    ,("utcr",Proc (\_ -> liftIO Osc.time >>= return . Atom . constant))
     ,("displayServerStatus",Proc (\_ -> lift_io (withSC3 serverStatus >>= mapM_ putStrLn)))
     ,("async*",Proc l_async_star)
     ,("send*",Proc l_send_star)
