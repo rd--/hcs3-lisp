@@ -1,4 +1,4 @@
--- | Rewrite a subset of haskell as LISP.
+-- | Rewrite a subset of Haskell as Lisp.
 module Sound.SC3.Lisp.Haskell where
 
 import Data.Maybe {- base -}
@@ -234,7 +234,7 @@ hs_exp_sch tbl s =
 
 {- | Parse Haskell declaration as Exp, i.e. mod_decl_sch of parseDecl.
 
-> let rw = L.sexp_show . hs_decl_sexp []
+> let rw = L.sexp_show . hs_decl_lisp []
 > rw "x = y" == "(define x y)"
 > rw "f x = case x of {0 -> a;1 -> b;_ -> c}" == "(define f (lambda (x) (case x ((0) a) ((1) b) (else c))))"
 > rw "x = y" == "(define x y)"
@@ -290,7 +290,7 @@ hs_module_sch tbl s =
 > rw "[(x,y) | x <- [1,2,3], y <- \"abc\"]" == undefined
 -}
 hs_exp_to_lisp :: Name_Table -> String -> String
-hs_exp_to_lisp tbl = L.sexp_show . hs_exp_sexp tbl
+hs_exp_to_lisp tbl = L.sexp_show . hs_exp_lisp tbl
 
 {- | Translate haskell @module@ code into @LISP@.
 
@@ -312,7 +312,7 @@ hs_exp_to_lisp tbl = L.sexp_show . hs_exp_sexp tbl
 > rw "main = putStrLn \"text\"" == "(putStrLn \"text\")\n"
 -}
 hs_to_lisp :: Name_Table -> String -> String
-hs_to_lisp tbl = unlines . map L.sexp_show . hs_module_sexp tbl
+hs_to_lisp tbl = unlines . map L.sexp_show . hs_module_lisp tbl
 
 -- * IO
 
@@ -337,43 +337,43 @@ hs_to_lisp_io = hs_to_lisp_f_io hs_to_lisp
 hs_exp_to_lisp_io :: Maybe FilePath -> FilePath -> FilePath -> IO ()
 hs_exp_to_lisp_io = hs_to_lisp_f_io hs_exp_to_lisp
 
--- * Sch to SExp
+-- * Sch to Lisp
 
-sch_case_to_sexp :: Sch.Exp -> [(Sch.Exp, Sch.Exp)] -> L.SExp
-sch_case_to_sexp c a =
-  let rw_lhs lhs = if Sch.is_symbol lhs then sch_to_sexp lhs else S.List [sch_to_sexp lhs]
-      rw (lhs,rhs) = S.List [rw_lhs lhs, sch_to_sexp rhs]
-  in S.List (S.Atom "case" : sch_to_sexp c : map rw a)
+sch_case_to_lisp :: Sch.Exp -> [(Sch.Exp, Sch.Exp)] -> S.LispVal
+sch_case_to_lisp c a =
+  let rw_lhs lhs = if Sch.is_symbol lhs then sch_to_lisp lhs else S.List [sch_to_lisp lhs]
+      rw (lhs,rhs) = S.List [rw_lhs lhs, sch_to_lisp rhs]
+  in S.List (S.Atom "case" : sch_to_lisp c : map rw a)
 
-sch_let_pat_to_sexp :: String -> [Sch.Exp] -> Sch.Exp -> S.LispVal
-sch_let_pat_to_sexp ref lhs rhs =
+sch_let_pat_to_lisp :: String -> [Sch.Exp] -> Sch.Exp -> S.LispVal
+sch_let_pat_to_lisp ref lhs rhs =
   let bnd = S.Atom "_letPatBind"
-      outer = S.List [bnd, sch_to_sexp rhs]
-      inner var ix = S.List [sch_to_sexp var, S.List [S.Atom ref, bnd, S.Number ix]]
+      outer = S.List [bnd, sch_to_lisp rhs]
+      inner var ix = S.List [sch_to_lisp var, S.List [S.Atom ref, bnd, S.Number ix]]
   in S.List (outer : zipWith inner lhs [0..])
 
 -- | Special case where all bindings are simple (non-pattern).
-sch_let_to_sexp :: [(Sch.Exp, Sch.Exp)] -> Sch.Exp -> L.SExp
-sch_let_to_sexp d x =
+sch_let_to_lisp :: [(Sch.Exp, Sch.Exp)] -> Sch.Exp -> S.LispVal
+sch_let_to_lisp d x =
   if null d
-  then sch_to_sexp x
+  then sch_to_lisp x
   else if all (Sch.is_symbol . fst) d
        then S.List
             [S.Atom (if length d == 1 then "let" else "let*")
-            ,S.List (map (\(lhs,rhs) -> S.List [sch_to_sexp lhs, sch_to_sexp rhs]) d), sch_to_sexp x]
-       else sch_let_to_sexp_pat d x
+            ,S.List (map (\(lhs,rhs) -> S.List [sch_to_lisp lhs, sch_to_lisp rhs]) d), sch_to_lisp x]
+       else sch_let_to_lisp_pat d x
 
 -- | Pattern bindings introduce nested let sequences, recur back to general case.
-sch_let_to_sexp_pat :: [(Sch.Exp, Sch.Exp)] -> Sch.Exp -> L.SExp
-sch_let_to_sexp_pat d x =
+sch_let_to_lisp_pat :: [(Sch.Exp, Sch.Exp)] -> Sch.Exp -> S.LispVal
+sch_let_to_lisp_pat d x =
   case d of
-    [] -> sch_to_sexp x
+    [] -> sch_to_lisp x
     (lhs,rhs):d' ->
       case lhs of
-        Sch.Symbol _ -> S.List [S.Atom "let", S.List [S.List [sch_to_sexp lhs, sch_to_sexp rhs]], sch_let_to_sexp d' x]
-        Sch.Tuple var -> S.List [S.Atom "let*", sch_let_pat_to_sexp "vectorRef" var rhs, sch_let_to_sexp d' x]
-        Sch.List var -> S.List [S.Atom "let*", sch_let_pat_to_sexp "listRef" var rhs, sch_let_to_sexp d' x]
-        _ -> error "sch_let_to_sexp"
+        Sch.Symbol _ -> S.List [S.Atom "let", S.List [S.List [sch_to_lisp lhs, sch_to_lisp rhs]], sch_let_to_lisp d' x]
+        Sch.Tuple var -> S.List [S.Atom "let*", sch_let_pat_to_lisp "vectorRef" var rhs, sch_let_to_lisp d' x]
+        Sch.List var -> S.List [S.Atom "let*", sch_let_pat_to_lisp "listRef" var rhs, sch_let_to_lisp d' x]
+        _ -> error "sch_let_to_lisp"
 
 -- | Rewriter for case where Lambda parameters are not all symbols.
 sch_lambda_rw :: [Sch.Exp] -> Sch.Exp -> Sch.Exp
@@ -382,33 +382,33 @@ sch_lambda_rw p x =
       p' = map (\ix -> Sch.Symbol ("_p" ++ show ix)) [1 .. k]
   in Sch.Lambda p' (Sch.Let (zip p p') x)
 
-sch_to_sexp :: Sch.Exp -> L.SExp
-sch_to_sexp e =
+sch_to_lisp :: Sch.Exp -> S.LispVal
+sch_to_lisp e =
   case e of
     Sch.Char c -> S.Char c
     Sch.String s -> S.String s
     Sch.Integer i -> S.Number i
     Sch.Double d -> S.Float d
     Sch.Symbol s -> S.Atom s
-    Sch.List l -> if null l then S.List [S.Atom "quote",S.Atom "()"] else S.List (S.Atom "list" : map sch_to_sexp l)
-    Sch.Case c a -> sch_case_to_sexp c a
-    Sch.Set lhs rhs -> S.List [S.Atom "set!", sch_to_sexp lhs, sch_to_sexp rhs]
-    Sch.App f a -> S.List (sch_to_sexp f : map sch_to_sexp a)
-    Sch.Begin x -> S.List (S.Atom "begin" : map sch_to_sexp x)
-    Sch.If p q r -> S.List (S.Atom "if" : map sch_to_sexp [p,q,r])
+    Sch.List l -> if null l then S.List [S.Atom "quote",S.nullLisp] else S.List (S.Atom "list" : map sch_to_lisp l)
+    Sch.Case c a -> sch_case_to_lisp c a
+    Sch.Set lhs rhs -> S.List [S.Atom "set!", sch_to_lisp lhs, sch_to_lisp rhs]
+    Sch.App f a -> S.List (sch_to_lisp f : map sch_to_lisp a)
+    Sch.Begin x -> S.List (S.Atom "begin" : map sch_to_lisp x)
+    Sch.If p q r -> S.List (S.Atom "if" : map sch_to_lisp [p,q,r])
     Sch.Lambda p x ->
       if all Sch.is_symbol p
-      then S.List [S.Atom "lambda", S.List (map sch_to_sexp p), sch_to_sexp x]
-      else sch_to_sexp (sch_lambda_rw p x)
-    Sch.Let d x -> sch_let_to_sexp d x
-    Sch.Tuple t -> S.List (S.Atom "vector" : map sch_to_sexp t)
-    Sch.Define lhs rhs -> S.List [S.Atom "define", sch_to_sexp lhs, sch_to_sexp rhs]
+      then S.List [S.Atom "lambda", S.List (map sch_to_lisp p), sch_to_lisp x]
+      else sch_to_lisp (sch_lambda_rw p x)
+    Sch.Let d x -> sch_let_to_lisp d x
+    Sch.Tuple t -> S.List (S.Atom "vector" : map sch_to_lisp t)
+    Sch.Define lhs rhs -> S.List [S.Atom "define", sch_to_lisp lhs, sch_to_lisp rhs]
 
-hs_exp_sexp :: Name_Table -> String -> L.SExp
-hs_exp_sexp tbl = sch_to_sexp . hs_exp_sch tbl
+hs_exp_lisp :: Name_Table -> String -> S.LispVal
+hs_exp_lisp tbl = sch_to_lisp . hs_exp_sch tbl
 
-hs_decl_sexp :: Name_Table -> String -> L.SExp
-hs_decl_sexp tbl = sch_to_sexp . hs_decl_sch tbl
+hs_decl_lisp :: Name_Table -> String -> S.LispVal
+hs_decl_lisp tbl = sch_to_lisp . hs_decl_sch tbl
 
-hs_module_sexp :: Name_Table -> String -> [L.SExp]
-hs_module_sexp tbl = map sch_to_sexp . hs_module_sch tbl
+hs_module_lisp :: Name_Table -> String -> [S.LispVal]
+hs_module_lisp tbl = map sch_to_lisp . hs_module_sch tbl

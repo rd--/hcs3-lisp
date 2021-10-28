@@ -35,6 +35,7 @@ library
                    hsc3-rw == 0.20.*,
                    mtl,
                    safe,
+                   stsc3 == 0.20.*,
                    unix
   default-language:Haskell2010
   ghc-options:     -Wall -fno-warn-orphans -fwarn-tabs
@@ -44,6 +45,7 @@ library
                    Sound.SC3.Lisp.Osc,
                    Sound.SC3.Lisp.Parse.Ethier,
                    Sound.SC3.Lisp.Sch,
+                   Sound.SC3.Lisp.SuperCollider,
                    Sound.SC3.Lisp.Type
 
 executable hsc3-lisp
