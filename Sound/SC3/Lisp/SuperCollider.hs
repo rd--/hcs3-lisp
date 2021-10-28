@@ -1,4 +1,4 @@
--- | Rewrite a subset of SuperCollider as Lisp.
+-- | Rewrite a subset of SuperCollider (specifically .stc) as Lisp.
 module Sound.SC3.Lisp.SuperCollider where
 
 import Data.Bifunctor {- base -}
@@ -169,21 +169,21 @@ exp_to_lisp e =
 
 {- | Viewer for translator. Reads Sc expression, prints re-written Lisp expression.
 
-> rw = scToLispViewer
+> rw = init . scToLispViewer
 > rw "$c"
 > rw "\"str\""
-> rw "'sym'"
-> rw "123"
-> rw "1.2"
-> rw "[$c, 'sym', 123, 1.2]"
-> rw "x = 1"
-> rw "f(x)"
-> rw "x.f"
-> rw "x.f(y)"
-> rw "{}"
-> rw "{arg x; x * 2}"
-> rw "{arg x; var y = x * 2; y + 3}"
-> rw "var x = 1; var y = 2; x + y"
+> rw "'sym'" == "(quote sym)"
+> rw "123" == "123"
+> rw "1.2" == "1.2"
+> rw "['sym', 123, 1.2]" == "(list (quote sym) 123 1.2)"
+> rw "x = 1" == "(set! x 1)"
+> rw "f(x)" == "(f x)"
+> rw "x.f" == "(f x)"
+> rw "x.f(y)" == "(f x y)"
+> rw "{}" == "(lambda () (quote ()))"
+> rw "{arg x; x * 2}" == "(lambda (x) (* x 2))"
+> rw "{arg x; var y = x * 2; y + 3}" == "(lambda (x) (let ((y (* x 2))) (+ y 3)))"
+> rw "var x = 1; var y = 2; x + y" == "(define x 1)\n(define y 2)\n(+ x y)"
 -}
 scToLispViewer :: String -> String
 scToLispViewer =
