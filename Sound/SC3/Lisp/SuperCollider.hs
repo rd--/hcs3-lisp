@@ -192,7 +192,7 @@ exp_to_lisp e =
 
 {- | Viewer for translator. Reads Sc expression, prints re-written Lisp expression.
 
-> rw = init . scToLispViewer
+> rw = init . scToLispViewer False
 > rw "$c"
 > rw "\"str\""
 > rw "'sym'" == "(quote sym)"
@@ -209,14 +209,16 @@ exp_to_lisp e =
 > rw "{arg x; x * 2}" == "(lambda (x) (* x 2))"
 > rw "{arg x; var y = x * 2; y + 3}" == "(lambda (x) (let ((y (* x 2))) (+ y 3)))"
 > rw "var x = 1; var y = 2; x + y" == "(let* ((x 1) (y 2)) (+ x y))"
-== "(define x 1)\n(define y 2)\n(+ x y)"
+
+> rw = init . scToLispViewer True
+> rw "var x = 1; var y = 2; x + y" == "(define x 1)\n(define y 2)\n(+ x y)"
 -}
 scToLispViewer :: Bool -> String -> String
 scToLispViewer dfn = scToRenamedLispViewer dfn []
 
 {- | Viewer for translator with renamer. Reads Sc expression, prints re-written Lisp expression.
 
-> rw = init . scToRenamedLispViewer [("+","add")]
+> rw = init . scToRenamedLispViewer False [("+","add")]
 > rw "1 + 2" == "(add 1 2)"
 -}
 scToRenamedLispViewer :: Bool -> [(String, String)] -> String -> String
