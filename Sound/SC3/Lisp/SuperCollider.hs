@@ -13,8 +13,10 @@ import qualified Language.Scheme.Types as S {- husk-scheme -}
 
 import qualified Sound.SC3.Lisp.Parse.Ethier as L {- hsc3-lisp -}
 
+-- | Identifier
 type Name = String
 
+-- | Ast for .stc as Lisp notation.
 data Exp
   = Char Char
   | String String
@@ -42,6 +44,18 @@ exp_map f e =
     Lambda p q -> Lambda p (exp_map f q)
     Define p q -> Define p (exp_map f q)
     _ -> f e
+
+-- | Rename Symbol names using lookup table.
+exp_rename :: [(String, String)] -> Exp -> Exp
+exp_rename tbl =
+  let rw nm = fromMaybe nm (lookup nm tbl)
+      f e =
+        case e of
+          Symbol s -> Symbol (rw s)
+          _ -> e
+  in exp_map f
+
+-- * Sc
 
 stNumber_to_exp :: St.Number -> Exp
 stNumber_to_exp n =
@@ -130,8 +144,17 @@ scPrimary_to_exp x =
     Sc.ScPrimaryArrayExpression p -> Array (map scBasicExpression_to_exp p)
     Sc.ScPrimaryImplictMessageSend p q -> App (Symbol p) (map scBasicExpression_to_exp q)
 
-scInitializerDefinition_to_exp :: Sc.ScInitializerDefinition -> [Exp]
-scInitializerDefinition_to_exp (Sc.ScInitializerDefinition tmp stm) =
+-- | Translate as let expression.
+scInitializerDefinition_to_let_exp :: Sc.ScInitializerDefinition -> Exp
+scInitializerDefinition_to_let_exp (Sc.ScInitializerDefinition tmp stm) =
+  let binder (p, q) = (p, maybe Nil scBasicExpression_to_exp q)
+      tmpSeq = concatMap (map binder) (fromMaybe [] tmp)
+      stmExp = maybe Nil scStatements_to_exp stm
+  in Let tmpSeq stmExp
+
+-- | Translate as definition sequence with perhaps a subsequent program.
+scInitializerDefinition_to_exp_seq :: Sc.ScInitializerDefinition -> [Exp]
+scInitializerDefinition_to_exp_seq (Sc.ScInitializerDefinition tmp stm) =
   let binder (p, q) = Define p (maybe Nil scBasicExpression_to_exp q)
       tmpSeq = concatMap (map binder) (fromMaybe [] tmp)
       stmExp = maybe [] (return . scStatements_to_exp) stm
@@ -180,16 +203,27 @@ exp_to_lisp e =
 > rw "f(x)" == "(f x)"
 > rw "x.f" == "(f x)"
 > rw "x.f(y)" == "(f x y)"
+> rw "f()" == "(f)"
+> rw "f(x).g(y)" == "(g (f x) y)"
 > rw "{}" == "(lambda () (quote ()))"
 > rw "{arg x; x * 2}" == "(lambda (x) (* x 2))"
 > rw "{arg x; var y = x * 2; y + 3}" == "(lambda (x) (let ((y (* x 2))) (+ y 3)))"
-> rw "var x = 1; var y = 2; x + y" == "(define x 1)\n(define y 2)\n(+ x y)"
+> rw "var x = 1; var y = 2; x + y" == "(let* ((x 1) (y 2)) (+ x y))"
+== "(define x 1)\n(define y 2)\n(+ x y)"
 -}
-scToLispViewer :: String -> String
-scToLispViewer =
-  unlines .
-  map L.sexp_show .
-  map exp_to_lisp .
-  scInitializerDefinition_to_exp .
-  Sc.superColliderParser .
-  Sc.alexScanTokens
+scToLispViewer :: Bool -> String -> String
+scToLispViewer dfn = scToRenamedLispViewer dfn []
+
+{- | Viewer for translator with renamer. Reads Sc expression, prints re-written Lisp expression.
+
+> rw = init . scToRenamedLispViewer [("+","add")]
+> rw "1 + 2" == "(add 1 2)"
+-}
+scToRenamedLispViewer :: Bool -> [(String, String)] -> String -> String
+scToRenamedLispViewer dfn tbl =
+  let f = if dfn then scInitializerDefinition_to_exp_seq else return . scInitializerDefinition_to_let_exp
+  in unlines .
+     map (L.sexp_show . exp_to_lisp . exp_rename tbl) .
+     f .
+     Sc.superColliderParser .
+     Sc.alexScanTokens

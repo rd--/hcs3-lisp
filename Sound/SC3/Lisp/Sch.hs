@@ -52,19 +52,13 @@ exp_symbol e = case e of {Symbol x -> x; _ -> error "exp_symbol"}
 
 -- * Renaming
 
--- | Name re-writing table, from LHS to RHS.
-type NameTable = [(String, String)]
-
--- | Rewrite names using table lookup.
-name_rewrite_table :: NameTable -> String -> String
-name_rewrite_table tbl nm = fromMaybe nm (lookup nm tbl)
-
 -- | Rename all Symbols at Exp.
-exp_rename :: NameTable -> Exp -> Exp
+exp_rename :: [(String, String)] -> Exp -> Exp
 exp_rename tbl =
-  let f e =
+  let rw nm = fromMaybe nm (lookup nm tbl)
+      f e =
         case e of
-          Symbol s -> Symbol (name_rewrite_table tbl s)
+          Symbol s -> Symbol (rw s)
           _ -> e
   in exp_map f
 

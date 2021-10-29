@@ -42,6 +42,7 @@ library
   exposed-modules: Sound.SC3.Lisp,
                    Sound.SC3.Lisp.Env,
                    Sound.SC3.Lisp.Haskell,
+                   Sound.SC3.Lisp.NameTable,
                    Sound.SC3.Lisp.Osc,
                    Sound.SC3.Lisp.Parse.Ethier,
                    Sound.SC3.Lisp.Sch,

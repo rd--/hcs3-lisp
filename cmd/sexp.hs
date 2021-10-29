@@ -1,6 +1,7 @@
 import qualified Music.Theory.Opt as Opt {- hmt-base -}
 
 import qualified Sound.SC3.Lisp.Haskell as Hs {- hsc3-lisp -}
+import qualified Sound.SC3.Lisp.NameTable as Tbl {- hsc3-lisp -}
 import qualified Sound.SC3.Lisp.SuperCollider as Sc {- hsc3-lisp -}
 
 opt :: [Opt.OptUsr]
@@ -16,6 +17,12 @@ help =
   ,"   haskell-to-lisp [opt]"
   ,"   supercollider-to-lisp [opt]"]
 
+sc_to_lisp_io :: Maybe FilePath -> FilePath -> FilePath -> IO ()
+sc_to_lisp_io tbl_fn i_fn o_fn = do
+  tbl <- maybe (return []) Tbl.nameTableLoad tbl_fn
+  i <- readFile i_fn
+  writeFile o_fn (Sc.scToRenamedLispViewer False tbl i)
+
 main :: IO ()
 main = do
   (o,a) <- Opt.opt_get_arg True help opt
@@ -27,7 +34,7 @@ main = do
       table x = if x == "nil" then Nothing else Just x
       translator = case a of
         ["haskell-to-lisp"] -> Hs.hs_to_lisp_f_io
-        ["supercollider-to-lisp"] -> \_ _ _ _ -> interact Sc.scToLispViewer
+        ["supercollider-to-lisp"] -> \_ -> sc_to_lisp_io
         _ -> usage
   translator
     (mode (Opt.opt_get o "mode"))
