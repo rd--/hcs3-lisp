@@ -3,4 +3,5 @@
 * mul
 / fdiv
 % mod
+** pow
 if ifThenElse

@@ -9,6 +9,6 @@ nameTableLoad fn = do
   txt <- readFile fn
   let parse x = case words x of
                   [lhs,rhs] -> (lhs,rhs)
-                  _ -> error ("name_tbl_load: " ++ x)
+                  _ -> error ("nameTableLoad: " ++ x)
   return (map parse (lines txt))
 

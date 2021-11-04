@@ -1,7 +1,6 @@
--- | Rewrite a subset of SuperCollider (specifically .stc) as Lisp.
+-- | Rewrite a subset of SuperCollider (specifically .scs & .stc) as Lisp.
 module Sound.SC3.Lisp.SuperCollider where
 
-import Data.Bifunctor {- base -}
 import Data.Maybe {- base -}
 
 import qualified Language.Smalltalk.Ansi as St {- stsc3 -}
@@ -12,50 +11,7 @@ import qualified Language.Smalltalk.SuperCollider.Parser as Sc {- stsc3 -}
 import qualified Language.Scheme.Types as S {- husk-scheme -}
 
 import qualified Sound.SC3.Lisp.Parse.Ethier as L {- hsc3-lisp -}
-
--- | Identifier
-type Name = String
-
--- | Ast for .stc as Lisp notation.
-data Exp
-  = Char Char
-  | String String
-  | Symbol Name
-  | Integer Integer
-  | Double Double
-  | Array [Exp]
-  | Set Exp Exp
-  | App Exp [Exp]
-  | Seq Exp Exp
-  | Let [(Name, Exp)] Exp
-  | Lambda [Name] Exp
-  | Define Name Exp
-  | Nil
-
--- | Apply f at each node of Exp.
-exp_map :: (Exp -> Exp) -> Exp -> Exp
-exp_map f e =
-  case e of
-    Array p -> Array (map (exp_map f) p)
-    Set p q -> Set (exp_map f p) (exp_map f q)
-    App p q -> App (exp_map f p) (map (exp_map f) q)
-    Seq p q -> Seq (exp_map f p) (exp_map f q)
-    Let p q -> Let (map (bimap id (exp_map f)) p) (exp_map f q)
-    Lambda p q -> Lambda p (exp_map f q)
-    Define p q -> Define p (exp_map f q)
-    _ -> f e
-
--- | Rename Symbol names using lookup table.
-exp_rename :: [(String, String)] -> Exp -> Exp
-exp_rename tbl =
-  let rw nm = fromMaybe nm (lookup nm tbl)
-      f e =
-        case e of
-          Symbol s -> Symbol (rw s)
-          _ -> e
-  in exp_map f
-
--- * Sc
+import Sound.SC3.Lisp.Scs {- hsc3-lisp -}
 
 stNumber_to_exp :: St.Number -> Exp
 stNumber_to_exp n =

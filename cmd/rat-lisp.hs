@@ -1,8 +1,8 @@
 import qualified Data.Map as M {- containers -}
 import Data.Ratio {- base -}
 
-import Sound.SC3.Lisp {- hsc3-lisp -}
 import Sound.SC3.Lisp.Env {- hsc3-lisp -}
+import Sound.SC3.Lisp.Interpreter {- hsc3-lisp -}
 import Sound.SC3.Lisp.Type {- hsc3-lisp -}
 
 -- * RATIONAL

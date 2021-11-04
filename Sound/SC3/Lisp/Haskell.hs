@@ -1,4 +1,4 @@
--- | Rewrite a subset of Haskell as Lisp.
+-- | Rewrite a subset of Haskell (.sch) as Lisp.
 module Sound.SC3.Lisp.Haskell where
 
 import Data.Maybe {- base -}

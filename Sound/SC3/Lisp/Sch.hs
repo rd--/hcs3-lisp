@@ -4,7 +4,9 @@ module Sound.SC3.Lisp.Sch where
 import Data.Bifunctor {- base -}
 import Data.Maybe {- base -}
 
--- | Ast for Sch notation.
+{- | Ast for Sch notation.
+     Lambda, Let and Case have Exp on the left hand side of bindings as some pattern matching is allowed.
+-}
 data Exp
   = Char Char
   | String String
@@ -52,7 +54,7 @@ exp_symbol e = case e of {Symbol x -> x; _ -> error "exp_symbol"}
 
 -- * Renaming
 
--- | Rename all Symbols at Exp.
+-- | Rename all Symbols at Exp using a lookup table.
 exp_rename :: [(String, String)] -> Exp -> Exp
 exp_rename tbl =
   let rw nm = fromMaybe nm (lookup nm tbl)
