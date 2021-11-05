@@ -24,6 +24,7 @@ data Exp
   | Lambda [Name] Exp
   | Define Name Exp
   | Nil
+  deriving (Eq, Show)
 
 -- | Apply f at each node of Exp.
 exp_map :: (Exp -> Exp) -> Exp -> Exp
