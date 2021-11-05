@@ -1,4 +1,4 @@
--- | .scs files are scheme (or a scheme-like) language written using C-Smalltalk (a subset of SuperCollider) notation.
+-- | .scs is scheme (or a scheme-like language) written using C-Smalltalk (a subset of SuperCollider) notation.
 module Sound.SC3.Lisp.Scs where
 
 import Data.Bifunctor {- base -}
@@ -7,7 +7,9 @@ import Data.Maybe {- base -}
 -- | Identifier
 type Name = String
 
--- | Ast for .stc as Lisp notation.
+{- | Ast for .stc as Lisp notation.
+     Set has Exp in the binding position because composite and expression assignments are allowed.
+-}
 data Exp
   = Char Char
   | String String

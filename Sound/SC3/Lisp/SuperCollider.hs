@@ -38,6 +38,7 @@ scStatements_to_exp x =
         Nothing -> scExpression_to_exp p
         Just q' -> Seq (scExpression_to_exp p) (scStatements_to_exp q')
 
+-- | Translated as Lambda with interior Let.  Alternately, Lambda could have a temporaries field.
 scBlockBody_to_exp :: Sc.ScBlockBody -> Exp
 scBlockBody_to_exp (Sc.ScBlockBody arg tmp stm) =
   let binder (p, q) = (p, maybe Nil scBasicExpression_to_exp q)
@@ -100,7 +101,7 @@ scPrimary_to_exp x =
     Sc.ScPrimaryArrayExpression p -> Array (map scBasicExpression_to_exp p)
     Sc.ScPrimaryImplictMessageSend p q -> App (Symbol p) (map scBasicExpression_to_exp q)
 
--- | Translate as let expression.
+-- | Translate as let expression.  Alternately could translate as Seq of Set.
 scInitializerDefinition_to_let_exp :: Sc.ScInitializerDefinition -> Exp
 scInitializerDefinition_to_let_exp (Sc.ScInitializerDefinition tmp stm) =
   let binder (p, q) = (p, maybe Nil scBasicExpression_to_exp q)

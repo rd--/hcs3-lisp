@@ -1,4 +1,4 @@
--- | .sch files are scheme (or a scheme-like) language written using Haskell notation.
+-- | .sch is scheme (or a scheme-like language) written using Haskell notation.
 module Sound.SC3.Lisp.Sch where
 
 import Data.Bifunctor {- base -}
