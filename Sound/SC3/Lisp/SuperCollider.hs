@@ -147,6 +147,14 @@ exp_to_lisp e =
 
 -- * Translate
 
+{- | Lex, parse and convert .stc expression to Exp.
+     If dfn is True translate to Exp sequence, else to Let.
+-}
+scToExp :: Bool -> String -> [Exp]
+scToExp dfn =
+  let f = if dfn then scInitializerDefinition_to_exp_seq else return . scInitializerDefinition_to_let_exp
+  in f . Sc.superColliderParser . Sc.alexScanTokens
+
 {- | Viewer for translator. Reads Sc expression, prints re-written Lisp expression.
 
 > rw = init . scToLispViewer False
@@ -180,9 +188,7 @@ scToLispViewer dfn = scToRenamedLispViewer dfn []
 -}
 scToRenamedLispViewer :: Bool -> [(String, String)] -> String -> String
 scToRenamedLispViewer dfn tbl =
-  let f = if dfn then scInitializerDefinition_to_exp_seq else return . scInitializerDefinition_to_let_exp
-  in unlines .
-     map (L.sexp_show . exp_to_lisp . exp_rename tbl) .
-     f .
-     Sc.superColliderParser .
-     Sc.alexScanTokens
+  unlines .
+  map (L.sexp_show . exp_to_lisp . exp_rename tbl) .
+  scToExp dfn
+
