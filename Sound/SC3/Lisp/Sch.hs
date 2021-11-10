@@ -1,4 +1,6 @@
--- | .sch is scheme (or a scheme-like language) written using Haskell notation.
+{- | .sch is scheme (or a scheme-like language) written using Haskell notation.
+     For parsers see "Sound.SC3.Lisp.Haskell".
+-}
 module Sound.SC3.Lisp.Sch where
 
 import Data.Bifunctor {- base -}
@@ -23,6 +25,7 @@ data Exp
   | Let [(Exp, Exp)] Exp
   | Tuple [Exp]
   | Define Exp Exp
+  deriving (Eq, Show)
 
 -- | Apply f at each node of Exp.
 exp_map :: (Exp -> Exp) -> Exp -> Exp
@@ -51,6 +54,22 @@ is_thunk e = case e of {Lambda [] _ -> True; _ -> False}
 -- | Unpack symbol.
 exp_symbol :: Exp -> String
 exp_symbol e = case e of {Symbol x -> x; _ -> error "exp_symbol"}
+
+{- | The Begin node is used to translate do notation sequences.
+     This function rewrites a >> sequence to Begin, else it is identity.
+     It makes "p >> q >> r" have the same Exp form as "do {p; q; r}".
+-}
+exp_seq_to_begin :: Exp -> Exp
+exp_seq_to_begin e =
+  let to_seq x =
+        case x of
+          App (Symbol ">>") [p, q] -> p : to_seq q
+          Begin p -> p
+          _ -> [x]
+  in case to_seq e of
+       [] -> error "exp_seq_to_begin: empty sequence?"
+       [p] -> p
+       r -> Begin r
 
 -- * Renaming
 

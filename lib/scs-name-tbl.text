@@ -5,3 +5,5 @@
 % mod
 ** pow
 if ifThenElse
+< lt
+> gt
