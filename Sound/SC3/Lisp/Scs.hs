@@ -1,4 +1,6 @@
--- | .scs is scheme (or a scheme-like language) written using C-Smalltalk (a subset of SuperCollider) notation.
+{- | .scs is scheme (or a scheme-like language) written using C-Smalltalk (a subset of SuperCollider) notation.
+     For parsers see "Sound.SC3.Lisp.SuperCollider".
+-}
 module Sound.SC3.Lisp.Scs where
 
 import Data.Bifunctor {- base -}
@@ -25,6 +27,13 @@ data Exp
   | Define Name Exp
   | Nil
   deriving (Eq, Show)
+
+-- | Translate Seq sequence to a list, else return singleton list of Exp.
+exp_seq_to_list :: Exp -> [Exp]
+exp_seq_to_list e =
+  case e of
+    Seq p q -> p : exp_seq_to_list q
+    _ -> [e]
 
 -- | Apply f at each node of Exp.
 exp_map :: (Exp -> Exp) -> Exp -> Exp
