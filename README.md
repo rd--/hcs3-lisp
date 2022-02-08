@@ -272,4 +272,4 @@ initial announcement:
 [gmane](http://article.gmane.org/gmane.comp.lang.haskell.art/1026)
 -->
 
-© [rohan drape](http://rohandrape.net/), 2014-2021, [gpl](http://gnu.org/copyleft/).
+© [rohan drape](http://rohandrape.net/), 2014-2022, [gpl](http://gnu.org/copyleft/).

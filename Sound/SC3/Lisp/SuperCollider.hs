@@ -103,7 +103,7 @@ scPrimary_to_exp x =
 
 -- | Translate as let expression.  Alternately could translate as Seq of Set.
 scInitializerDefinition_to_let_exp :: Sc.ScInitializerDefinition -> Exp
-scInitializerDefinition_to_let_exp (Sc.ScInitializerDefinition tmp stm) =
+scInitializerDefinition_to_let_exp (Sc.ScInitializerDefinition _cmt tmp stm) =
   let binder (p, q) = (p, maybe Nil scBasicExpression_to_exp q)
       tmpSeq = concatMap (map binder) (fromMaybe [] tmp)
       stmExp = maybe Nil scStatements_to_exp stm
@@ -111,7 +111,7 @@ scInitializerDefinition_to_let_exp (Sc.ScInitializerDefinition tmp stm) =
 
 -- | Translate as definition sequence with perhaps a subsequent program.
 scInitializerDefinition_to_exp_seq :: Sc.ScInitializerDefinition -> [Exp]
-scInitializerDefinition_to_exp_seq (Sc.ScInitializerDefinition tmp stm) =
+scInitializerDefinition_to_exp_seq (Sc.ScInitializerDefinition _cmt tmp stm) =
   let binder (p, q) = Define p (maybe Nil scBasicExpression_to_exp q)
       tmpSeq = concatMap (map binder) (fromMaybe [] tmp)
       stmExp = maybe [] (return . scStatements_to_exp) stm
