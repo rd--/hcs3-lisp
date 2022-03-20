@@ -34,13 +34,13 @@ s_word8 l =
 s_bytevector_to_vector :: Lazy.ByteString -> S.LispVal
 s_bytevector_to_vector = s_list_to_vector . map (S.Number . fromIntegral) . Lazy.unpack
 
-list_to_midi :: [Word8] -> MIDI
+list_to_midi :: [Word8] -> MidiData
 list_to_midi l =
   case l of
-    [a,b,c,d] -> MIDI a b c d
+    [a,b,c,d] -> MidiData a b c d
     _ -> error "list_to_midi"
 
-bytestring_to_midi :: Strict.ByteString -> MIDI
+bytestring_to_midi :: Strict.ByteString -> MidiData
 bytestring_to_midi x =
   if Strict.length x == 4
   then list_to_midi (Strict.unpack x)
@@ -48,9 +48,9 @@ bytestring_to_midi x =
 
 -- * TO-LISP
 
--- | 'MIDI' to (midi . #(i j k l))
-midi_to_lisp :: Bool -> MIDI -> S.LispVal
-midi_to_lisp u8 (MIDI m1 m2 m3 m4) =
+-- | 'MidiData' to (midi . #(i j k l))
+midi_to_lisp :: Bool -> MidiData -> S.LispVal
+midi_to_lisp u8 (MidiData m1 m2 m3 m4) =
   let v = if u8
           then S.ByteVector (Lazy.toStrict (Lazy.pack [m1,m2,m3,m4]))
           else s_list_to_vector (map (S.Number . fromIntegral) [m1,m2,m3,m4])
@@ -74,7 +74,7 @@ datum_to_lisp u8 d =
     Int64 x -> S.Number (fromIntegral x)
     Float x -> S.Float (realToFrac x)
     Double x -> S.Float x
-    ASCII_String x -> S.String (ascii_to_string x)
+    Ascii_String x -> S.String (ascii_to_string x)
     Blob x -> (if u8 then S.ByteVector . Lazy.toStrict else s_bytevector_to_vector) x
     TimeStamp x -> s_cons (S.Atom "timestamp") (S.Float x)
     Midi x -> midi_to_lisp u8 x
