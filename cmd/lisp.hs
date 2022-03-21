@@ -8,7 +8,7 @@ import qualified Safe {- safe -}
 
 import qualified Control.Monad.Except as Except {- mtl -}
 
-import qualified Sound.OSC as Osc {- hosc -}
+import qualified Sound.Osc as Osc {- hosc -}
 
 import           Sound.SC3 {- hsc3 -}
 import qualified Sound.SC3.UGen.Plain as Plain {- hsc3 -}

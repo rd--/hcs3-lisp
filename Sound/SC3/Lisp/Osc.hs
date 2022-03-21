@@ -10,7 +10,7 @@ import qualified Data.ByteString.Lazy as Lazy {- bytestring -}
 import qualified Language.Scheme.Parser as S {- husk-scheme -}
 import qualified Language.Scheme.Types as S {- husk-scheme -}
 
-import Sound.OSC {- hosc -}
+import Sound.Osc {- hosc -}
 
 import qualified Sound.SC3.Lisp.Parse.Ethier as S {- hsc3-lisp -}
 
@@ -74,7 +74,7 @@ datum_to_lisp u8 d =
     Int64 x -> S.Number (fromIntegral x)
     Float x -> S.Float (realToFrac x)
     Double x -> S.Float x
-    Ascii_String x -> S.String (ascii_to_string x)
+    AsciiString x -> S.String (ascii_to_string x)
     Blob x -> (if u8 then S.ByteVector . Lazy.toStrict else s_bytevector_to_vector) x
     TimeStamp x -> s_cons (S.Atom "timestamp") (S.Float x)
     Midi x -> midi_to_lisp u8 x
@@ -144,7 +144,7 @@ lisp_is_bundle l =
     S.List (S.String "#bundle" : S.Float _ : m) -> all lisp_is_message m
     _ -> False
 
--- | Translate from s-expression 'S.LispVal' to OSC 'Packet'.
+-- | Translate from s-expression 'S.LispVal' to Osc 'Packet'.
 lisp_to_packet :: (Integer -> Datum,Double -> Datum) -> S.LispVal -> Packet
 lisp_to_packet opt l =
   if lisp_is_bundle l
@@ -153,7 +153,7 @@ lisp_to_packet opt l =
        then Packet_Message (lisp_to_message opt l)
        else error "lisp_to_packet"
 
--- | Translate OSC 'Packet' to 'S.LispVal'.
+-- | Translate Osc 'Packet' to 'S.LispVal'.
 packet_to_lisp :: (Bool, Bool) -> Packet -> S.LispVal
 packet_to_lisp opt pkt =
   case pkt of
