@@ -99,7 +99,7 @@ scPrimary_to_exp x =
     Sc.ScPrimaryBlock p -> scBlockBody_to_exp p
     Sc.ScPrimaryExpression p -> scExpression_to_exp p
     Sc.ScPrimaryArrayExpression p -> Array (map scBasicExpression_to_exp p)
-    Sc.ScPrimaryImplictMessageSend p q -> App (Symbol p) (map scBasicExpression_to_exp q)
+    Sc.ScPrimaryImplicitMessageSend p q -> App (Symbol p) (map scBasicExpression_to_exp q)
 
 -- | Translate as let expression.  Alternately could translate as Seq of Set.
 scInitializerDefinition_to_let_exp :: Sc.ScInitializerDefinition -> Exp
