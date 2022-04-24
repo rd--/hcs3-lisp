@@ -43,7 +43,7 @@ scBlockBody_to_exp :: Sc.ScBlockBody -> Exp
 scBlockBody_to_exp (Sc.ScBlockBody arg tmp stm) =
   let binder (p, q) = (p, maybe Nil scBasicExpression_to_exp q)
       body = Let (maybe [] (concatMap (map binder)) tmp) (maybe Nil scStatements_to_exp stm)
-  in Lambda (fromMaybe [] arg) body
+  in Lambda (map fst (fromMaybe [] arg)) body
 
 scExpression_to_exp :: Sc.ScExpression -> Exp
 scExpression_to_exp e =
@@ -51,15 +51,9 @@ scExpression_to_exp e =
     Sc.ScExprAssignment p q -> Set (Symbol p) (scExpression_to_exp q)
     Sc.ScExprBasic p -> scBasicExpression_to_exp p
 
-scKeywordArgument_to_exp :: Sc.ScKeywordArgument -> Exp
-scKeywordArgument_to_exp (Sc.ScKeywordArgument p q) =
-  case p of
-    Nothing -> scBasicExpression_to_exp q
-    Just _ -> error "keyword argument"
-
 -- | rcv.msg(arg) translates are (msg (rcv : arg)).
 scDotMessage_to_exp :: Exp -> Sc.ScDotMessage -> Exp
-scDotMessage_to_exp rcv (Sc.ScDotMessage msg arg) = App (Symbol msg) (rcv : map scKeywordArgument_to_exp arg)
+scDotMessage_to_exp rcv (Sc.ScDotMessage msg arg) = App (Symbol msg) (rcv : map scBasicExpression_to_exp arg)
 
 scDotMessages_to_exp :: Exp -> [Sc.ScDotMessage] -> Exp
 scDotMessages_to_exp rcv m =
@@ -99,6 +93,7 @@ scPrimary_to_exp x =
     Sc.ScPrimaryBlock p -> scBlockBody_to_exp p
     Sc.ScPrimaryExpression p -> scExpression_to_exp p
     Sc.ScPrimaryArrayExpression p -> Array (map scBasicExpression_to_exp p)
+    Sc.ScPrimaryDictionaryExpression _ -> error "scPrimary_to_exp: dictionary..."
     Sc.ScPrimaryImplicitMessageSend p q -> App (Symbol p) (map scBasicExpression_to_exp q)
 
 -- | Translate as let expression.  Alternately could translate as Seq of Set.
@@ -153,7 +148,7 @@ exp_to_lisp e =
 scToExp :: Bool -> String -> [Exp]
 scToExp dfn =
   let f = if dfn then scInitializerDefinition_to_exp_seq else return . scInitializerDefinition_to_let_exp
-  in f . Sc.superColliderParser . Sc.alexScanTokens
+  in f . Sc.superColliderParserInitializerDefinition . Sc.alexScanTokens
 
 {- | Viewer for translator. Reads Sc expression, prints re-written Lisp expression.
 
