@@ -36,6 +36,7 @@ library
                    mtl,
                    safe,
                    stsc3 == 0.20.*,
+                   stsc3-som == 0.20.*,
                    unix
   default-language:Haskell2010
   ghc-options:     -Wall -fno-warn-orphans -fwarn-tabs
@@ -59,7 +60,8 @@ executable hsc3-lisp
                    hsc3-lisp == 0.20.*,
                    hsc3-rw == 0.20.*,
                    mtl,
-                   safe
+                   safe,
+                   stsc3-som == 0.20.*
   hs-source-dirs:  cmd
   main-is:         lisp.hs
   ghc-options:     -Wall -fno-warn-orphans -fwarn-tabs

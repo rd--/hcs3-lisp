@@ -17,8 +17,10 @@ import System.Exit {- base -}
 import System.FilePath {- filepath -}
 import System.IO {- base -}
 
-import           Sound.SC3.Lisp.Env {- hsc3-lisp -}
-import           Sound.SC3.Lisp.Type {- hsc3-lisp -}
+import Interpreter.Som.Dict {- stsc3-som -}
+
+import Sound.SC3.Lisp.Env {- hsc3-lisp -}
+import Sound.SC3.Lisp.Type {- hsc3-lisp -}
 import qualified Sound.SC3.Lisp.Parse.Ethier as Parse {- hsc3-lisp -}
 
 -- * Expr

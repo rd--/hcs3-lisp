@@ -10,16 +10,18 @@ import qualified Control.Monad.Except as Except {- mtl -}
 
 import qualified Sound.Osc as Osc {- hosc -}
 
-import           Sound.SC3 {- hsc3 -}
+import Sound.SC3 {- hsc3 -}
 import qualified Sound.SC3.UGen.Plain as Plain {- hsc3 -}
 
 import qualified Sound.SC3.UGen.Protect as Protect {- hsc3-rw -}
 
 import qualified Sound.SC3.UGen.Dot as Dot {- hsc3-dot -}
 
+import qualified Interpreter.Som.Dict as Dict {- stsc3-som -}
+
 import qualified Sound.SC3.Lisp.Env as Env {- hsc3-lisp -}
-import           Sound.SC3.Lisp.Interpreter {- hsc3-lisp -}
-import           Sound.SC3.Lisp.Type {- hsc3-lisp -}
+import Sound.SC3.Lisp.Interpreter {- hsc3-lisp -}
+import Sound.SC3.Lisp.Type {- hsc3-lisp -}
 
 ugen_to_int :: String -> UGen -> Int
 ugen_to_int c u =
@@ -163,9 +165,9 @@ l_async_star c = expr_to_message c >>= \c' -> lift_io (withSC3 (void (async c'))
 l_send_star :: Expr UGen -> LispVM t
 l_send_star c = expr_to_message c >>= \c' -> lift_io (withSC3 (void (Osc.sendMessage c')))
 
-ugen_dict :: MonadIO m => m (Env.Dict String (Expr UGen))
+ugen_dict :: MonadIO m => m (Dict.Dict String (Expr UGen))
 ugen_dict =
-    Env.dictFromList
+    Dict.dictFromList
     [("number?",Fun l_is_number)
     ,("mce?",Fun l_is_mce)
     ,("string?",Fun (\c -> case c of {String _ -> l_true; _ -> l_false}))
