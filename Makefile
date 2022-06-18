@@ -5,7 +5,7 @@ mk-cmd:
 	(cd cmd ; make install)
 
 clean:
-	rm -Rf dist dist-newstyle *~
+	rm -Rf dist dist-newstyle cabal.project.local *~
 	(cd cmd; make clean)
 
 push-all:
