@@ -1,12 +1,12 @@
 -- | Lisp types
-module Sound.SC3.Lisp.Type where
+module Sound.Sc3.Lisp.Type where
 
 import Data.Maybe {- base -}
 
 import qualified Control.Monad.State as State {- mtl -}
 import qualified Control.Monad.Except as Except {- mtl -}
 
-import Sound.SC3.Lisp.Env {- hsc3-lisp -}
+import Sound.Sc3.Lisp.Env {- hsc3-lisp -}
 
 -- * Types
 

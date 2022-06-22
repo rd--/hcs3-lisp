@@ -40,16 +40,16 @@ library
                    unix
   default-language:Haskell2010
   ghc-options:     -Wall -fno-warn-orphans -fwarn-tabs
-  exposed-modules: Sound.SC3.Lisp.Env,
-                   Sound.SC3.Lisp.Haskell,
-                   Sound.SC3.Lisp.Interpreter,
-                   Sound.SC3.Lisp.NameTable,
-                   Sound.SC3.Lisp.Osc,
-                   Sound.SC3.Lisp.Parse.Ethier,
-                   Sound.SC3.Lisp.Sch,
-                   Sound.SC3.Lisp.Scs,
-                   Sound.SC3.Lisp.SuperCollider,
-                   Sound.SC3.Lisp.Type
+  exposed-modules: Sound.Sc3.Lisp.Env,
+                   Sound.Sc3.Lisp.Haskell,
+                   Sound.Sc3.Lisp.Interpreter,
+                   Sound.Sc3.Lisp.NameTable,
+                   Sound.Sc3.Lisp.Osc,
+                   Sound.Sc3.Lisp.Parse.Ethier,
+                   Sound.Sc3.Lisp.Sch,
+                   Sound.Sc3.Lisp.Scs,
+                   Sound.Sc3.Lisp.SuperCollider,
+                   Sound.Sc3.Lisp.Type
 
 executable hsc3-lisp
   build-depends:   base >= 4.8 && < 5,

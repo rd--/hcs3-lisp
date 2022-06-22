@@ -1,5 +1,5 @@
 -- | SExp parser using atto-lisp (Schilling).
-module Sound.SC3.Lisp.Parse.Schilling where
+module Sound.Sc3.Lisp.Parse.Schilling where
 
 import Control.Monad.Except {- mtl -}
 
@@ -11,7 +11,7 @@ import qualified Data.Attoparsec.Number as A {- attoparsec -}
 
 import qualified Data.AttoLisp as L {- atto-lisp -}
 
-import Sound.SC3.Lisp.Type {- hsc3-lisp -}
+import Sound.Sc3.Lisp.Type {- hsc3-lisp -}
 
 {-
 parse_sexp ";lisp\n(1 -1) (0.1 -0.1) (\"x\" x) ((quote x) '()) (#t #f) (λ \"λ\") (x . y)"

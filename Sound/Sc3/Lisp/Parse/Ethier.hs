@@ -1,5 +1,5 @@
 -- | SExp parser using husk-scheme <https://github.com/justinethier/husk-scheme> (Ethier)
-module Sound.SC3.Lisp.Parse.Ethier where
+module Sound.Sc3.Lisp.Parse.Ethier where
 
 import qualified Numeric {- base -}
 
@@ -9,7 +9,7 @@ import qualified Data.ByteString as B {- bytestring -}
 import qualified Language.Scheme.Parser as S {- husk-scheme -}
 import qualified Language.Scheme.Types as S {- husk-scheme -}
 
-import qualified Sound.SC3.Lisp.Type as L {- hsc3-lisp -}
+import qualified Sound.Sc3.Lisp.Type as L {- hsc3-lisp -}
 
 -- | S-expression
 type SExp = S.LispVal

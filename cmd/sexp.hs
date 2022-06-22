@@ -1,8 +1,8 @@
 import qualified Music.Theory.Opt as Opt {- hmt-base -}
 
-import qualified Sound.SC3.Lisp.Haskell as Hs {- hsc3-lisp -}
-import qualified Sound.SC3.Lisp.NameTable as Tbl {- hsc3-lisp -}
-import qualified Sound.SC3.Lisp.SuperCollider as Sc {- hsc3-lisp -}
+import qualified Sound.Sc3.Lisp.Haskell as Hs {- hsc3-lisp -}
+import qualified Sound.Sc3.Lisp.NameTable as Tbl {- hsc3-lisp -}
+import qualified Sound.Sc3.Lisp.SuperCollider as Sc {- hsc3-lisp -}
 
 opt :: [Opt.OptUsr]
 opt =

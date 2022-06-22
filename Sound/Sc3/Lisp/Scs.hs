@@ -1,7 +1,7 @@
 {- | .scs is scheme (or a scheme-like language) written using C-Smalltalk (a subset of SuperCollider) notation.
-     For parsers see "Sound.SC3.Lisp.SuperCollider".
+     For parsers see "Sound.Sc3.Lisp.SuperCollider".
 -}
-module Sound.SC3.Lisp.Scs where
+module Sound.Sc3.Lisp.Scs where
 
 import Data.Bifunctor {- base -}
 import Data.Maybe {- base -}

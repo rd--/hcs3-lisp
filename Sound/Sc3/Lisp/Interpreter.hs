@@ -5,7 +5,7 @@ NOTE: the primitive lambda form is monadic, ie. λx → y
 For parsers that allow unicode (ie. Ethier) the primitive lambda can be written λ
 
 -}
-module Sound.SC3.Lisp.Interpreter where
+module Sound.Sc3.Lisp.Interpreter where
 
 import Control.Concurrent {- base -}
 import Control.Monad.State as State {- mtl -}
@@ -19,9 +19,9 @@ import System.IO {- base -}
 
 import Interpreter.Som.Dict {- stsc3-som -}
 
-import Sound.SC3.Lisp.Env {- hsc3-lisp -}
-import Sound.SC3.Lisp.Type {- hsc3-lisp -}
-import qualified Sound.SC3.Lisp.Parse.Ethier as Parse {- hsc3-lisp -}
+import Sound.Sc3.Lisp.Env {- hsc3-lisp -}
+import Sound.Sc3.Lisp.Type {- hsc3-lisp -}
+import qualified Sound.Sc3.Lisp.Parse.Ethier as Parse {- hsc3-lisp -}
 
 -- * Expr
 
@@ -183,9 +183,9 @@ load c = do
 
 load_files :: Lisp_Ty t => [String] -> ExprVM t ()
 load_files nm = do
-  r <- liftIO (lookupEnv "HSC3_LISP_DIR")
+  r <- liftIO (lookupEnv "HSc3_LISP_DIR")
   case r of
-    Nothing -> throwError "HSC3_LISP_DIR not set"
+    Nothing -> throwError "HSc3_LISP_DIR not set"
     Just dir -> mapM_ load (map (String . (dir </>)) nm)
 
 -- * CORE

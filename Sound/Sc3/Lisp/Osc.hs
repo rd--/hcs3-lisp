@@ -1,5 +1,5 @@
 -- | Translation between Open Sound Control packets and S-Expressions (ie. packet_to_lisp and lisp_to_packet).
-module Sound.SC3.Lisp.Osc where
+module Sound.Sc3.Lisp.Osc where
 
 import Data.Word {- base -}
 
@@ -12,7 +12,7 @@ import qualified Language.Scheme.Types as S {- husk-scheme -}
 
 import Sound.Osc {- hosc -}
 
-import qualified Sound.SC3.Lisp.Parse.Ethier as S {- hsc3-lisp -}
+import qualified Sound.Sc3.Lisp.Parse.Ethier as S {- hsc3-lisp -}
 
 -- * UTIL
 

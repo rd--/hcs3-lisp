@@ -1,7 +1,7 @@
 {- | .sch is scheme (or a scheme-like language) written using Haskell notation.
-     For parsers see "Sound.SC3.Lisp.Haskell".
+     For parsers see "Sound.Sc3.Lisp.Haskell".
 -}
-module Sound.SC3.Lisp.Sch where
+module Sound.Sc3.Lisp.Sch where
 
 import Data.Bifunctor {- base -}
 import Data.Maybe {- base -}

@@ -1,5 +1,5 @@
 -- | SExp parser using sexpresso (Archambault).
-module Sound.SC3.Lisp.Parse.Archambault where
+module Sound.Sc3.Lisp.Parse.Archambault where
 
 import Data.Ratio {- base -}
 import Data.Void {- base -}
@@ -16,7 +16,7 @@ import qualified Data.SExpresso.Parse as S {- sexpresso -}
 import qualified Data.SExpresso.SExpr as S {- sexpresso -}
 import qualified Data.SExpresso.Language.SchemeR5RS as S {- sexpresso -}
 
-import Sound.SC3.Lisp.Type {- hsc3-lisp -}
+import Sound.Sc3.Lisp.Type {- hsc3-lisp -}
 
 type SExp = S.Datum -- S.SExpr S.SExprType S.SchemeToken
 
