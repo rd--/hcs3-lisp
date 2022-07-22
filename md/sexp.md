@@ -1,6 +1,6 @@
 # sexp (October, 2014)
 
-Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) notation.
+Translate a subset of [haskell](http://haskell.org) into `s-expression` (Lisp) notation.
 
 - comments, `import` statements, type signatures and type annotations are discarded
 - function application
@@ -42,7 +42,7 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (LISP) n
 
 The immediate reason for this re-writer is to translate
 [SuperCollider](http://audiosynth.com) graphs written in haskell for
-[hsc3](?t=hsc3) into LISP graphs for [rsc3](?r=rsc3) and [hsc3-lisp](?t=hsc3-lisp).
+[hsc3](?t=hsc3) into Lisp graphs for [rsc3](?r=rsc3) and [hsc3-lisp](?t=hsc3-lisp).
 
 There is a table for renaming hsc3 graphs to rsc3 graphs at
 `hsc3-lisp/lib/hsc3-name-tbl.text`.  The haskell notation of the
@@ -58,7 +58,7 @@ $ r.hsc3-to-rsc3.sh < ~/sw/hsc3/Help/Graph/jmcc-analog-bubbles.hs
 $
 ~~~~
 
-The scheme and lisp `non-deterministic` UGen functions generate
+The scheme and lisp `non-deterministic` Ugen functions generate
 identifiers internally, so the written identifiers are removed by a
 post-processor, for instance `sed` or `awk`:
 
