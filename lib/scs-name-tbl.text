@@ -1,9 +1,9 @@
-+ add
-- sub
-* mul
-/ fdiv
-% mod
-** pow
++ Add
+- Sub
+* Mul
+/ Fdiv
+% Mod
+** Pow
 if ifThenElse
-< lt
-> gt
+< Lt
+> Gt
