@@ -7,3 +7,12 @@
 if ifThenElse
 < Lt
 > Gt
+clip2 Clip2
+distort Distort
+floor Floor
+max Max
+min Min
+choose listChoose
+sum Mix
+rand s:rand
+rand2 s:rand2
