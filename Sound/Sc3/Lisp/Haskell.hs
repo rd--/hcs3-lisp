@@ -344,7 +344,7 @@ sch_let_to_lisp d x =
   then sch_to_lisp x
   else if all (Sch.is_symbol . fst) d
        then S.List
-            [S.Atom (if length d == 1 then "let" else "let*")
+            [S.Atom "letrec" -- (if length d == 1 then "let" else "let*")
             ,S.List (map (\(lhs,rhs) -> S.List [sch_to_lisp lhs, sch_to_lisp rhs]) d), sch_to_lisp x]
        else sch_let_to_lisp_pat d x
 

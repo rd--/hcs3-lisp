@@ -9,18 +9,18 @@ Translate a subset of [haskell](http://haskell.org) into `s-expression` (Lisp) n
   + `f ()` is written `(f)`
 - infix operations `x + y` are written `(+ x y)`
 - local bindings
-  + `let x = i in x` is written `(let ((x i)) x)`
-  + `let {x = i; y = j} in x + y` is written `(let* ((x i) (y j)) (+ x y))`
+  + `let x = i in x` is written `(letrec ((x i)) x)`
+  + `let {x = i; y = j} in x + y` is written `(letrec ((x i) (y j)) (+ x y))`
   + `let [i,j] = p in (j,i)` is written \
-    `(let* ((_rhs p)) (i (listRef _rhs 0)) (j (listRef _rhs 1))) (vector j i))`
+    `(letrec ((_rhs p)) (i (listRef _rhs 0)) (j (listRef _rhs 1))) (vector j i))`
   + `let (i,j) = p in (j,i)` is written
-    `(let* ((_rhs p)) (i (vectorRef _rhs 0)) (j (vectorRef _rhs 1))) (vector j i))`
+    `(letrec ((_rhs p)) (i (vectorRef _rhs 0)) (j (vectorRef _rhs 1))) (vector j i))`
 - functions
   + `\() -> f ()` is written `(lambda () (f))`
   + `\x -> x * x` is written `(lambda (x) (* x x))`
   + `\x y -> x * x + y * y` is written `(lambda (x y) (+ (* x x) (* y y)))`
   + `\(p, q) r -> p + q * r` is written
-    `(lambda (_p1 _p2) (let* ((_rhs _p1) (p (vectorRef _rhs 0)) (q (vectorRef _rhs 1))) (let ((r _p2)) (+ p (* q r)))))`
+    `(lambda (_p1 _p2) (letrec ((_rhs _p1) (p (vectorRef _rhs 0)) (q (vectorRef _rhs 1))) (letrec ((r _p2)) (+ p (* q r)))))`
 - lists `[1, 2, 3]` are written `(list 1 2 3)`
 - products `(1, 2.0,' 3', "4")` are written `(vector 1 2.0 \#3 "4")`
 - ranges `[x .. y]` are written `(enumFromTo x y)`
@@ -51,9 +51,10 @@ re-written as:
 
 ~~~~
 $ r.hsc3-to-rsc3.sh < ~/sw/hsc3/Help/Graph/jmcc-analog-bubbles.hs
-(let* ((o (Add (Mul (LFSaw kr (Mce2 8 7.23) 0) 3) 80))
-       (f (Add (Mul (LFSaw kr 0.4 0) 24) o))
-       (s (Mul (SinOsc ar (MIDICPS f) 0) 0.04)))
+(letrec
+    ((o (Add (Mul (LFSaw kr (Mce2 8 7.23) 0) 3) 80))
+     (f (Add (Mul (LFSaw kr 0.4 0) 24) o))
+     (s (Mul (SinOsc ar (MIDICPS f) 0) 0.04)))
   (CombN s 0.2 0.2 4))
 $
 ~~~~

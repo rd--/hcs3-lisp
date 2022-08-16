@@ -1,10 +1,10 @@
 1. core-name-tbl.text ; table for translating the .sch files at sw/rhs ;
-   names where either the left hand side is problematic in R6RS scheme or the right hand side is problematic in haskell
+   names where either the left hand side is problematic in scheme or the right hand side is problematic in haskell
 
-2. sch-name-tbl.text ; table for translating the .sch files at sw/rsc3 and sw/rsc3-arf
+2. sch-name-tbl.text ; table for translating the .sch files at sw/rsc3
 
 Notes:
 
-Predicate names that exist at Haskell without an `is` prefix have that name, i.e. null, even &etc.
+Predicates have an _is_ prefix in places of the _?_ suffix, i.e. isPair, isList &etc.
 
-Otherwise an `is` prefix is preferred, i.e. isPair, isList &etc.
+Predicate names that exist at Haskell without an `is` prefix also have that name, i.e. null, even &etc.

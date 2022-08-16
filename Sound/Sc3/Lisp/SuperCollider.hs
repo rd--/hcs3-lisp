@@ -119,7 +119,7 @@ let_to_lisp d x =
   if null d
   then exp_to_lisp x
   else S.List
-       [S.Atom (if length d == 1 then "let" else "let*")
+       [S.Atom (if length d == 1 then "let" else "let*") -- "letrec"
        ,S.List (map (\(lhs, rhs) -> S.List [S.Atom lhs, exp_to_lisp rhs]) d)
        ,exp_to_lisp x]
 
