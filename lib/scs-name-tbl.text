@@ -22,4 +22,5 @@ midiCps MidiCps
 min Min
 negated Negated
 roundTo RoundTo
+softClip SoftClip
 splay2 Splay2
