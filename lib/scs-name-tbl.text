@@ -13,6 +13,7 @@ sum Mix
 abs Abs
 biLinRand BiLinRand
 clip2 Clip2
+cos Cos
 distort Distort
 exp Exp
 floor Floor
@@ -24,3 +25,5 @@ negated Negated
 roundTo RoundTo
 softClip SoftClip
 splay2 Splay2
+squared Squared
+tanh Tanh
