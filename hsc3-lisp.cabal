@@ -1,6 +1,6 @@
 Cabal-Version:     2.4
 Name:              hsc3-lisp
-Version:           0.20
+Version:           0.21
 Synopsis:          Lisp Supercollider
 Description:       Lisp Supercollider
 License:           GPL-3.0-only
@@ -10,7 +10,7 @@ Author:            Rohan Drape
 Maintainer:        rd@rohandrape.net
 Stability:         Experimental
 Homepage:          http://rohandrape.net/t/hsc3-lisp
-Tested-With:       GHC == 9.4.2
+Tested-With:       GHC == 9.4.3
 Build-Type:        Simple
 
 Data-files:        README.md
@@ -29,14 +29,14 @@ library
                    hashable,
                    haskell-src-exts,
                    husk-scheme >= 3.19.4,
-                   hosc == 0.20.*,
-                   hsc3 == 0.20.*,
-                   hsc3-dot == 0.20.*,
-                   hsc3-rw == 0.20.*,
+                   hosc == 0.21.*,
+                   hsc3 == 0.21.*,
+                   hsc3-dot == 0.21.*,
+                   hsc3-rw == 0.21.*,
                    mtl,
                    safe,
-                   stsc3 == 0.20.*,
-                   stsc3-som == 0.20.*,
+                   stsc3 == 0.21.*,
+                   stsc3-som == 0.21.*,
                    unix
   default-language:Haskell2010
   ghc-options:     -Wall -fno-warn-orphans -fwarn-tabs
@@ -54,14 +54,14 @@ library
 executable hsc3-lisp
   build-depends:   base >= 4.8 && < 5,
                    containers,
-                   hosc == 0.20.*,
-                   hsc3 == 0.20.*,
-                   hsc3-dot == 0.20.*,
-                   hsc3-lisp == 0.20.*,
-                   hsc3-rw == 0.20.*,
+                   hosc == 0.21.*,
+                   hsc3 == 0.21.*,
+                   hsc3-dot == 0.21.*,
+                   hsc3-lisp == 0.21.*,
+                   hsc3-rw == 0.21.*,
                    mtl,
                    safe,
-                   stsc3-som == 0.20.*
+                   stsc3-som == 0.21.*
   hs-source-dirs:  cmd
   main-is:         lisp.hs
   ghc-options:     -Wall -fno-warn-orphans -fwarn-tabs
@@ -69,8 +69,8 @@ executable hsc3-lisp
 
 executable hsc3-sexp
   build-depends:   base >= 4.8 && < 5,
-                   hmt-base == 0.20.*,
-                   hsc3-lisp == 0.20.*
+                   hmt-base == 0.21.*,
+                   hsc3-lisp == 0.21.*
   hs-source-dirs:  cmd
   main-is:         sexp.hs
   ghc-options:     -Wall -fno-warn-orphans -fwarn-tabs
