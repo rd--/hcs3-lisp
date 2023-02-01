@@ -183,9 +183,9 @@ load c = do
 
 load_files :: Lisp_Ty t => [String] -> ExprVM t ()
 load_files nm = do
-  r <- liftIO (lookupEnv "HSc3_LISP_DIR")
+  r <- liftIO (lookupEnv "HSC3_LISP_DIR")
   case r of
-    Nothing -> throwError "HSc3_LISP_DIR not set"
+    Nothing -> throwError "HSC3_LISP_DIR not set"
     Just dir -> mapM_ load (map (String . (dir </>)) nm)
 
 -- * CORE

@@ -398,7 +398,7 @@ set! ; error
     (print 'after)))
 
 (define randomSine (Mul (SinOsc ar (Rand 220 440) 9) 0.01))
-(dt-rescheduler (lambda (t) (begin (audition (Out 0 randomSine)) 1)) (utcr))
+(deltaTimeRescheduler (lambda (t) (begin (audition (Out 0 randomSine)) 1)) (utcr))
 
 ; IO
 ; --
@@ -427,7 +427,7 @@ three ; 3
 ; Floating Point
 ; --------------
 
-(map Sin (enum-from-then-to 0 0.05 pi))
+(map Sin (enumFromThenTo 0 0.05 pi))
 
 ; SICP
 ; ----
@@ -530,7 +530,7 @@ three ; 3
 ; https://oeis.org/A000045
 
 (define fib (lambda (x) (if (<= x 1) 1 (+ (fib (- x 1)) (fib (- x 2))))))
-(map fib (enum-from-to 0 19)) ; (1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765)
+(map fib (enumFromTo 0 19)) ; (1 1 2 3 5 8 13 21 34 55 89 144 233 377 610 987 1597 2584 4181 6765)
 
 ; Interpreter
 ; -----------
