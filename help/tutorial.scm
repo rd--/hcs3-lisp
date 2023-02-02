@@ -376,7 +376,7 @@ set! ; error
 
 (number? 1) ; #t
 (number? 'one) ; #f
-(number? (SinOsc kr 5 0)) ; #f
+(number? (SinOsc 5 0)) ; #f
 
 ; Random
 ; ------
@@ -397,7 +397,7 @@ set! ; error
     (pauseThreadUntil (+ t 1))
     (print 'after)))
 
-(define randomSine (Mul (SinOsc ar (Rand 220 440) 9) 0.01))
+(define randomSine (Mul (SinOsc (Rand 220 440) 9) 0.01))
 (deltaTimeRescheduler (lambda (t) (begin (audition (Out 0 randomSine)) 1)) (utcr))
 
 ; IO
@@ -447,16 +447,16 @@ three ; 3
 
 (reset nil)
 (reset)
-(draw (Mul (SinOsc ar 440 0) 0.1))
-(draw (Mul (SinOsc ar (MouseX kr 440 880 0 0.1) 0) 0.1))
-(draw (Mul (HPZ1 (WhiteNoise ar)) 0.1))
-(display-server-status nil)
-(audition (Out 0 (Mul (SinOsc ar 440 0) 0.1)))
+(draw (Mul (SinOsc 440 0) 0.1))
+(draw (Mul (SinOsc (MouseX 440 880 0 0.1) 0) 0.1))
+(draw (Mul (HPZ1 (WhiteNoise)) 0.1))
+(displayServerStatus nil)
+(audition (Out 0 (Mul (SinOsc 440 0) 0.1)))
 
 ; Case Sensitivity
 ; ----------------
 
-(audition (Out 0 (Mul (SinOsc ar 440 0) 0.1)))
+(audition (Out 0 (Mul (SinOsc 440 0) 0.1)))
 
 ; UID
 ; ---

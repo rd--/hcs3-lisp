@@ -1,3 +1,17 @@
 ; unimplemented
 (define even? (lambda (x) (error "even?")))
 (define odd? (lambda (x) (error "odd?")))
+
+(define head car)
+(define not (lambda (x) (if (equal? x #f) #t #f)))
+(define max (lambda (x y) (if (> x y) x y)))
+(define min (lambda (x y) (if (< x y) x y)))
+(define append (lambda (a b) (if (null? a) b (cons (car a) (append (cdr a) b)))))
+(define at (lambda (l n) (if (equal? n 0) (car l) (at (cdr l) (- n 1)))))
+(define find (lambda (f l) (if (null? l) #f (if (f (car l)) (id (car l)) (find f (cdr l))))))
+(define length (lambda (l) (if (null? l) 0 (+ 1 (length (cdr l))))))
+(define lookup (lambda (x l) (if (null? l) #f (if (equal? (fst (car l)) x) (snd (car l)) (lookup x (cdr l))))))
+(define map (lambda (f l) (if (null? l) (quote ()) (cons (f (car l)) (map f (cdr l))))))
+(define reverse (lambda (l) (foldl (flip cons) (quote ()) l)))
+(define tail cdr)
+(define zipWith (lambda (f a b) (if (or (null? a) (null? b)) (quote ()) (cons (f (head a) (head b)) (zipWith f (tail a) (tail b))))))

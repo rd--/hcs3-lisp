@@ -1,11 +1,13 @@
 import qualified Data.Map as M {- containers -}
 import Data.Ratio {- base -}
 
-import Sound.SC3.Lisp.Env {- hsc3-lisp -}
-import Sound.SC3.Lisp.Interpreter {- hsc3-lisp -}
-import Sound.SC3.Lisp.Type {- hsc3-lisp -}
+import qualified Interpreter.Som.Dict as Dict {- stsc3-som -}
 
--- * RATIONAL
+import qualified Sound.Sc3.Lisp.Env as Env {- hsc3-lisp -}
+import Sound.Sc3.Lisp.Interpreter {- hsc3-lisp -}
+import Sound.Sc3.Lisp.Type {- hsc3-lisp -}
+
+-- * Rational
 
 {-
 import Safe {- safe -}
@@ -36,34 +38,34 @@ rat_pp r =
         d = denominator r
     in if d == 1 then show n else concat [show n,"/",show d]
 
--- * LISP-TY
+-- * Lisp-Ty
 
 instance (Show a,Integral a) => Lisp_Ty (Ratio a) where
     ty_show = rat_pp
     ty_to_int = floor
     ty_from_bool t = if t then 1 else 0
 
--- * NUM / FLOAT
+-- * Num / Float
 
 (.:) :: (Functor f, Functor g) => (a -> b) -> f (g a) -> f (g b)
 (.:) = fmap . fmap
 
-map_atom :: Lisp_Ty a => (a -> a) -> Cell a -> Cell a
+map_atom :: Lisp_Ty a => (a -> a) -> Expr a -> Expr a
 map_atom f c = maybe (Error ("NOT-ATOM: " ++ show c)) (Atom . f) (atom c)
 
-lift_uop :: Lisp_Ty a => (a -> a) -> Cell a
+lift_uop :: Lisp_Ty a => (a -> a) -> Expr a
 lift_uop f = Fun (map_atom f)
 
-lift_binop :: Lisp_Ty a => (a -> a -> a) -> Cell a
+lift_binop :: Lisp_Ty a => (a -> a -> a) -> Expr a
 lift_binop f =
     let g p q = case (p,q) of
                   (Just p',Just q') -> Atom (f p' q')
                   _ -> Error "BINOP: NOT-ATOM?"
     in Fun (\lhs -> Fun (\rhs -> g (atom lhs) (atom rhs)))
 
-rat_dict :: Lisp_Ty a => Dict (Cell a)
+rat_dict :: IO (Dict.Dict String (Expr Rational))
 rat_dict =
-    M.fromList
+    Dict.dictFromList
     [("+",lift_binop (+))
     ,("*",lift_binop (*))
     ,("-",lift_binop (-))
@@ -86,5 +88,5 @@ float_dict =
 main :: IO ()
 main = do
   putStrLn "RAT-LISP"
-  env <- env_gen_toplevel (M.union core_dict rat_dict) :: IO (Env (Cell Rational))
-  repl_init env (load_files ["stdlib.lisp","rhs.lisp"])
+  env <- sequence [core_dict,rat_dict] >>= Env.envNewFromList :: IO (Env.Env String (Expr Rational))
+  repl_init env (load_files ["stdlib.scm", "rhs.prereq.scm", "rhs.scm"])

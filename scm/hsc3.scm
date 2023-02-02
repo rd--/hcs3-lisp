@@ -39,14 +39,14 @@
 (define + Add)
 (define - Sub)
 (define * Mul)
-(define / FDiv)
+(define / Fdiv)
 (define % Mod)
-(define == EQ)
-(define /= NE)
-(define < LT)
-(define > GT)
-(define <= LE)
-(define >= GE)
+(define == Eq)
+(define /= Ne)
+(define < Lt)
+(define > Gt)
+(define <= Le)
+(define >= Ge)
 (define ** Pow)
 
 ; ord
@@ -59,7 +59,7 @@
 (define reset reset*)
 (define async (lambda (_ msg) (async* msg)))
 (define send (lambda (_ msg) (send* msg)))
-(define withSC3 (lambda (f) (f nil)))
+(define withSc3 (lambda (f) (f nil)))
 
 ; dot
 (define draw show-graph)

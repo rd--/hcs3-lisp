@@ -104,6 +104,15 @@ l_is_number c =
       Atom u -> if isConstant u then l_true else l_false
       _ -> l_false
 
+l_is_integer :: Expr Ugen -> Expr Ugen
+l_is_integer c =
+    case c of
+      Atom u ->
+        case un_constant u of
+          Just k -> atom_from_bool (constantIsInteger k)
+          _ -> l_false
+      _ -> l_false
+
 l_is_mce :: Expr Ugen -> Expr Ugen
 l_is_mce c =
     case c of
@@ -169,6 +178,7 @@ ugen_dict :: MonadIO m => m (Dict.Dict String (Expr Ugen))
 ugen_dict =
     Dict.dictFromList
     [("number?",Fun l_is_number)
+    ,("exact?",Fun l_is_integer)
     ,("mce?",Fun l_is_mce)
     ,("string?",Fun (\c -> case c of {String _ -> l_true; _ -> l_false}))
     ,("symbol?",Fun (\c -> case c of {Symbol _ -> l_true; _ -> l_false}))

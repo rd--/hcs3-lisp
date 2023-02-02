@@ -1,6 +1,6 @@
 {- | Lisp interpreter.
 
-NOTE: the primitive lambda form is monadic, ie. λx → y
+Note: the primitive lambda form is monadic, ie. λx → y
 
 For parsers that allow unicode (ie. Ethier) the primitive lambda can be written λ
 
@@ -52,10 +52,13 @@ l_false = Atom (ty_from_bool False)
 l_true :: Lisp_Ty a => Expr a
 l_true = Atom (ty_from_bool True)
 
-l_equal :: Lisp_Ty a => Expr a -> Expr a
-l_equal lhs = Fun (\rhs -> if lhs == rhs then l_true else l_false)
+atom_from_bool :: Lisp_Ty a => Bool -> Expr a
+atom_from_bool x = if x then l_true else l_false
 
--- * EVAL / APPLY
+l_equal :: Lisp_Ty a => Expr a -> Expr a
+l_equal lhs = Fun (\rhs -> atom_from_bool (lhs == rhs))
+
+-- * Eval / Apply
 
 -- | Currently the *trace-level* is hard-coded.  This should be read from the environment.
 trace :: Show t => Trace_Level -> String -> t -> EnvMonad IO String a ()
@@ -163,7 +166,7 @@ expand c = do
           _ -> l_mapM expand c
     _ -> return c
 
--- * LOAD
+-- * Load
 
 eval_str :: Lisp_Ty t => Trace_Level -> String -> ExprVM t [Expr t]
 eval_str lvl str = do
@@ -188,7 +191,7 @@ load_files nm = do
     Nothing -> throwError "HSC3_LISP_DIR not set"
     Just dir -> mapM_ load (map (String . (dir </>)) nm)
 
--- * CORE
+-- * Core
 
 l_write_char :: Lisp_Ty a => Expr a -> LispVM a
 l_write_char c = atom_err c >>= \a -> liftIO (putChar (toEnum (ty_to_int a)) >> return Nil)
@@ -244,7 +247,7 @@ core_dict =
     ,("write-string",Proc l_write_string)
     ]
 
--- * REPL
+-- * Repl
 
 get_sexp :: String -> Handle -> IO String
 get_sexp s h = do

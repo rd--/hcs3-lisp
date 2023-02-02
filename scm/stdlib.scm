@@ -105,6 +105,7 @@
         z
         (f (car l) (foldr f z (cdr l))))))
 
+; (list-rw '(list 1 2))
 (define list-rw
   (λ exp
      (let ((f (lambda (e r) (append (cons (quote cons) (cons e nil)) (cons r '())))))
