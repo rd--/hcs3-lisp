@@ -8,14 +8,16 @@ For parsers that allow unicode (ie. Ethier) the primitive lambda can be written 
 module Sound.Sc3.Lisp.Interpreter where
 
 import Control.Concurrent {- base -}
-import Control.Monad.State as State {- mtl -}
-import Control.Monad.Except as Except {- mtl -}
+import Control.Monad {- base -}
 import Data.Maybe {- base -}
 import System.Directory {- directory -}
 import System.Environment {- base -}
 import System.Exit {- base -}
 import System.FilePath {- filepath -}
 import System.IO {- base -}
+
+import Control.Monad.State as State {- mtl -}
+import Control.Monad.Except as Except {- mtl -}
 
 import Interpreter.Som.Dict {- stsc3-som -}
 
