@@ -1,4 +1,6 @@
--- | Translation between Open Sound Control packets and S-Expressions (ie. packet_to_lisp and lisp_to_packet).
+{- | Translation between Open Sound Control packets and S-Expressions
+(ie. packet_to_lisp and lisp_to_packet).
+-}
 module Sound.Sc3.Lisp.Osc where
 
 import Data.Word {- base -}
@@ -6,6 +8,7 @@ import Data.Word {- base -}
 import qualified Data.Array as Array {- array -}
 import qualified Data.ByteString as Strict {- bytestring -}
 import qualified Data.ByteString.Lazy as Lazy {- bytestring -}
+import qualified Safe {- safe -}
 
 import qualified Language.Scheme.Parser as S {- husk-scheme -}
 import qualified Language.Scheme.Types as S {- husk-scheme -}
@@ -14,7 +17,7 @@ import Sound.Osc {- hosc -}
 
 import qualified Sound.Sc3.Lisp.Parse.Ethier as S {- hsc3-lisp -}
 
--- * UTIL
+-- * Util
 
 -- | cons p q
 s_cons :: S.LispVal -> S.LispVal -> S.LispVal
@@ -46,7 +49,7 @@ bytestring_to_midi x =
   then list_to_midi (Strict.unpack x)
   else error "bytevector_to_midi"
 
--- * TO-LISP
+-- * To-Lisp
 
 -- | 'MidiData' to (midi . #(i j k l))
 midi_to_lisp :: Bool -> MidiData -> S.LispVal
@@ -59,13 +62,15 @@ midi_to_lisp u8 (MidiData m1 m2 m3 m4) =
 {- | Convert 'Datum' to 'S.LispVal'.
      If /u8/ is 'True' then encode 'Blob' and 'Midi' data using byte-vectors, else use vectors.
 
-> d = [int32 0,int64 0,float 0,double 0,TimeStamp 0]
-> l = map (datum_to_lisp undefined) d
-> map (lisp_to_datum (int32,float)) l == [int32 0,int32 0,float 0,float 0,TimeStamp 0]
+>>> let d = [int32 0,int64 0,float 0,double 0,TimeStamp 0]
+>>> let l = map (datum_to_lisp undefined) d
+>>> map (lisp_to_datum (int32,float)) l == [int32 0,int32 0,float 0,float 0,TimeStamp 0]
+True
 
-> d = [string "str",blob [0,1,2],midi (0,1,2,3)]
-> l = map (datum_to_lisp False) d
-> map (lisp_to_datum (int32,float)) l == d
+>>> let d = [string "str",blob [0,1,2],midi (0,1,2,3)]
+>>> let l = map (datum_to_lisp False) d
+>>> map (lisp_to_datum (int32,float)) l == d
+True
 -}
 datum_to_lisp :: Bool -> Datum -> S.LispVal
 datum_to_lisp u8 d =
@@ -88,7 +93,7 @@ message_to_lisp (ty,u8) (Message a d) =
 bundle_to_lisp :: (Bool,Bool) -> Bundle Message -> S.LispVal
 bundle_to_lisp opt (Bundle t m) = S.List (S.String "#bundle" : S.Float t : map (message_to_lisp opt) m)
 
--- * FROM-LISP
+-- * From-Lisp
 
 -- | Convert 'S.LispVal' to 'Datum' given functions to determine encodings for integers and floats.
 lisp_to_datum :: (Integer -> Datum,Double -> Datum) -> S.LispVal -> Datum
@@ -106,9 +111,10 @@ lisp_to_datum (i,f) l =
 
 {- | Convert 'S.LispVal' to 'Message', inverse of 'message_to_lisp'
 
-> m = Message "/m" [int32 0,float 1,blob [1,2,3],midi (1,2,3,4)]
-> l = message_to_lisp (False,False) m
-> lisp_to_message (int32,float) l == m
+>>> let m = Message "/m" [int32 0,float 1,blob [1,2,3],midi (1,2,3,4)]
+>>> let l = message_to_lisp (False,False) m
+>>> lisp_to_message (int32,float) l == m
+True
 -}
 lisp_to_message :: (Integer -> Datum,Double -> Datum) -> S.LispVal -> Message
 lisp_to_message opt l =
@@ -119,9 +125,13 @@ lisp_to_message opt l =
 
 {- | Convert 'S.LispVal' to 'Bundle', inverse of 'bundle_to_lisp'.
 
-> b = Bundle 0 [Message "/c_set" [Int32 0,Float 1],Message "/nil" []]
-> l = bundle_to_lisp (True,True) b
-> lisp_to_bundle (int32,float) l == b
+>>> let b = Bundle 0 [Message "/c_set" [Int32 0,Float 1],Message "/nil" []]
+>>> let l = bundle_to_lisp (True,True) b
+>>> lisp_to_bundle (int32,float) l == b
+True
+
+>>> l
+("#bundle" 0.0 (("/c_set" . ",if") 0 1.0) (("/nil" . ",")))
 -}
 lisp_to_bundle :: (Integer -> Datum,Double -> Datum) -> S.LispVal -> Bundle Message
 lisp_to_bundle opt l =
@@ -133,8 +143,10 @@ lisp_to_bundle opt l =
 lisp_is_message :: S.LispVal -> Bool
 lisp_is_message l =
   case l of
-    S.List (S.String ty : _) -> head ty == '/'
-    S.List (S.DottedList [S.String ty] (S.String sig) : _) -> head ty == '/' && head sig == ','
+    S.List (S.String ty : _) ->
+      Safe.headMay ty == Just '/'
+    S.List (S.DottedList [S.String ty] (S.String sig) : _) ->
+      Safe.headMay ty == Just '/' && Safe.headMay sig == Just ','
     _ -> False
 
 -- | A list where the first element is the string #bundle, the second a float and the rest messages.
@@ -167,12 +179,18 @@ lisp_print_packet opt = S.sexp_show . packet_to_lisp opt
 
 {- | 'lisp_to_packet' of 'S.readExpr'
 
-> b = Bundle 0 [Message "/c_set" [Int32 0,Float 1],Message "/nil" []]
-> p = Packet_Bundle b
-> s = lisp_print_packet (False,False) p
-> s = lisp_print_packet (True,False) p
-> putStrLn s
-> lisp_parse_packet (int32,float) s == p
+>>> let b = Bundle 0 [Message "/c_set" [Int32 0,Float 1],Message "/nil" []]
+>>> let p = Packet_Bundle b
+>>> let s = lisp_print_packet (False,False) p
+>>> putStrLn s
+("#bundle" 0.0 ("/c_set" 0 1.0) ("/nil"))
+
+>>> let s = lisp_print_packet (True,False) p
+>>> putStrLn s
+("#bundle" 0.0 (("/c_set" . ",if") 0 1.0) (("/nil" . ",")))
+
+>>> lisp_parse_packet (int32,float) s == p
+True
 -}
 lisp_parse_packet :: (Integer -> Datum,Double -> Datum) -> String -> Packet Message
 lisp_parse_packet opt txt =
