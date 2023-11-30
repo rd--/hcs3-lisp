@@ -90,7 +90,7 @@ message_to_lisp (ty,u8) (Message a d) =
   then S.List (s_cons (S.String a) (S.String (',' : map datum_tag d)) : map (datum_to_lisp u8) d)
   else S.List (S.String a : map (datum_to_lisp u8) d)
 
-bundle_to_lisp :: (Bool,Bool) -> Bundle Message -> S.LispVal
+bundle_to_lisp :: (Bool,Bool) -> BundleOf Message -> S.LispVal
 bundle_to_lisp opt (Bundle t m) = S.List (S.String "#bundle" : S.Float t : map (message_to_lisp opt) m)
 
 -- * From-Lisp
@@ -133,7 +133,7 @@ True
 >>> l
 ("#bundle" 0.0 (("/c_set" . ",if") 0 1.0) (("/nil" . ",")))
 -}
-lisp_to_bundle :: (Integer -> Datum,Double -> Datum) -> S.LispVal -> Bundle Message
+lisp_to_bundle :: (Integer -> Datum,Double -> Datum) -> S.LispVal -> BundleOf Message
 lisp_to_bundle opt l =
   case l of
     S.List (S.String "#bundle" : S.Float t : m) -> Bundle t (map (lisp_to_message opt) m)
@@ -157,7 +157,7 @@ lisp_is_bundle l =
     _ -> False
 
 -- | Translate from s-expression 'S.LispVal' to Osc 'Packet'.
-lisp_to_packet :: (Integer -> Datum,Double -> Datum) -> S.LispVal -> Packet Message
+lisp_to_packet :: (Integer -> Datum,Double -> Datum) -> S.LispVal -> PacketOf Message
 lisp_to_packet opt l =
   if lisp_is_bundle l
   then Packet_Bundle (lisp_to_bundle opt l)
@@ -166,14 +166,14 @@ lisp_to_packet opt l =
        else error "lisp_to_packet"
 
 -- | Translate Osc 'Packet' to 'S.LispVal'.
-packet_to_lisp :: (Bool, Bool) -> Packet Message -> S.LispVal
+packet_to_lisp :: (Bool, Bool) -> PacketOf Message -> S.LispVal
 packet_to_lisp opt pkt =
   case pkt of
     Packet_Bundle x -> bundle_to_lisp opt x
     Packet_Message x -> message_to_lisp opt x
 
 -- | 'S.sexp_show' of 'packet_to_lisp'
-lisp_print_packet :: (Bool, Bool) -> Packet Message -> String
+lisp_print_packet :: (Bool, Bool) -> PacketOf Message -> String
 lisp_print_packet opt = S.sexp_show . packet_to_lisp opt
 
 
@@ -192,7 +192,7 @@ lisp_print_packet opt = S.sexp_show . packet_to_lisp opt
 >>> lisp_parse_packet (int32,float) s == p
 True
 -}
-lisp_parse_packet :: (Integer -> Datum,Double -> Datum) -> String -> Packet Message
+lisp_parse_packet :: (Integer -> Datum,Double -> Datum) -> String -> PacketOf Message
 lisp_parse_packet opt txt =
   case S.readExpr txt of
     Left err -> error (show err)
