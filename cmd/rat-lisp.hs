@@ -32,18 +32,18 @@ parse_rat s =
             Nothing -> fmap realToFrac (R.readMaybe s :: Maybe Double)
 -}
 
-rat_pp :: (Show i,Integral i) => Ratio i -> String
+rat_pp :: (Show i, Integral i) => Ratio i -> String
 rat_pp r =
-    let n = numerator r
-        d = denominator r
-    in if d == 1 then show n else concat [show n,"/",show d]
+  let n = numerator r
+      d = denominator r
+  in if d == 1 then show n else concat [show n, "/", show d]
 
 -- * Lisp-Ty
 
-instance (Show a,Integral a) => Lisp_Ty (Ratio a) where
-    ty_show = rat_pp
-    ty_to_int = floor
-    ty_from_bool t = if t then 1 else 0
+instance (Show a, Integral a) => Lisp_Ty (Ratio a) where
+  ty_show = rat_pp
+  ty_to_int = floor
+  ty_from_bool t = if t then 1 else 0
 
 -- * Num / Float
 
@@ -58,24 +58,25 @@ lift_uop f = Fun (map_atom f)
 
 lift_binop :: Lisp_Ty a => (a -> a -> a) -> Expr a
 lift_binop f =
-    let g p q = case (p,q) of
-                  (Just p',Just q') -> Atom (f p' q')
-                  _ -> Error "BINOP: NOT-ATOM?"
-    in Fun (\lhs -> Fun (\rhs -> g (atom lhs) (atom rhs)))
+  let g p q = case (p, q) of
+        (Just p', Just q') -> Atom (f p' q')
+        _ -> Error "BINOP: NOT-ATOM?"
+  in Fun (\lhs -> Fun (\rhs -> g (atom lhs) (atom rhs)))
 
 rat_dict :: IO (Dict.Dict String (Expr Rational))
 rat_dict =
-    Dict.dictFromList
-    [("+",lift_binop (+))
-    ,("*",lift_binop (*))
-    ,("-",lift_binop (-))
-    ,("/",lift_binop (/))
-    ,("<",lift_binop (ty_from_bool .: (<)))
-    ,(">",lift_binop (ty_from_bool .: (>)))
-    ,("<=",lift_binop (ty_from_bool .: (<=)))
-    ,(">=",lift_binop (ty_from_bool .: (>=)))
-    ,("negate",lift_uop negate)
-    ,("recip",lift_uop recip)]
+  Dict.dictFromList
+    [ ("+", lift_binop (+))
+    , ("*", lift_binop (*))
+    , ("-", lift_binop (-))
+    , ("/", lift_binop (/))
+    , ("<", lift_binop (ty_from_bool .: (<)))
+    , (">", lift_binop (ty_from_bool .: (>)))
+    , ("<=", lift_binop (ty_from_bool .: (<=)))
+    , (">=", lift_binop (ty_from_bool .: (>=)))
+    , ("negate", lift_uop negate)
+    , ("recip", lift_uop recip)
+    ]
 
 {-
 float_dict :: (Lisp_Ty a,Floating a) => Dict a
@@ -88,5 +89,5 @@ float_dict =
 main :: IO ()
 main = do
   putStrLn "RAT-LISP"
-  env <- sequence [core_dict,rat_dict] >>= Env.envNewFromList :: IO (Env.Env String (Expr Rational))
+  env <- sequence [core_dict, rat_dict] >>= Env.envNewFromList :: IO (Env.Env String (Expr Rational))
   repl_init env (load_files ["stdlib.scm", "rhs.prereq.scm", "rhs.scm"])

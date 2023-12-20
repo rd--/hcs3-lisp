@@ -31,9 +31,9 @@ sexp_to_exp sexp =
     L.Number (A.I n) -> return (Atom (fromIntegral n))
     L.Number (A.D n) -> return (Atom (realToFrac n))
     L.Symbol s -> case T.unpack s of
-                    "#f" -> return (Atom (ty_from_bool False))
-                    "#t" -> return (Atom (ty_from_bool True))
-                    r -> return (Symbol r)
+      "#f" -> return (Atom (ty_from_bool False))
+      "#t" -> return (Atom (ty_from_bool True))
+      r -> return (Symbol r)
     L.String s -> return (String (T.unpack s))
     L.List [] -> return Nil
     L.List (e : l) -> sexp_to_exp e >>= \e' -> fmap (Cons e') (sexp_to_exp (L.List l))

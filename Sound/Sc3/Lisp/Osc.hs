@@ -25,7 +25,7 @@ s_cons p q = S.DottedList [p] q
 
 -- | [p,q,r] to #(p q r)
 s_list_to_vector :: [S.LispVal] -> S.LispVal
-s_list_to_vector l = S.Vector (Array.listArray (0,length l - 1) l)
+s_list_to_vector l = S.Vector (Array.listArray (0, length l - 1) l)
 
 -- | Convert 'S.Number' to 'Word8', 'error' if not a number or out of range.
 s_word8 :: S.LispVal -> Word8
@@ -40,23 +40,24 @@ s_bytevector_to_vector = s_list_to_vector . map (S.Number . fromIntegral) . Lazy
 list_to_midi :: [Word8] -> MidiData
 list_to_midi l =
   case l of
-    [a,b,c,d] -> MidiData a b c d
+    [a, b, c, d] -> MidiData a b c d
     _ -> error "list_to_midi"
 
 bytestring_to_midi :: Strict.ByteString -> MidiData
 bytestring_to_midi x =
   if Strict.length x == 4
-  then list_to_midi (Strict.unpack x)
-  else error "bytevector_to_midi"
+    then list_to_midi (Strict.unpack x)
+    else error "bytevector_to_midi"
 
 -- * To-Lisp
 
 -- | 'MidiData' to (midi . #(i j k l))
 midi_to_lisp :: Bool -> MidiData -> S.LispVal
 midi_to_lisp u8 (MidiData m1 m2 m3 m4) =
-  let v = if u8
-          then S.ByteVector (Lazy.toStrict (Lazy.pack [m1,m2,m3,m4]))
-          else s_list_to_vector (map (S.Number . fromIntegral) [m1,m2,m3,m4])
+  let v =
+        if u8
+          then S.ByteVector (Lazy.toStrict (Lazy.pack [m1, m2, m3, m4]))
+          else s_list_to_vector (map (S.Number . fromIntegral) [m1, m2, m3, m4])
   in s_cons (S.Atom "midi") v
 
 {- | Convert 'Datum' to 'S.LispVal'.
@@ -84,20 +85,20 @@ datum_to_lisp u8 d =
     TimeStamp x -> s_cons (S.Atom "timestamp") (S.Float x)
     Midi x -> midi_to_lisp u8 x
 
-message_to_lisp :: (Bool,Bool) -> Message -> S.LispVal
-message_to_lisp (ty,u8) (Message a d) =
+message_to_lisp :: (Bool, Bool) -> Message -> S.LispVal
+message_to_lisp (ty, u8) (Message a d) =
   if ty
-  then S.List (s_cons (S.String a) (S.String (',' : map datum_tag d)) : map (datum_to_lisp u8) d)
-  else S.List (S.String a : map (datum_to_lisp u8) d)
+    then S.List (s_cons (S.String a) (S.String (',' : map datum_tag d)) : map (datum_to_lisp u8) d)
+    else S.List (S.String a : map (datum_to_lisp u8) d)
 
-bundle_to_lisp :: (Bool,Bool) -> BundleOf Message -> S.LispVal
+bundle_to_lisp :: (Bool, Bool) -> BundleOf Message -> S.LispVal
 bundle_to_lisp opt (Bundle t m) = S.List (S.String "#bundle" : S.Float t : map (message_to_lisp opt) m)
 
 -- * From-Lisp
 
 -- | Convert 'S.LispVal' to 'Datum' given functions to determine encodings for integers and floats.
-lisp_to_datum :: (Integer -> Datum,Double -> Datum) -> S.LispVal -> Datum
-lisp_to_datum (i,f) l =
+lisp_to_datum :: (Integer -> Datum, Double -> Datum) -> S.LispVal -> Datum
+lisp_to_datum (i, f) l =
   case l of
     S.Number x -> i x
     S.Float x -> f x
@@ -116,7 +117,7 @@ lisp_to_datum (i,f) l =
 >>> lisp_to_message (int32,float) l == m
 True
 -}
-lisp_to_message :: (Integer -> Datum,Double -> Datum) -> S.LispVal -> Message
+lisp_to_message :: (Integer -> Datum, Double -> Datum) -> S.LispVal -> Message
 lisp_to_message opt l =
   case l of
     S.List (S.String a : d) -> Message a (map (lisp_to_datum opt) d)
@@ -133,7 +134,7 @@ True
 >>> l
 ("#bundle" 0.0 (("/c_set" . ",if") 0 1.0) (("/nil" . ",")))
 -}
-lisp_to_bundle :: (Integer -> Datum,Double -> Datum) -> S.LispVal -> BundleOf Message
+lisp_to_bundle :: (Integer -> Datum, Double -> Datum) -> S.LispVal -> BundleOf Message
 lisp_to_bundle opt l =
   case l of
     S.List (S.String "#bundle" : S.Float t : m) -> Bundle t (map (lisp_to_message opt) m)
@@ -157,13 +158,14 @@ lisp_is_bundle l =
     _ -> False
 
 -- | Translate from s-expression 'S.LispVal' to Osc 'Packet'.
-lisp_to_packet :: (Integer -> Datum,Double -> Datum) -> S.LispVal -> PacketOf Message
+lisp_to_packet :: (Integer -> Datum, Double -> Datum) -> S.LispVal -> PacketOf Message
 lisp_to_packet opt l =
   if lisp_is_bundle l
-  then Packet_Bundle (lisp_to_bundle opt l)
-  else if lisp_is_message l
-       then Packet_Message (lisp_to_message opt l)
-       else error "lisp_to_packet"
+    then Packet_Bundle (lisp_to_bundle opt l)
+    else
+      if lisp_is_message l
+        then Packet_Message (lisp_to_message opt l)
+        else error "lisp_to_packet"
 
 -- | Translate Osc 'Packet' to 'S.LispVal'.
 packet_to_lisp :: (Bool, Bool) -> PacketOf Message -> S.LispVal
@@ -175,7 +177,6 @@ packet_to_lisp opt pkt =
 -- | 'S.sexp_show' of 'packet_to_lisp'
 lisp_print_packet :: (Bool, Bool) -> PacketOf Message -> String
 lisp_print_packet opt = S.sexp_show . packet_to_lisp opt
-
 
 {- | 'lisp_to_packet' of 'S.readExpr'
 
@@ -192,7 +193,7 @@ lisp_print_packet opt = S.sexp_show . packet_to_lisp opt
 >>> lisp_parse_packet (int32,float) s == p
 True
 -}
-lisp_parse_packet :: (Integer -> Datum,Double -> Datum) -> String -> PacketOf Message
+lisp_parse_packet :: (Integer -> Datum, Double -> Datum) -> String -> PacketOf Message
 lisp_parse_packet opt txt =
   case S.readExpr txt of
     Left err -> error (show err)

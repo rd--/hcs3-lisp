@@ -45,15 +45,15 @@ exp_map f e =
 
 -- | Is Exp a Symbol.
 is_symbol :: Exp -> Bool
-is_symbol e = case e of {Symbol _ -> True; _ -> False}
+is_symbol e = case e of Symbol _ -> True; _ -> False
 
 -- | Is Exp a Lambda expression with no arguments.
 is_thunk :: Exp -> Bool
-is_thunk e = case e of {Lambda [] _ -> True; _ -> False}
+is_thunk e = case e of Lambda [] _ -> True; _ -> False
 
 -- | Unpack symbol.
 exp_symbol :: Exp -> String
-exp_symbol e = case e of {Symbol x -> x; _ -> error "exp_symbol"}
+exp_symbol e = case e of Symbol x -> x; _ -> error "exp_symbol"
 
 {- | The Begin node is used to translate do notation sequences.
      This function rewrites a >> sequence to Begin, else it is identity.
@@ -67,9 +67,9 @@ exp_seq_to_begin e =
           Begin p -> p
           _ -> [x]
   in case to_seq e of
-       [] -> error "exp_seq_to_begin: empty sequence?"
-       [p] -> p
-       r -> Begin r
+      [] -> error "exp_seq_to_begin: empty sequence?"
+      [p] -> p
+      r -> Begin r
 
 -- * Renaming
 
@@ -82,4 +82,3 @@ exp_rename tbl =
           Symbol s -> Symbol (rw s)
           _ -> e
   in exp_map f
-

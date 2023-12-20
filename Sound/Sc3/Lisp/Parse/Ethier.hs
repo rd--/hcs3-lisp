@@ -26,16 +26,16 @@ parse_sexp_vm = either (E.throwError . show) return . S.readExprList
 
 sexp_to_exp :: L.Lisp_Ty a => SExp -> L.EnvMonad IO String (L.Expr a) (L.Expr a)
 sexp_to_exp sexp =
-    case sexp of
-      S.Number n -> return (L.Atom (fromIntegral n))
-      S.Float n -> return (L.Atom (realToFrac n))
-      S.Rational n -> return (L.Atom (fromRational n))
-      S.Atom nm -> return (L.Symbol nm)
-      S.String s -> return (L.String s)
-      S.Bool b -> return (L.Atom (L.ty_from_bool b))
-      S.List [] -> return L.Nil
-      S.List (e : l) -> sexp_to_exp e >>= \e' -> fmap (L.Cons e') (sexp_to_exp (S.List l))
-      _ -> E.throwError ("sexp-to-exp: " ++ show sexp)
+  case sexp of
+    S.Number n -> return (L.Atom (fromIntegral n))
+    S.Float n -> return (L.Atom (realToFrac n))
+    S.Rational n -> return (L.Atom (fromRational n))
+    S.Atom nm -> return (L.Symbol nm)
+    S.String s -> return (L.String s)
+    S.Bool b -> return (L.Atom (L.ty_from_bool b))
+    S.List [] -> return L.Nil
+    S.List (e : l) -> sexp_to_exp e >>= \e' -> fmap (L.Cons e') (sexp_to_exp (S.List l))
+    _ -> E.throwError ("sexp-to-exp: " ++ show sexp)
 
 {- | The husk-scheme printer uses "show" for Floats,
      prints 'Char' directly,
@@ -46,14 +46,14 @@ sexp_to_exp sexp =
 -}
 sexp_show :: SExp -> String
 sexp_show s =
-    case s of
-      S.Atom x -> x
-      S.Char x -> ['#','\\',x]
-      S.Float x -> Numeric.showFFloat Nothing x ""
-      S.List x -> "(" ++ unwords (map sexp_show x) ++ ")"
-      S.DottedList x y -> concat ["(",unwords (map sexp_show x)," . ",sexp_show y,")"]
-      S.Number x -> show x
-      S.String x -> "\"" ++ x ++ "\""
-      S.Vector _ -> show s
-      S.ByteVector x -> "(bytevector " ++ unwords (map show (B.unpack x)) ++ ")"
-      _ -> error ("sexp_show: " ++ show s)
+  case s of
+    S.Atom x -> x
+    S.Char x -> ['#', '\\', x]
+    S.Float x -> Numeric.showFFloat Nothing x ""
+    S.List x -> "(" ++ unwords (map sexp_show x) ++ ")"
+    S.DottedList x y -> concat ["(", unwords (map sexp_show x), " . ", sexp_show y, ")"]
+    S.Number x -> show x
+    S.String x -> "\"" ++ x ++ "\""
+    S.Vector _ -> show s
+    S.ByteVector x -> "(bytevector " ++ unwords (map show (B.unpack x)) ++ ")"
+    _ -> error ("sexp_show: " ++ show s)

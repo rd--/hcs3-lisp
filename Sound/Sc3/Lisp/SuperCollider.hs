@@ -59,7 +59,7 @@ scDotMessages_to_exp :: Exp -> [Sc.ScDotMessage] -> Exp
 scDotMessages_to_exp rcv m =
   case m of
     [] -> rcv
-    p:q -> scDotMessages_to_exp (scDotMessage_to_exp rcv p) q
+    p : q -> scDotMessages_to_exp (scDotMessage_to_exp rcv p) q
 
 scBinaryArgument_to_exp :: Sc.ScBinaryArgument -> Exp
 scBinaryArgument_to_exp (Sc.ScBinaryArgument p q) = scDotMessages_to_exp (scPrimary_to_exp p) (fromMaybe [] q)
@@ -71,7 +71,7 @@ scBinaryMessages_to_exp :: Exp -> [Sc.ScBinaryMessage] -> Exp
 scBinaryMessages_to_exp rcv m =
   case m of
     [] -> rcv
-    p:q -> scBinaryMessages_to_exp (scBinaryMessage_to_exp rcv p) q
+    p : q -> scBinaryMessages_to_exp (scBinaryMessage_to_exp rcv p) q
 
 scMessages_to_exp :: Exp -> Sc.ScMessages -> Exp
 scMessages_to_exp rcv m =
@@ -117,11 +117,13 @@ scInitializerDefinition_to_exp_seq (Sc.ScInitializerDefinition _cmt tmp stm) =
 let_to_lisp :: [(Name, Exp)] -> Exp -> S.LispVal
 let_to_lisp d x =
   if null d
-  then exp_to_lisp x
-  else S.List
-       [S.Atom (if length d == 1 then "let" else "let*") -- "letrec"
-       ,S.List (map (\(lhs, rhs) -> S.List [S.Atom lhs, exp_to_lisp rhs]) d)
-       ,exp_to_lisp x]
+    then exp_to_lisp x
+    else
+      S.List
+        [ S.Atom (if length d == 1 then "let" else "let*") -- "letrec"
+        , S.List (map (\(lhs, rhs) -> S.List [S.Atom lhs, exp_to_lisp rhs]) d)
+        , exp_to_lisp x
+        ]
 
 exp_to_lisp :: Exp -> S.LispVal
 exp_to_lisp e =
@@ -131,11 +133,11 @@ exp_to_lisp e =
     Integer i -> S.Number i
     Double d -> S.Float d
     Symbol s -> S.Atom s
-    Array l -> if null l then S.List [S.Atom "quote",S.nullLisp] else S.List (S.Atom "list" : map exp_to_lisp l)
+    Array l -> if null l then S.List [S.Atom "quote", S.nullLisp] else S.List (S.Atom "list" : map exp_to_lisp l)
     Set lhs rhs -> S.List [S.Atom "set!", exp_to_lisp lhs, exp_to_lisp rhs]
     App f a -> S.List (exp_to_lisp f : map exp_to_lisp a)
     Seq p q -> S.List (S.Atom "begin" : map exp_to_lisp [p, q])
-    Lambda p x ->  S.List [S.Atom "lambda", S.List (map S.Atom p), exp_to_lisp x]
+    Lambda p x -> S.List [S.Atom "lambda", S.List (map S.Atom p), exp_to_lisp x]
     Let d x -> let_to_lisp d x
     Define lhs rhs -> S.List [S.Atom "define", S.Atom lhs, exp_to_lisp rhs]
     Nil -> S.List [S.Atom "quote", S.nullLisp]
@@ -183,7 +185,6 @@ scToLispViewer dfn = scToRenamedLispViewer dfn []
 -}
 scToRenamedLispViewer :: Bool -> [(String, String)] -> String -> String
 scToRenamedLispViewer dfn tbl =
-  unlines .
-  map (L.sexp_show . exp_to_lisp . exp_rename tbl) .
-  scToExp dfn
-
+  unlines
+    . map (L.sexp_show . exp_to_lisp . exp_rename tbl)
+    . scToExp dfn

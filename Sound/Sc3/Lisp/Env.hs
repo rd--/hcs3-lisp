@@ -1,4 +1,4 @@
-{-# Language FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 -- | Environment
 module Sound.Sc3.Lisp.Env where
@@ -63,8 +63,8 @@ envLookupCurrentFrameMaybe w (Env r _) = dictRefLookup r w
 envLookupMaybe :: (MonadIO m, Ord k) => k -> Env k v -> m (Maybe v)
 envLookupMaybe w (Env r p) = do
   x <- dictRefLookup r w
-  case (x,p) of
-    (Nothing,Just e) -> envLookupMaybe w e
+  case (x, p) of
+    (Nothing, Just e) -> envLookupMaybe w e
     _ -> return x
 
 -- | Lookup with default.
@@ -94,7 +94,7 @@ envAddFrame :: MonadIO m => Dict k v -> Env k v -> m (Env k v)
 envAddFrame d e = liftIO (newIORef d) >>= \r -> return (Env r (Just e))
 
 -- | Extend environment by adding a frame given as an association list.
-envAddFrameFromList :: (MonadIO m,Ord k) => [(k,v)] -> Env k v -> m (Env k v)
+envAddFrameFromList :: (MonadIO m, Ord k) => [(k, v)] -> Env k v -> m (Env k v)
 envAddFrameFromList l e = dictFromList l >>= \d -> envAddFrame d e
 
 -- | Delete current frame if one exists.
