@@ -2,7 +2,6 @@
 ; ---------
 
 ; primitives are: λ, macro, set!, if, quote, fork, cons
-λ ; error: env-lookup: λ
 
 ; Emacs
 ; -----
@@ -24,8 +23,12 @@
 
 ((λ n ((* n) n)) 3) ; 9
 
-+ ; (λ a (λ b (mk-ugen...)))
-(+ 1) ; (λ b (mk-ugen...))
+; Lambda is not a value
+
+λ ; error: envLookup: no key: λ
+
++ ; (λ a (λ b ...)))
+(+ 1) ; (λ b ...))
 ((+ 1) 2) ; 3
 
 ; The evaluator allows two notational simplifications.
@@ -62,11 +65,11 @@
 
 ; Predicates are:
 
-(pair? (cons 1 2)) ; #t
-(list? (cons 1 2)) ; #f
-(null? (cons 1 2)) ; #f
-(null? nil) ; #t
-(null? '()) ; #t
+(pair? (cons 1 2)) ; #t=1
+(list? (cons 1 2)) ; #f=0
+(null? (cons 1 2)) ; #f=0
+(null? nil) ; #t=1
+(null? '()) ; #t=1
 
 ; List
 ; ----
@@ -118,6 +121,7 @@
 
 b ; error: env-lookup
 (set! a (macro (λ exp (list 'set! 'b (car exp))))) ; nil
+a ; Macro: (λ exp ...)
 (a 5) ; nil
 b ; 5
 
@@ -151,7 +155,7 @@ a ; nil
 ; The only false value is #f, all other values are #t.
 
 (if #t 'a 'b) ; a
-(if #f (print 'a) (print 'b)) ; b nil
+(if #f (print 'a) (print 'b)) ; prints b result=nil
 (if 'false 'true 'false) ; true
 (if (> 3 2) 'yes 'no) ; yes
 (if (> 2 3) 'yes 'no) ; no
@@ -168,7 +172,7 @@ a ; nil
 (cond-rw (cdr '(cond (a b)))) ; (if a b nil)
 (cond-rw (cdr '(cond (a b) (c d)))) ; (if a b (if c d nil))
 (cond-rw (cdr '(cond (a b) (c d) (else e)))) ; (if a b (if c d e))
-(cond-rw (cdr '(cond ((> x y) 'gt) ((< x y) 'lt) (else 'eq))))
+(cond-rw (cdr '(cond ((> x y) 'gt) ((< x y) 'lt) (else 'eq)))) ; (if (> x y) ...)
 
 (cond ((> 3 2) 'greater) ((< 3 2) 'less)) ; greater
 (cond ((> 3 3) 'greater) ((< 3 3) 'less) (else 'equal)) ; equal
@@ -179,14 +183,14 @@ a ; nil
 (eval 1) ; 1
 (eval (eval 1)) ; 1
 
-(1) ; error
+(1) ; error: apply: invalid lhs
 
 ; Variadic Expressions
 ; --------------------
 
 ; Macros can implement variable argument functions.
 
-list ; macro
+list ; Macro: (λ exp ...)
 (list) ; nil
 (list 1 2 3) ; (1 2 3)
 
@@ -201,7 +205,7 @@ list-rw ; (λ exp ...)
 
 (map (+ 1) (list 1 2 3)) ; (2 3 4)
 (map (compose (+ 1) (* 2)) (list 1 2 3)) ; (3 5 7)
-(map (compose (/ 2) (+ 3)) (list 1 2 3)) ; (1/2 2/5 1/3)
+(map (compose (/ 2) (+ 3)) (list 1 2 3)) ; (0.5 0.4 0.33333) ; (1/2 2/5 1/3)
 (map (const 3) (list 1 2 3)) ; (3 3 3)
 (cons (- 1 2) ((flip -) 1 2)) ; (cons -1 1)
 (id 1) ; 1
@@ -221,32 +225,32 @@ list-rw ; (λ exp ...)
 
 ; begin cannot be elided.
 
-((lambda (p q) (display p) (print q))) ; error
+((lambda (p q) (display p) (print q))) ; error: "lambda: not unary?"
 ((lambda (p q) (begin (display p) (print q))) 1 2) ; prints 12 ; result=nil
 
-; Nil
+; nil
 ; ---
 
 nil ; nil
-(null? nil) ; #t
+(null? nil) ; #t=1
 
 ; Eq
 ; --
 
-(equal? 'a 'a) ; #t
-(equal? "b" "b") ; #t
-(= 5 5) ; #t
+(equal? 'a 'a) ; #t=1
+(equal? "b" "b") ; #t=1
+(= 5 5) ; #t=1
 
 ; Ord
 ; ---
 
-(< 0 1) ; #t
-(> 0 1) ; #f
+(< 0 1) ; #t=1
+(> 0 1) ; #f=0
 (min 1 2) ; 1
 (max 1 2) ; 2
-(compare 1 2) ; 'lt
-(compare 2 1) ; 'gt
-(compare 1 1) ; 'eq
+(compare 1 2) ; lt
+(compare 2 1) ; gt
+(compare 1 1) ; eq
 
 ; Sequencing & begin
 ; ------------------
@@ -324,30 +328,30 @@ set! ; error
 
 (letrec ((even? (lambda (n) (if (== n 0) #t (odd? (- n 1)))))
          (odd? (lambda (n) (if (== n 0) #f (even? (- n 1))))))
-  (even? 88)) ; #t
+  (even? 88)) ; #t=1
 
 ; Logic
 ; -----
 
-(not #t) ; #f
-(not #f) ; #t
-(not 'sym) ; 0 ; #f
-(not 3) ; #f
-(not (list 3)) ; #f
-(not '()) ; #f
-(not (list)) ; #f
-(not 'nil) ; #f
+(not #t) ; #f=0
+(not #f) ; #t=1
+(not 'sym) ; #f=0
+(not 3) ; #f=0
+(not (list 3)) ; #f=0
+(not '()) ; #f=0
+(not (list)) ; #f=0
+(not 'nil) ; #f=0
 
 (and-rw (cdr '(and p q))) ; (if p q 0)
-(list (and #t #t) (and #t #f) (and #f #t) (and #f #f)) ; (#t #f #f #f)
-(and (= 2 2) (> 2 1)) ; 1
-(and (= 2 2) (< 2 1)) ; 0
+(list (and #t #t) (and #t #f) (and #f #t) (and #f #f)) ; (#t=1 #f=0 #f=0 #f=0)
+(and (= 2 2) (> 2 1)) ; #t=1
+(and (= 2 2) (< 2 1)) ; #f=0
 
 (or-rw (cdr '(or p q))) ; (if p #t q)
-(list (or #t #t) (or #t #f) (or #f #t) (or #f #f)) ; (#t #t #t #f)
-(or (= 2 2) (> 2 1)) ; 1
-(or (= 2 2) (< 2 1)) ; 1
-(or #f #f) ; 0
+(list (or #t #t) (or #t #f) (or #f #t) (or #f #f)) ; (#t=1 #t=1 #t=1 #f=0)
+(or (= 2 2) (> 2 1)) ; #t=1
+(or (= 2 2) (< 2 1)) ; #t=1
+(or #f #f) ; #f=0
 
 ; and and or are binary
 
@@ -374,15 +378,15 @@ set! ; error
 
 ; Constants are numbers.
 
-(number? 1) ; #t
-(number? 'one) ; #f
-(number? (SinOsc 5 0)) ; #f
+(number? 1) ; #t=1
+(number? 'one) ; #f=0
+(number? (SinOsc 5 0)) ; #f=0
 
 ; Random
 ; ------
 
-(s:rand 0 1) ; random floating point number in (0,1)
-(s:irand 0 3) ; random integer in (0,2)
+(random-float-uniform 0 1) ; random floating point number in (0,1)
+(random-int-uniform 0 3) ; random integer in (0,2)
 
 ; Time
 ; ----
@@ -398,6 +402,7 @@ set! ; error
     (print 'after)))
 
 (define randomSine (Mul (SinOsc (Rand 220 440) 9) 0.01))
+(audition randomSine)
 (deltaTimeRescheduler (lambda (t) (begin (audition (Out 0 randomSine)) 1)) (utcr))
 
 ; IO
@@ -422,7 +427,7 @@ three ; 3
 ; Load
 ; ----
 
-(load "/home/rohan/sw/hsc3-lisp/lisp/stdlib.lisp")
+(load "/home/rohan/sw/hsc3-lisp/scm/stdlib.scm")
 
 ; Floating Point
 ; --------------

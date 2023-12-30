@@ -1,6 +1,7 @@
 -- | SExp parser using atto-lisp (Schilling).
 module Sound.Sc3.Lisp.Parse.Schilling where
 
+{-
 import Control.Monad.Except {- mtl -}
 
 import qualified Data.Text as T {- text -}
@@ -38,3 +39,4 @@ sexp_to_exp sexp =
     L.List [] -> return Nil
     L.List (e : l) -> sexp_to_exp e >>= \e' -> fmap (Cons e') (sexp_to_exp (L.List l))
     _ -> throwError ("sexp-to-exp: " ++ show sexp)
+-}

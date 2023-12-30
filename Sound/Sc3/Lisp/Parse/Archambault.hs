@@ -1,6 +1,7 @@
 -- | SExp parser using sexpresso (Archambault).
 module Sound.Sc3.Lisp.Parse.Archambault where
 
+{-
 import Data.Ratio {- base -}
 import Data.Void {- base -}
 
@@ -12,11 +13,9 @@ import Control.Monad.Except {- mtl -}
 
 import qualified Text.Megaparsec as M {- megaparsec -}
 
-{- sexpresso -}
-{- sexpresso -}
 import qualified Data.SExpresso.Language.SchemeR5RS as S {- sexpresso -}
-import qualified Data.SExpresso.Parse as S
-import qualified Data.SExpresso.SExpr as S
+import qualified Data.SExpresso.Parse as S {- sexpresso -}
+import qualified Data.SExpresso.SExpr as S {- sexpresso -}
 
 import Sound.Sc3.Lisp.Type {- hsc3-lisp -}
 
@@ -84,3 +83,4 @@ sexp_to_exp sexp =
       S.DQuote (S.DList []) -> return Nil
       S.DList (e : l) -> sexp_to_exp e >>= \e' -> fmap (Cons e') (sexp_to_exp (S.DList l))
       _ -> err
+-}

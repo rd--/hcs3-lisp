@@ -1,6 +1,7 @@
 True #t
 False #f
 set set!
+!! list-ref
 vectorRef vector-ref
 >> begin
 ++ append

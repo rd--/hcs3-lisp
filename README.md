@@ -275,4 +275,8 @@ initial announcement:
 
 * * *
 
-July 2014
+```
+$ make doctest
+Examples: 95  Tried: 95  Errors: 0  Failures: 0
+$
+```

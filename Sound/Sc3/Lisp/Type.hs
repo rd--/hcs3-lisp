@@ -3,9 +3,8 @@ module Sound.Sc3.Lisp.Type where
 
 import Data.Maybe {- base -}
 
-{- mtl -}
 import qualified Control.Monad.Except as Except {- mtl -}
-import qualified Control.Monad.State as State
+import qualified Control.Monad.State as State {- mtl -}
 
 import Sound.Sc3.Lisp.Env {- hsc3-lisp -}
 
@@ -15,18 +14,14 @@ newtype Trace_Level = Trace_Level Int
 
 -- | Constraints on type parameters for Expr.
 class (Eq a, Ord a, Num a, Fractional a) => Lisp_Ty a where
-  ty_show ::
-    a ->
-    -- | String representation of /a/, pretty printer.
-    String
-  ty_to_int ::
-    a ->
-    -- | Coercion, ie. for Char.
-    Int
-  ty_from_bool ::
-    Bool ->
-    -- | Boolean value represented in /a/, by convention @1@ and @0@.
-    a
+  -- | String representation of /a/, pretty printer.
+  ty_show :: a -> String
+
+  -- | Coercion, ie. for Char.
+  ty_to_int :: a -> Int
+
+  -- | Boolean value represented in /a/, by convention @1@ and @0@.
+  ty_from_bool :: Bool -> a
 
 -- | State monad wrapped in Exception monad.
 type EnvMonad m k v r = Except.ExceptT String (State.StateT (Env k v) m) r

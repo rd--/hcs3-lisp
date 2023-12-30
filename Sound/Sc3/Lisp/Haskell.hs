@@ -225,12 +225,21 @@ hs_exp_sch s =
 
 {- | Parse Haskell declaration as Exp, i.e. mod_decl_sch of parseDecl.
 
-> let rw = L.sexp_show . hs_decl_lisp []
-> rw "x = y" == "(define x y)"
-> rw "f x = case x of {0 -> a;1 -> b;_ -> c}" == "(define f (lambda (x) (case x ((0) a) ((1) b) (else c))))"
-> rw "x = y" == "(define x y)"
-> rw "f x = x * x" == "(define f (lambda (x) (* x x)))"
-> rw "main = x" == "x"
+>>> let rw = L.sexp_show . hs_decl_lisp []
+>>> rw "x = y"
+"(define x y)"
+
+>>> rw "f x = case x of {0 -> a;1 -> b;_ -> c}"
+"(define f (lambda (x) (case x ((0) a) ((1) b) (else c))))"
+
+>>> rw "x = y"
+"(define x y)"
+
+>>> rw "f x = x * x"
+"(define f (lambda (x) (* x x)))"
+
+>>> rw "main = x"
+"x"
 -}
 hs_decl_sch :: String -> Sch.Exp
 hs_decl_sch s =
@@ -249,65 +258,152 @@ hs_module_sch s =
 
 {- | Haskell expression to s-expression.
 
-> let rw = hs_exp_to_lisp []
-> rw "()" == "unit"
-> rw "f ()" == "(f)"
-> rw "f x" == "(f x)"
-> rw "f x y" == "(f x y)"
-> rw "x + y" == "(+ x y)"
-> rw "let x = y in x" == "(let ((x y)) x)"
-> rw "let {x = i;y = j} in x + y" == "(let* ((x i) (y j)) (+ x y))"
-> rw "\\() -> x ()" == "(lambda () (x))"
-> rw "\\x -> x * x" == "(lambda (x) (* x x))"
-> rw "\\x y -> x * x + y * y" == "(lambda (x y) (+ (* x x) (* y y)))"
-> rw "\\(p, q) r -> p + q * r" == "(lambda (_p1 _p2) (let* ((_letPatBind _p1) (p (vectorRef _letPatBind 0)) (q (vectorRef _letPatBind 1))) (let ((r _p2)) (+ p (* q r)))))"
-> rw "[]" == "(quote ())"
-> rw "[1,2,3]" == "(list 1 2 3)"
-> rw "(1,2.0,'3',\"4\")" == "(vector 1 2.0 #\\3 \"4\")"
-> rw "[x .. y]" == "(enumFromTo x y)"
-> rw "[x,y .. z]" == "(enumFromThenTo x y z)"
-> rw "if x then y else z" == "(if x y z)"
-> rw "\\x -> case x of {0 -> 5;1 -> 4;_ -> 3}" == "(lambda (x) (case x ((0) 5) ((1) 4) (else 3)))"
-> rw "(+ 1)" == "(lambda (_rightSectionArg) (+ _rightSectionArg 1))"
-> rw "(1 +)" == "(lambda (_leftSectionArg) (+ 1 _leftSectionArg))"
-> rw "do {display 0;display (quote x)}" == "(begin (display 0) (display (quote x)))"
-> rw "let x = 5 in do {x <- quote five;display x}" == "(let ((x 5)) (begin (set! x (quote five)) (display x)))"
-> rw "display 5 >> display (quote five)" == "(>> (display 5) (display (quote five)))"
-> rw "let f x = x * 2 in f 3" == "(let ((f (lambda (x) (* x 2)))) (f 3))"
-> rw "let f () = act () in f ()" == "(let ((f (lambda () (act)))) (f))"
-> rw "let f (p, q) = p + q in f (2, 3)" == "(let ((f (lambda (_p1) (let* ((_letPatBind _p1) (p (vectorRef _letPatBind 0)) (q (vectorRef _letPatBind 1))) (+ p q))))) (f (vector 2 3)))"
-> rw "let (i,j) = (1,2) in (j,i)" == "(let* ((_letPatBind (vector 1 2)) (i (vectorRef _letPatBind 0)) (j (vectorRef _letPatBind 1))) (vector j i))"
-> rw "let [i,j] = [1,2] in (j,i)" == "(let* ((_letPatBind (list 1 2)) (i (listRef _letPatBind 0)) (j (listRef _letPatBind 1))) (vector j i))"
-> rw "[(x,y) | x <- [1,2,3], y <- \"abc\"]" == undefined
+>>> let rw = hs_exp_to_lisp []
+>>> rw "()"
+"unit"
 
-> hs_exp_to_lisp [("+","add")] "1 + 2" == "(add 1 2)"
+>>> rw "f ()"
+"(f)"
+
+>>> rw "f x"
+"(f x)"
+
+>>> rw "f x y"
+"(f x y)"
+
+>>> rw "x + y"
+"(+ x y)"
+
+>>> rw "let x = y in x"
+"(letrec ((x y)) x)"
+
+>>> rw "let {x = i;y = j} in x + y"
+"(letrec ((x i) (y j)) (+ x y))"
+
+>>> rw "\\() -> x ()"
+"(lambda () (x))"
+
+>>> rw "\\x -> x * x"
+"(lambda (x) (* x x))"
+
+>>> rw "\\x y -> x * x + y * y"
+"(lambda (x y) (+ (* x x) (* y y)))"
+
+>>> rw "\\(p, q) r -> p + q * r"
+"(lambda (_p1 _p2) (let* ((_letPatBind _p1) (p (vectorRef _letPatBind 0)) (q (vectorRef _letPatBind 1))) (letrec ((r _p2)) (+ p (* q r)))))"
+
+>>> rw "[]"
+"(quote ())"
+
+>>> rw "[1,2,3]"
+"(list 1 2 3)"
+
+>>> rw "(1,2.0,'3',\"4\")"
+"(vector 1 2.0 #\\3 \"4\")"
+
+>>> rw "[x .. y]"
+"(enumFromTo x y)"
+
+>>> rw "[x,y .. z]"
+"(enumFromThenTo x y z)"
+
+>>> rw "if x then y else z"
+"(if x y z)"
+
+>>> rw "\\x -> case x of {0 -> 5;1 -> 4;_ -> 3}"
+"(lambda (x) (case x ((0) 5) ((1) 4) (else 3)))"
+
+>>> rw "(+ 1)"
+"(lambda (_rightSectionArg) (+ _rightSectionArg 1))"
+
+>>> rw "(1 +)"
+"(lambda (_leftSectionArg) (+ 1 _leftSectionArg))"
+
+>>> rw "do {display 0;display (quote x)}"
+"(begin (display 0) (display (quote x)))"
+
+>>> rw "let x = 5 in do {x <- quote five;display x}"
+"(letrec ((x 5)) (begin (set! x (quote five)) (display x)))"
+
+>>> rw "display 5 >> display (quote five)"
+"(>> (display 5) (display (quote five)))"
+
+>>> rw "let f x = x * 2 in f 3"
+"(letrec ((f (lambda (x) (* x 2)))) (f 3))"
+
+>>> rw "let f () = act () in f ()"
+"(letrec ((f (lambda () (act)))) (f))"
+
+>>> rw "let f (p, q) = p + q in f (2, 3)"
+"(letrec ((f (lambda (_p1) (let* ((_letPatBind _p1) (p (vectorRef _letPatBind 0)) (q (vectorRef _letPatBind 1))) (+ p q))))) (f (vector 2 3)))"
+
+>>> rw "let (i,j) = (1,2) in (j,i)"
+"(let* ((_letPatBind (vector 1 2)) (i (vectorRef _letPatBind 0)) (j (vectorRef _letPatBind 1))) (vector j i))"
+
+>>> rw "let [i,j] = [1,2] in (j,i)"
+"(let* ((_letPatBind (list 1 2)) (i (listRef _letPatBind 0)) (j (listRef _letPatBind 1))) (vector j i))"
+
+> rw "[(x,y) | x <- [1,2,3], y <- \"abc\"]"
+undefined
+
+>>> hs_exp_to_lisp [("+","add")] "1 + 2"
+"(add 1 2)"
 -}
 hs_exp_to_lisp :: Tbl.NameTable -> String -> String
 hs_exp_to_lisp tbl = L.sexp_show . hs_exp_lisp tbl
 
-{- | Translate haskell @module@ code into @LISP@.
+{- | Translate haskell @module@ code into @Lisp@.
 
-> let rw = hs_to_lisp []
-> rw "import Sound.Sc3" == ""
-> rw "o = let f = midiCps (mce [65.0,65.1]) in sinOsc ar f 0" == "(define o (let ((f (midiCps (mce (list 65.0 65.1))))) (sinOsc ar f 0)))\n"
-> rw "a = dbAmp (-24)" == "(define a (dbAmp -24))\n"
-> rw "main = audition (out 0 (o * a))" == "(audition (out 0 (* o a)))\n"
-> rw "x = (1,2,3)" == "(define x (vector 1 2 3))\n"
-> rw "sq n = n * n" == "(define sq (lambda (n) (* n n)))\n"
-> rw "abs n = if n >= 0 then n else -n" == "(define abs (lambda (n) (if (>= n 0) n (negate n))))\n"
-> rw "l = [0 .. 9]" == "(define l (enumFromTo 0 9))\n"
-> rw "l = [0, 2 .. 8]" == "(define l (enumFromThenTo 0 2 8))\n"
-> rw "n = 0.1 * 0.01 * 0.001" == "(define n (* (* 0.1 0.01) 0.001))\n"
-> rw "l = [1,1.0,\"str\",'c']" == "(define l (list 1 1.0 \"str\" #\\c))\n"
-> rw "sq = \\x -> x * x" == "(define sq (lambda (x) (* x x)))\n"
-> rw "sum_sq = \\x y -> x * x + y * y" == "(define sum_sq (lambda (x y) (+ (* x x) (* y y))))\n"
-> rw "l = 1 : []" == "(define l (cons 1 (quote ())))\n"
-> rw "main = putStrLn \"text\"" == "(putStrLn \"text\")\n"
+>>> let rw = hs_to_lisp []
+>>> rw "import Sound.Sc3"
+""
+
+>>> rw "o = let f = midiCps (mce [65.0,65.1]) in sinOsc ar f 0"
+"(define o (letrec ((f (midiCps (mce (list 65.0 65.1))))) (sinOsc ar f 0)))\n"
+
+>>> rw "a = dbAmp (-24)"
+"(define a (dbAmp -24))\n"
+
+>>> rw "main = audition (out 0 (o * a))"
+"(audition (out 0 (* o a)))\n"
+
+>>> rw "x = (1,2,3)"
+"(define x (vector 1 2 3))\n"
+
+>>> rw "sq n = n * n"
+"(define sq (lambda (n) (* n n)))\n"
+
+>>> rw "abs n = if n >= 0 then n else -n"
+"(define abs (lambda (n) (if (>= n 0) n (negate n))))\n"
+
+>>> rw "l = [0 .. 9]"
+"(define l (enumFromTo 0 9))\n"
+
+>>> rw "l = [0, 2 .. 8]"
+"(define l (enumFromThenTo 0 2 8))\n"
+
+>>> rw "n = 0.1 * 0.01 * 0.001"
+"(define n (* (* 0.1 0.01) 0.001))\n"
+
+>>> rw "l = [1,1.0,\"str\",'c']"
+"(define l (list 1 1.0 \"str\" #\\c))\n"
+
+>>> rw "sq = \\x -> x * x"
+"(define sq (lambda (x) (* x x)))\n"
+
+>>> rw "sum_sq = \\x y -> x * x + y * y"
+"(define sum_sq (lambda (x y) (+ (* x x) (* y y))))\n"
+
+>>> rw "l = 1 : []"
+"(define l (cons 1 (quote ())))\n"
+
+>>> rw "main = putStrLn \"text\""
+"(putStrLn \"text\")\n"
 -}
 hs_to_lisp :: Tbl.NameTable -> String -> String
 hs_to_lisp tbl = unlines . map L.sexp_show . hs_module_lisp tbl
 
--- * IO
+-- * Io
 
 hs_to_lisp_f_io :: (Tbl.NameTable -> String -> String) -> Maybe FilePath -> FilePath -> FilePath -> IO ()
 hs_to_lisp_f_io proc_f tbl_fn i_fn o_fn = do

@@ -41,8 +41,13 @@ sexp_to_exp sexp =
      prints 'Char' directly,
      and uses literal syntax for bytevectors.
 
-> (S.Float 0.01,S.Char 'c',S.ByteVector (B.pack [0,1,2])) -- 1.0e-2 c #u8(0 1 2)
-> mapM_ (putStrLn . show_sexp) [S.Float 0.01,S.Char 'c',S.ByteVector (B.pack [0,1,2])] -- 0.01 #\c
+>>> (S.Float 0.01,S.Char 'c',S.ByteVector (B.pack [0,1,2]))
+(1.0e-2,c,#u8(0 1 2))
+
+>>> mapM_ (putStrLn . sexp_show) [S.Float 0.01,S.Char 'c',S.ByteVector (B.pack [0,1,2])]
+0.01
+#\c
+(bytevector 0 1 2)
 -}
 sexp_show :: SExp -> String
 sexp_show s =
