@@ -48,7 +48,7 @@ library
                    Sound.Sc3.Lisp.Parse.Ethier,
                    Sound.Sc3.Lisp.Sch,
                    Sound.Sc3.Lisp.Scs,
-                   Sound.Sc3.Lisp.SuperCollider,
+                   Sound.Sc3.Lisp.Spl,
                    Sound.Sc3.Lisp.Type
 
 executable hsc3-lisp

@@ -1,12 +1,12 @@
--- | Rewrite a subset of SuperCollider (specifically .scs & .stc) as Lisp.
-module Sound.Sc3.Lisp.SuperCollider where
+-- | Rewrite Spl as Lisp.
+module Sound.Sc3.Lisp.Spl where
 
 import Data.Maybe {- base -}
 
 import qualified Language.Smalltalk.Ansi as St {- stsc3 -}
-import qualified Language.Smalltalk.SuperCollider.Ast as Sc {- stsc3 -}
-import qualified Language.Smalltalk.SuperCollider.Lexer as Sc {- stsc3 -}
-import qualified Language.Smalltalk.SuperCollider.Parser as Sc {- stsc3 -}
+import qualified Language.Smalltalk.Spl.Ast as Sc {- stsc3 -}
+import qualified Language.Smalltalk.Spl.Lexer as Sc {- stsc3 -}
+import qualified Language.Smalltalk.Spl.Parser as Sc {- stsc3 -}
 
 import qualified Language.Scheme.Types as S {- husk-scheme -}
 
@@ -65,7 +65,7 @@ scBinaryArgument_to_exp :: Sc.ScBinaryArgument -> Exp
 scBinaryArgument_to_exp (Sc.ScBinaryArgument p q) = scDotMessages_to_exp (scPrimary_to_exp p) (fromMaybe [] q)
 
 scBinaryMessage_to_exp :: Exp -> Sc.ScBinaryMessage -> Exp
-scBinaryMessage_to_exp rcv (Sc.ScBinaryMessage p q) = App (Symbol p) [rcv, scBinaryArgument_to_exp q]
+scBinaryMessage_to_exp rcv (Sc.ScBinaryMessage (p, _) q) = App (Symbol p) [rcv, scBinaryArgument_to_exp q]
 
 scBinaryMessages_to_exp :: Exp -> [Sc.ScBinaryMessage] -> Exp
 scBinaryMessages_to_exp rcv m =

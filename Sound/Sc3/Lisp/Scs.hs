@@ -1,5 +1,5 @@
-{- | .scs is scheme (or a scheme-like language) written using C-Smalltalk (a subset of SuperCollider) notation.
-     For parsers see "Sound.Sc3.Lisp.SuperCollider".
+{- | .scs is scheme (or a scheme-like language) written using Spl notation.
+     For parsers see "Sound.Sc3.Lisp.Spl".
 -}
 module Sound.Sc3.Lisp.Scs where
 
