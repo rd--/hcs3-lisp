@@ -1,12 +1,11 @@
--- | Rewrite Spl as Lisp.
+-- | Rewrite .stc and .spl as Lisp.
 module Sound.Sc3.Lisp.Spl where
 
 import Data.Maybe {- base -}
 
 import qualified Language.Smalltalk.Ansi as St {- stsc3 -}
-import qualified Language.Smalltalk.Spl.Ast as Sc {- stsc3 -}
-import qualified Language.Smalltalk.Spl.Lexer as Sc {- stsc3 -}
-import qualified Language.Smalltalk.Spl.Parser as Sc {- stsc3 -}
+import qualified Language.Smalltalk.SuperCollider.Ast as Sc {- stsc3 -}
+import qualified Language.Smalltalk.SuperCollider.Translate as Sc {- stsc3 -}
 
 import qualified Language.Scheme.Types as S {- husk-scheme -}
 
@@ -51,7 +50,7 @@ scExpression_to_exp e =
     Sc.ScExprAssignment p q -> Set (Symbol p) (scExpression_to_exp q)
     Sc.ScExprBasic p -> scBasicExpression_to_exp p
 
--- | rcv.msg(arg) translates are (msg (rcv : arg)).
+-- | rcv.msg(arg) translates as (msg (rcv : arg)).
 scDotMessage_to_exp :: Exp -> Sc.ScDotMessage -> Exp
 scDotMessage_to_exp rcv (Sc.ScDotMessage msg arg) = App (Symbol msg) (rcv : map scBasicExpression_to_exp arg)
 
@@ -144,24 +143,25 @@ exp_to_lisp e =
 
 -- * Translate
 
--- | Sc Parse
-scParse :: String -> Sc.ScInitializerDefinition
-scParse = Sc.superColliderParserInitializerDefinition . Sc.alexScanTokens
+type Parser = String -> Sc.ScInitializerDefinition
 
-{- | Lex, parse and convert .stc expression to Exp.
-     If dfn is True translate to Exp sequence, else to Let.
--}
-scToExp :: Bool -> String -> [Exp]
-scToExp dfn =
-  let f =
-        if dfn
-          then scInitializerDefinition_to_exp_seq
-          else return . scInitializerDefinition_to_let_exp
-  in f . scParse
+-- | If dfn is True translate to Exp sequence, else to Let.
+toExp :: Parser -> Bool -> String -> [Exp]
+toExp f dfn =
+  if dfn
+    then scInitializerDefinition_to_exp_seq . f
+    else return . scInitializerDefinition_to_let_exp . f
+
+-- | Lex, parse and convert .stc expression to Exp.
+stcToExp :: Bool -> String -> [Exp]
+stcToExp = toExp Sc.stcParseToSc
+
+splToExp :: Bool -> String -> [Exp]
+splToExp = toExp Sc.splParseToSc
 
 {- | Viewer for translator. Reads Sc expression, prints re-written Lisp expression.
 
->>> let rw = init . scToLispViewer False
+>>> let rw = init . toLispViewer False Sc.stcParseToSc
 >>> rw "$c"
 "#\\c"
 
@@ -180,7 +180,7 @@ scToExp dfn =
 >>> rw "['sym', 123, 1.2]"
 "(list (quote sym) 123 1.2)"
 
->>> rw "x := 1"
+>>> rw "x = 1"
 "(set! x 1)"
 
 >>> rw "f(x)"
@@ -210,21 +210,21 @@ scToExp dfn =
 >>> rw "var x = 1; var y = 2; x + y"
 "(let* ((x 1) (y 2)) (+ x y))"
 
->>> let rw = init . scToLispViewer True
+>>> let rw = init . toLispViewer True Sc.stcParseToSc
 >>> rw "var x = 1; var y = 2; x + y"
 "(define x 1)\n(define y 2)\n(+ x y)"
 -}
-scToLispViewer :: Bool -> String -> String
-scToLispViewer dfn = scToRenamedLispViewer dfn []
+toLispViewer :: Bool -> Parser -> String -> String
+toLispViewer dfn = toRenamedLispViewer dfn []
 
 {- | Viewer for translator with renamer. Reads Sc expression, prints re-written Lisp expression.
 
->>> let rw = init . scToRenamedLispViewer False [("+","add")]
+>>> let rw = init . toRenamedLispViewer False [("+","add")] Sc.stcParseToSc
 >>> rw "1 + 2"
 "(add 1 2)"
 -}
-scToRenamedLispViewer :: Bool -> [(String, String)] -> String -> String
-scToRenamedLispViewer dfn tbl =
+toRenamedLispViewer :: Bool -> [(String, String)] -> Parser -> String -> String
+toRenamedLispViewer dfn tbl f =
   unlines
     . map (L.sexp_show . exp_to_lisp . exp_rename tbl)
-    . scToExp dfn
+    . toExp f dfn

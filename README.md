@@ -277,6 +277,6 @@ initial announcement:
 
 ```
 $ make doctest
-Examples: 95  Tried: 95  Errors: 0  Failures: 0
+Examples: 102  Tried: 102  Errors: 0  Failures: 0
 $
 ```

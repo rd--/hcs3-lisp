@@ -1,5 +1,7 @@
 import qualified Music.Theory.Opt as Opt {- hmt-base -}
 
+import qualified Language.Smalltalk.SuperCollider.Translate as Sc {- stsc3 -}
+
 import qualified Sound.Sc3.Lisp.Haskell as Hs {- hsc3-lisp -}
 import qualified Sound.Sc3.Lisp.NameTable as Tbl {- hsc3-lisp -}
 import qualified Sound.Sc3.Lisp.Spl as Spl {- hsc3-lisp -}
@@ -23,7 +25,7 @@ sc_to_lisp_io :: Maybe FilePath -> FilePath -> FilePath -> IO ()
 sc_to_lisp_io tbl_fn i_fn o_fn = do
   tbl <- maybe (return []) Tbl.nameTableLoad tbl_fn
   i <- readFile i_fn
-  writeFile o_fn (Spl.scToRenamedLispViewer False tbl i)
+  writeFile o_fn (Spl.toRenamedLispViewer False tbl Sc.stcParseToSc i)
 
 main :: IO ()
 main = do

@@ -1,4 +1,4 @@
-{- | .scs is scheme (or a scheme-like language) written using Spl notation.
+{- | .scs is scheme (or a scheme-like language) written using .stc/.spl notation.
      For parsers see "Sound.Sc3.Lisp.Spl".
 -}
 module Sound.Sc3.Lisp.Scs where
@@ -9,7 +9,7 @@ import Data.Maybe {- base -}
 -- | Identifier
 type Name = String
 
-{- | Ast for .stc as Lisp notation.
+{- | Ast for .stc/.spl as Lisp notation.
      Set has Exp in the binding position because composite and expression assignments are allowed.
 -}
 data Exp
