@@ -9,7 +9,7 @@ defVar :: String -> Exp -> [String]
 defVar n x = ":" : n : expToForth x ++ [";"]
 
 -- | Define word
-defWord :: String -> [String] -> [(String,Exp)] -> Exp -> [String]
+defWord :: String -> [String] -> [(String, Exp)] -> Exp -> [String]
 defWord n p b x = ":" : n : "{" : unwords p : "}" : concatMap (uncurry defVar) b ++ expToForth x ++ [";"]
 
 -- | Exp to Forth.
