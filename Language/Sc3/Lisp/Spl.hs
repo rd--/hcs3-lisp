@@ -1,5 +1,5 @@
 -- | Rewrite .stc and .spl as Lisp.
-module Sound.Sc3.Lisp.Spl where
+module Language.Sc3.Lisp.Spl where
 
 import Data.Maybe {- base -}
 
@@ -9,8 +9,8 @@ import qualified Language.Smalltalk.SuperCollider.Translate as Sc {- stsc3 -}
 
 import qualified Language.Scheme.Types as S {- husk-scheme -}
 
-import qualified Sound.Sc3.Lisp.Parse.Ethier as L {- hsc3-lisp -}
-import Sound.Sc3.Lisp.Scs {- hsc3-lisp -}
+import qualified Language.Sc3.Lisp.Parse.Ethier as L {- hsc3-lisp -}
+import Language.Sc3.Lisp.Scs {- hsc3-lisp -}
 
 stNumber_to_exp :: St.Number -> Exp
 stNumber_to_exp n =

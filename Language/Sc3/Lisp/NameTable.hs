@@ -1,4 +1,4 @@
-module Sound.Sc3.Lisp.NameTable where
+module Language.Sc3.Lisp.NameTable where
 
 -- | Name table.
 type NameTable = [(String, String)]

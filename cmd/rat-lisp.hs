@@ -3,9 +3,9 @@ import Data.Ratio {- base -}
 
 import qualified Interpreter.Som.Dict as Dict {- stsc3-som -}
 
-import qualified Sound.Sc3.Lisp.Env as Env {- hsc3-lisp -}
-import Sound.Sc3.Lisp.Interpreter {- hsc3-lisp -}
-import Sound.Sc3.Lisp.Type {- hsc3-lisp -}
+import qualified Language.Sc3.Lisp.Env as Env {- hsc3-lisp -}
+import Language.Sc3.Lisp.Interpreter {- hsc3-lisp -}
+import Language.Sc3.Lisp.Type {- hsc3-lisp -}
 
 -- * Rational
 

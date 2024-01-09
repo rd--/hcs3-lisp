@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 -- | Environment
-module Sound.Sc3.Lisp.Env where
+module Language.Sc3.Lisp.Env where
 
 import Control.Monad.IO.Class {- base -}
 import Data.IORef {- base -}

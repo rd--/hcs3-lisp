@@ -1,7 +1,7 @@
 {- | .scs is scheme (or a scheme-like language) written using .stc/.spl notation.
-     For parsers see "Sound.Sc3.Lisp.Spl".
+     For parsers see .Language.Sc3.Lisp.Spl".
 -}
-module Sound.Sc3.Lisp.Scs where
+module Language.Sc3.Lisp.Scs where
 
 import Data.Bifunctor {- base -}
 import Data.Maybe {- base -}

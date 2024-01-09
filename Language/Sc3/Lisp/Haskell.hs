@@ -1,5 +1,5 @@
 -- | Rewrite a subset of Haskell (.sch) as Lisp.
-module Sound.Sc3.Lisp.Haskell where
+module Language.Sc3.Lisp.Haskell where
 
 import Data.Maybe {- base -}
 
@@ -7,9 +7,9 @@ import qualified Language.Haskell.Exts as E {- haskell-src-exts -}
 
 import qualified Language.Scheme.Types as S {- husk-scheme -}
 
-import qualified Sound.Sc3.Lisp.NameTable as Tbl {- hsc3-lisp -}
-import qualified Sound.Sc3.Lisp.Parse.Ethier as L {- hsc3-lisp -}
-import qualified Sound.Sc3.Lisp.Sch as Sch {- hsc3-lisp -}
+import qualified Language.Sc3.Lisp.NameTable as Tbl {- hsc3-lisp -}
+import qualified Language.Sc3.Lisp.Parse.Ethier as L {- hsc3-lisp -}
+import qualified Language.Sc3.Lisp.Sch as Sch {- hsc3-lisp -}
 
 -- | Format error string.
 error_x :: Show a => String -> a -> t
@@ -355,7 +355,7 @@ hs_exp_to_lisp tbl = L.sexp_show . hs_exp_lisp tbl
 {- | Translate haskell @module@ code into @Lisp@.
 
 >>> let rw = hs_to_lisp []
->>> rw "import Sound.Sc3"
+>>> rw "import.Language.Sc3"
 ""
 
 >>> rw "o = let f = midiCps (mce [65.0,65.1]) in sinOsc ar f 0"

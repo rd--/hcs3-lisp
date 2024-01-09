@@ -1,8 +1,8 @@
 -- | Translate subset of Exp to Forth notation.
-module Sound.Sc3.Lisp.Forth where
+module Language.Sc3.Lisp.Forth where
 
-import Sound.Sc3.Lisp.Scs {- hsc3-lisp -}
-import qualified Sound.Sc3.Lisp.Spl as Spl {- hsc3-lisp -}
+import Language.Sc3.Lisp.Scs {- hsc3-lisp -}
+import qualified Language.Sc3.Lisp.Spl as Spl {- hsc3-lisp -}
 
 -- | Define variable
 defVar :: String -> Exp -> [String]
