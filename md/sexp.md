@@ -50,11 +50,11 @@ There is a table for renaming hsc3 graphs to rsc3 graphs at
 re-written as:
 
 ~~~~
-$ r.hsc3-to-rsc3.sh < ~/sw/hsc3/Help/Graph/jmcc-analog-bubbles.hs
+$ hsc3-sch-to-scm < ~/sw/hsc3/Help/Graph/jmcc-analog-bubbles.hs
 (letrec
     ((o (Add (Mul (LFSaw kr (Mce2 8 7.23) 0) 3) 80))
      (f (Add (Mul (LFSaw kr 0.4 0) 24) o))
-     (s (Mul (SinOsc ar (MIDICPS f) 0) 0.04)))
+     (s (Mul (SinOsc ar (MidiCps f) 0) 0.04)))
   (CombN s 0.2 0.2 4))
 $
 ~~~~
@@ -81,4 +81,4 @@ and work in `hsc3-lisp`, which is `post-ML`, but not in `scheme`.
 
 * * *
 
-[HS](?t=hsc3-lisp&e=Sound/SC3/Lisp/Haskell.hs)
+[HS](?t=hsc3-lisp&e=Language/Sc3/Lisp/Haskell.hs)
