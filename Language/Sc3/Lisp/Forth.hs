@@ -43,7 +43,7 @@ expToForth e =
 >>> rw "[x, y]"
 "[ x y ]"
 
->>> rw "i = f(x) + y;"
+>>> rw "i := f(x) + y;"
 ": i x f y + ;"
 
 >>> rw "var f = { |x| x * x }; f(3)"

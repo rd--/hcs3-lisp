@@ -1,7 +1,7 @@
 import qualified Music.Theory.Io as Io {- hmt-base -}
 import qualified Music.Theory.Opt as Opt {- hmt-base -}
 
-import qualified Language.Smalltalk.SuperCollider.Translate as Sc {- stsc3 -}
+import qualified Language.Smalltalk.Stc.Translate as Stc {- stsc3 -}
 
 import qualified Language.Sc3.Lisp.Forth as Fs {- hsc3-lisp -}
 import qualified Language.Sc3.Lisp.Haskell as Hs {- hsc3-lisp -}
@@ -28,7 +28,7 @@ sc_to_lisp_io :: Maybe FilePath -> FilePath -> FilePath -> IO ()
 sc_to_lisp_io tbl_fn i_fn o_fn = do
   tbl <- maybe (return []) Tbl.nameTableLoad tbl_fn
   i <- readFile i_fn
-  writeFile o_fn (Spl.toRenamedLispViewer False tbl Sc.stcParseToSc i)
+  writeFile o_fn (Spl.toRenamedLispViewer False tbl Stc.stcParseToStc i)
 
 main :: IO ()
 main = do

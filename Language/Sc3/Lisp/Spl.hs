@@ -4,8 +4,8 @@ module Language.Sc3.Lisp.Spl where
 import Data.Maybe {- base -}
 
 import qualified Language.Smalltalk.Ansi as St {- stsc3 -}
-import qualified Language.Smalltalk.SuperCollider.Ast as Sc {- stsc3 -}
-import qualified Language.Smalltalk.SuperCollider.Translate as Sc {- stsc3 -}
+import qualified Language.Smalltalk.Stc.Ast as Stc {- stsc3 -}
+import qualified Language.Smalltalk.Stc.Translate as Stc {- stsc3 -}
 
 import qualified Language.Scheme.Types as S {- husk-scheme -}
 
@@ -28,87 +28,87 @@ stLiteral_to_exp l =
     St.SelectorLiteral x -> Symbol (St.selectorIdentifier x)
     St.ArrayLiteral x -> Array (map (either stLiteral_to_exp Symbol) x)
 
-scStatements_to_exp :: Sc.ScStatements -> Exp
-scStatements_to_exp x =
+stcStatements_to_exp :: Stc.StcStatements -> Exp
+stcStatements_to_exp x =
   case x of
-    Sc.ScStatementsReturn (Sc.ScReturnStatement p) -> App (Symbol "return") [scExpression_to_exp p]
-    Sc.ScStatementsExpression p q ->
+    Stc.StcStatementsReturn (Stc.StcReturnStatement p) -> App (Symbol "return") [stcExpression_to_exp p]
+    Stc.StcStatementsExpression p q ->
       case q of
-        Nothing -> scExpression_to_exp p
-        Just q' -> Seq (scExpression_to_exp p) (scStatements_to_exp q')
+        Nothing -> stcExpression_to_exp p
+        Just q' -> Seq (stcExpression_to_exp p) (stcStatements_to_exp q')
 
 -- | Translated as Lambda with interior Let.  Alternately, Lambda could have a temporaries field.
-scBlockBody_to_exp :: Sc.ScBlockBody -> Exp
-scBlockBody_to_exp (Sc.ScBlockBody arg tmp stm) =
-  let binder (p, q) = (p, maybe Nil scBasicExpression_to_exp q)
-      body = Let (maybe [] (concatMap (map binder)) tmp) (maybe Nil scStatements_to_exp stm)
+stcBlockBody_to_exp :: Stc.StcBlockBody -> Exp
+stcBlockBody_to_exp (Stc.StcBlockBody arg tmp stm) =
+  let binder (p, q) = (p, maybe Nil stcBasicExpression_to_exp q)
+      body = Let (maybe [] (concatMap (map binder)) tmp) (maybe Nil stcStatements_to_exp stm)
   in Lambda (map fst (fromMaybe [] arg)) body
 
-scExpression_to_exp :: Sc.ScExpression -> Exp
-scExpression_to_exp e =
+stcExpression_to_exp :: Stc.StcExpression -> Exp
+stcExpression_to_exp e =
   case e of
-    Sc.ScExprAssignment p q -> Set (Symbol p) (scExpression_to_exp q)
-    Sc.ScExprBasic p -> scBasicExpression_to_exp p
+    Stc.StcExprAssignment p q -> Set (Symbol p) (stcExpression_to_exp q)
+    Stc.StcExprBasic p -> stcBasicExpression_to_exp p
 
 -- | rcv.msg(arg) translates as (msg (rcv : arg)).
-scDotMessage_to_exp :: Exp -> Sc.ScDotMessage -> Exp
-scDotMessage_to_exp rcv (Sc.ScDotMessage msg arg) = App (Symbol msg) (rcv : map scBasicExpression_to_exp arg)
+stcDotMessage_to_exp :: Exp -> Stc.StcDotMessage -> Exp
+stcDotMessage_to_exp rcv (Stc.StcDotMessage msg arg) = App (Symbol msg) (rcv : map stcBasicExpression_to_exp arg)
 
-scDotMessages_to_exp :: Exp -> [Sc.ScDotMessage] -> Exp
-scDotMessages_to_exp rcv m =
+stcDotMessages_to_exp :: Exp -> [Stc.StcDotMessage] -> Exp
+stcDotMessages_to_exp rcv m =
   case m of
     [] -> rcv
-    p : q -> scDotMessages_to_exp (scDotMessage_to_exp rcv p) q
+    p : q -> stcDotMessages_to_exp (stcDotMessage_to_exp rcv p) q
 
-scBinaryArgument_to_exp :: Sc.ScBinaryArgument -> Exp
-scBinaryArgument_to_exp (Sc.ScBinaryArgument p q) = scDotMessages_to_exp (scPrimary_to_exp p) (fromMaybe [] q)
+stcBinaryArgument_to_exp :: Stc.StcBinaryArgument -> Exp
+stcBinaryArgument_to_exp (Stc.StcBinaryArgument p q) = stcDotMessages_to_exp (stcPrimary_to_exp p) (fromMaybe [] q)
 
-scBinaryMessage_to_exp :: Exp -> Sc.ScBinaryMessage -> Exp
-scBinaryMessage_to_exp rcv (Sc.ScBinaryMessage (p, _) q) = App (Symbol p) [rcv, scBinaryArgument_to_exp q]
+stcBinaryMessage_to_exp :: Exp -> Stc.StcBinaryMessage -> Exp
+stcBinaryMessage_to_exp rcv (Stc.StcBinaryMessage (p, _) q) = App (Symbol p) [rcv, stcBinaryArgument_to_exp q]
 
-scBinaryMessages_to_exp :: Exp -> [Sc.ScBinaryMessage] -> Exp
-scBinaryMessages_to_exp rcv m =
+stcBinaryMessages_to_exp :: Exp -> [Stc.StcBinaryMessage] -> Exp
+stcBinaryMessages_to_exp rcv m =
   case m of
     [] -> rcv
-    p : q -> scBinaryMessages_to_exp (scBinaryMessage_to_exp rcv p) q
+    p : q -> stcBinaryMessages_to_exp (stcBinaryMessage_to_exp rcv p) q
 
-scMessages_to_exp :: Exp -> Sc.ScMessages -> Exp
-scMessages_to_exp rcv m =
+stcMessages_to_exp :: Exp -> Stc.StcMessages -> Exp
+stcMessages_to_exp rcv m =
   case m of
-    Sc.ScMessagesDot p q -> scBinaryMessages_to_exp (scDotMessages_to_exp rcv p) (fromMaybe [] q)
-    Sc.ScMessagesBinary p -> scBinaryMessages_to_exp rcv p
+    Stc.StcMessagesDot p q -> stcBinaryMessages_to_exp (stcDotMessages_to_exp rcv p) (fromMaybe [] q)
+    Stc.StcMessagesBinary p -> stcBinaryMessages_to_exp rcv p
 
-scBasicExpression_to_exp :: Sc.ScBasicExpression -> Exp
-scBasicExpression_to_exp (Sc.ScBasicExpression p q) =
+stcBasicExpression_to_exp :: Stc.StcBasicExpression -> Exp
+stcBasicExpression_to_exp (Stc.StcBasicExpression p q) =
   case q of
-    Nothing -> scPrimary_to_exp p
-    Just m -> scMessages_to_exp (scPrimary_to_exp p) m
+    Nothing -> stcPrimary_to_exp p
+    Just m -> stcMessages_to_exp (stcPrimary_to_exp p) m
 
-scPrimary_to_exp :: Sc.ScPrimary -> Exp
-scPrimary_to_exp x =
+stcPrimary_to_exp :: Stc.StcPrimary -> Exp
+stcPrimary_to_exp x =
   case x of
-    Sc.ScPrimaryIdentifier p -> Symbol p
-    Sc.ScPrimaryLiteral p -> stLiteral_to_exp p
-    Sc.ScPrimaryBlock p -> scBlockBody_to_exp p
-    Sc.ScPrimaryExpression p -> scExpression_to_exp p
-    Sc.ScPrimaryArrayExpression p -> Array (map scBasicExpression_to_exp p)
-    Sc.ScPrimaryDictionaryExpression _ -> error "scPrimary_to_exp: dictionary..."
-    Sc.ScPrimaryImplicitMessageSend p q -> App (Symbol p) (map scBasicExpression_to_exp q)
+    Stc.StcPrimaryIdentifier p -> Symbol p
+    Stc.StcPrimaryLiteral p -> stLiteral_to_exp p
+    Stc.StcPrimaryBlock p -> stcBlockBody_to_exp p
+    Stc.StcPrimaryExpression p -> stcExpression_to_exp p
+    Stc.StcPrimaryArrayExpression p -> Array (map stcBasicExpression_to_exp p)
+    Stc.StcPrimaryDictionaryExpression _ -> error "stcPrimary_to_exp: dictionary..."
+    Stc.StcPrimaryImplicitMessageSend p q -> App (Symbol p) (map stcBasicExpression_to_exp q)
 
 -- | Translate as let expression.  Alternately could translate as Seq of Set.
-scInitializerDefinition_to_let_exp :: Sc.ScInitializerDefinition -> Exp
-scInitializerDefinition_to_let_exp (Sc.ScInitializerDefinition _cmt tmp stm) =
-  let binder (p, q) = (p, maybe Nil scBasicExpression_to_exp q)
+stcInitializerDefinition_to_let_exp :: Stc.StcInitializerDefinition -> Exp
+stcInitializerDefinition_to_let_exp (Stc.StcInitializerDefinition _cmt tmp stm) =
+  let binder (p, q) = (p, maybe Nil stcBasicExpression_to_exp q)
       tmpSeq = concatMap (map binder) (fromMaybe [] tmp)
-      stmExp = maybe Nil scStatements_to_exp stm
+      stmExp = maybe Nil stcStatements_to_exp stm
   in Let tmpSeq stmExp
 
 -- | Translate as definition sequence with perhaps a subsequent program.
-scInitializerDefinition_to_exp_seq :: Sc.ScInitializerDefinition -> [Exp]
-scInitializerDefinition_to_exp_seq (Sc.ScInitializerDefinition _cmt tmp stm) =
-  let binder (p, q) = Define p (maybe Nil scBasicExpression_to_exp q)
+stcInitializerDefinition_to_exp_seq :: Stc.StcInitializerDefinition -> [Exp]
+stcInitializerDefinition_to_exp_seq (Stc.StcInitializerDefinition _cmt tmp stm) =
+  let binder (p, q) = Define p (maybe Nil stcBasicExpression_to_exp q)
       tmpSeq = concatMap (map binder) (fromMaybe [] tmp)
-      stmExp = maybe [] (return . scStatements_to_exp) stm
+      stmExp = maybe [] (return . stcStatements_to_exp) stm
   in tmpSeq ++ stmExp
 
 -- * Lisp
@@ -143,25 +143,25 @@ exp_to_lisp e =
 
 -- * Translate
 
-type Parser = String -> Sc.ScInitializerDefinition
+type Parser = String -> Stc.StcInitializerDefinition
 
 -- | If dfn is True translate to Exp sequence, else to Let.
 toExp :: Parser -> Bool -> String -> [Exp]
 toExp f dfn =
   if dfn
-    then scInitializerDefinition_to_exp_seq . f
-    else return . scInitializerDefinition_to_let_exp . f
+    then stcInitializerDefinition_to_exp_seq . f
+    else return . stcInitializerDefinition_to_let_exp . f
 
 -- | Lex, parse and convert .stc expression to Exp.
 stcToExp :: Bool -> String -> [Exp]
-stcToExp = toExp Sc.stcParseToSc
+stcToExp = toExp Stc.stcParseToStc
 
 splToExp :: Bool -> String -> [Exp]
-splToExp = toExp Sc.splParseToSc
+splToExp = toExp Stc.splParseToStc
 
-{- | Viewer for translator. Reads Sc expression, prints re-written Lisp expression.
+{- | Viewer for translator. Reads Stc expression, prints re-written Lisp expression.
 
->>> let rw = init . toLispViewer False Sc.stcParseToSc
+>>> let rw = init . toLispViewer False Stc.stcParseToStc
 >>> rw "$c"
 "#\\c"
 
@@ -210,16 +210,16 @@ splToExp = toExp Sc.splParseToSc
 >>> rw "var x = 1; var y = 2; x + y"
 "(let* ((x 1) (y 2)) (+ x y))"
 
->>> let rw = init . toLispViewer True Sc.stcParseToSc
+>>> let rw = init . toLispViewer True Stc.stcParseToStc
 >>> rw "var x = 1; var y = 2; x + y"
 "(define x 1)\n(define y 2)\n(+ x y)"
 -}
 toLispViewer :: Bool -> Parser -> String -> String
 toLispViewer dfn = toRenamedLispViewer dfn []
 
-{- | Viewer for translator with renamer. Reads Sc expression, prints re-written Lisp expression.
+{- | Viewer for translator with renamer. Reads Stc expression, prints re-written Lisp expression.
 
->>> let rw = init . toRenamedLispViewer False [("+","add")] Sc.stcParseToSc
+>>> let rw = init . toRenamedLispViewer False [("+","add")] Stc.stcParseToStc
 >>> rw "1 + 2"
 "(add 1 2)"
 -}
