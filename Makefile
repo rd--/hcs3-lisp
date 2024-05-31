@@ -13,7 +13,7 @@ push-all:
 	r.github-push.sh hsc3-lisp
 
 indent:
-	fourmolu -i Sound cmd
+	fourmolu -i Language cmd
 
 doctest:
-	doctest -Wno-x-partial -Wno-incomplete-uni-patterns Sound
+	doctest -Wno-x-partial -Wno-incomplete-uni-patterns Language

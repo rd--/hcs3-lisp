@@ -5,12 +5,12 @@ Synopsis:          Lisp Supercollider
 Description:       Lisp Supercollider
 License:           GPL-3.0-only
 Category:          Sound
-Copyright:         (c) Rohan Drape, 2014-2023
+Copyright:         (c) Rohan Drape, 2014-2024
 Author:            Rohan Drape
 Maintainer:        rd@rohandrape.net
 Stability:         Experimental
 Homepage:          http://rohandrape.net/t/hsc3-lisp
-Tested-With:       GHC == 9.8.1
+Tested-With:       GHC == 9.10.1
 Build-Type:        Simple
 
 Data-files:        README.md

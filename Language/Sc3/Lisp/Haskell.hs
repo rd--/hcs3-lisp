@@ -355,7 +355,7 @@ hs_exp_to_lisp tbl = L.sexp_show . hs_exp_lisp tbl
 {- | Translate haskell @module@ code into @Lisp@.
 
 >>> let rw = hs_to_lisp []
->>> rw "import.Language.Sc3"
+>>> rw "import Language.Sc3"
 ""
 
 >>> rw "o = let f = midiCps (mce [65.0,65.1]) in sinOsc ar f 0"

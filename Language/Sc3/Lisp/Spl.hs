@@ -180,7 +180,7 @@ splToExp = toExp Stc.splParseToStc
 >>> rw "['sym', 123, 1.2]"
 "(list (quote sym) 123 1.2)"
 
->>> rw "x = 1"
+>>> rw "x := 1"
 "(set! x 1)"
 
 >>> rw "f(x)"
