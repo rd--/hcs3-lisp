@@ -1,4 +1,3 @@
-import qualified Data.Map as M {- containers -}
 import Data.Ratio {- base -}
 
 import qualified Interpreter.Som.Dict as Dict {- stsc3-som -}
@@ -10,6 +9,7 @@ import Language.Sc3.Lisp.Type {- hsc3-lisp -}
 -- * Rational
 
 {-
+import qualified Data.Map as M {- containers -}
 import Safe {- safe -}
 import qualified Text.Read as R {- base -}
 
