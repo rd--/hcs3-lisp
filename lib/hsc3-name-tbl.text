@@ -1,3 +1,4 @@
+. compose
 True #t
 False #f
 set set!
